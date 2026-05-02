@@ -1,7 +1,7 @@
 import os
 
-groq_key  = os.environ.get('GROQ_API_KEY', '')
-slack_url = os.environ.get('SLACK_WEBHOOK_URL', '')
+groq_key  = os.environ.get('GROQ_API_KEY', '').strip()
+slack_url = os.environ.get('SLACK_WEBHOOK_URL', '').strip()
 
 config_text = (
     'METABASE_CSV_URL = "https://bia.metabaseapp.com/public/question/5ec265f5-182d-409d-bfbd-45303880da2d.csv"\n'
