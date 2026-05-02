@@ -19,6 +19,9 @@ jobs:
       - name: Instalar dependencias
         run: pip install groq pdfplumber requests twilio
 
+      - name: Eliminar config viejo
+        run: rm -f config.py create_config.py
+
       - name: Correr QA
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
