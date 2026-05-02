@@ -1,0 +1,48 @@
+name: QA BIA Automatico
+
+on:
+  schedule:
+    - cron: '0 23 * * *'  # Corre todos los dias a las 6 PM Colombia (11 PM UTC)
+  workflow_dispatch:        # Permite correrlo manualmente con un clic
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Instalar dependencias
+        run: pip install groq pdfplumber requests twilio
+        
+      - name: Crear config
+        run: |
+          cat > config.py << EOF
+          METABASE_CSV_URL = "https://bia.metabaseapp.com/public/question/5ec265f5-182d-409d-bfbd-45303880da2d.csv"
+          GROQ_API_KEY = "${{ secrets.GROQ_API_KEY }}"
+          GROQ_MODEL = "llama-3.1-8b-instant"
+          SLACK_WEBHOOK_URL = "${{ secrets.SLACK_WEBHOOK_URL }}"
+          TWILIO_ACCOUNT_SID = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          TWILIO_AUTH_TOKEN = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          TWILIO_FROM_WHATSAPP = "whatsapp:+14155238886"
+          TWILIO_TO_WHATSAPP = "whatsapp:+57TUNUMERODECELULAR"
+          MODO_PRUEBA = False
+          MODO_UNICO = True
+          ACTAS_PRUEBA = 2
+          FECHA_INICIO = "2026-04-27"
+          PAUSA_GROQ_SEGUNDOS = 5
+          INTERVALO_SEGUNDOS = 300
+          ARCHIVO_PROCESADOS = "actas_procesadas.json"
+          CARPETA_REPORTES = "reportes_qa"
+          TIPOS_SERVICIO_VALIDOS = ["Instalación", "Visita previa"]
+          ESTADOS_ANALIZAR = ["CLOSURE_SUCCESSFUL", "CLOSURE_FAILED"]
+          OR_PLANNERS = {"ESSA": "Ervison Plata", "EPM": "Ervison Plata", "AIRE": "Ervison Plata", "AIR-E": "Ervison Plata", "AFINIA": "Ervison Plata"}
+          PLANNER_DEFAULT = "Dinovi Sanchez"
+          EOF
+          
+      - name: Correr QA
+        run: python qa_bia.py
