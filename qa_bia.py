@@ -16,7 +16,37 @@ from groq import Groq
 from datetime import datetime, date
 from twilio.rest import Client as TwilioClient
 
-import config
+# GitHub Actions: leer de variables de entorno
+if os.environ.get('GROQ_API_KEY'):
+    class config:
+        METABASE_CSV_URL     = "https://bia.metabaseapp.com/public/question/5ec265f5-182d-409d-bfbd-45303880da2d.csv"
+        GROQ_API_KEY         = os.environ['GROQ_API_KEY']
+        GROQ_MODEL           = "llama-3.1-8b-instant"
+        SLACK_WEBHOOK_URL    = os.environ.get('SLACK_WEBHOOK_URL', '')
+        TWILIO_ACCOUNT_SID   = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        TWILIO_AUTH_TOKEN    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        TWILIO_FROM_WHATSAPP = "whatsapp:+14155238886"
+        TWILIO_TO_WHATSAPP   = "whatsapp:+57TUNUMERODECELULAR"
+        MODO_PRUEBA          = False
+        MODO_UNICO           = True
+        ACTAS_PRUEBA         = 2
+        FECHA_INICIO         = "2026-04-27"
+        PAUSA_GROQ_SEGUNDOS  = 5
+        INTERVALO_SEGUNDOS   = 300
+        ARCHIVO_PROCESADOS   = "actas_procesadas.json"
+        CARPETA_REPORTES     = "reportes_qa"
+        TIPOS_SERVICIO_VALIDOS = ["Instalación", "Visita previa"]
+        ESTADOS_ANALIZAR       = ["CLOSURE_SUCCESSFUL", "CLOSURE_FAILED"]
+        OR_PLANNERS = {
+            "ESSA":   "Ervison Plata",
+            "EPM":    "Ervison Plata",
+            "AIRE":   "Ervison Plata",
+            "AIR-E":  "Ervison Plata",
+            "AFINIA": "Ervison Plata",
+        }
+        PLANNER_DEFAULT = "Dinovi Sanchez"
+else:
+    import config
 
 cliente_groq = Groq(api_key=config.GROQ_API_KEY)
 
@@ -86,7 +116,7 @@ def obtener_actas_nuevas():
     print(f"  {len(pendientes)} acta(s) nueva(s) (omitidas por fecha: {omitidas})")
 
     if config.MODO_PRUEBA and len(pendientes) > config.ACTAS_PRUEBA:
-        print(f"  [MODO PRUEBA] Solo {config.ACTAS_PRUEBA} de {len(pendientes)} (las mas recientes).")
+        print(f"  [MODO PRUEBA] Solo {config.ACTAS_PRUEBA} de {len(pendientes)}.")
         pendientes = pendientes[:config.ACTAS_PRUEBA]
 
     return pendientes
@@ -394,9 +424,6 @@ def main():
         print("   PRUEBA TERMINADA - " + str(procesadas) + " acta(s) auditada(s)")
         print("   Reportes en: " + os.path.abspath(config.CARPETA_REPORTES))
         print("=" * 58)
-        print("")
-        print("   Cuando todo este bien cambia en config.py:")
-        print("   MODO_PRUEBA = False")
 
     else:
         actas = obtener_actas_nuevas()
@@ -407,7 +434,7 @@ def main():
                     time.sleep(config.PAUSA_GROQ_SEGUNDOS)
         else:
             print("[" + ahora() + "] Sin actas nuevas.")
-        
+
         if not getattr(config, 'MODO_UNICO', False):
             while True:
                 time.sleep(config.INTERVALO_SEGUNDOS)
@@ -419,5 +446,6 @@ def main():
                             time.sleep(config.PAUSA_GROQ_SEGUNDOS)
                 else:
                     print("[" + ahora() + "] Sin actas nuevas. Revisando en " + str(config.INTERVALO_SEGUNDOS) + "s...")
+
 if __name__ == "__main__":
     main()
