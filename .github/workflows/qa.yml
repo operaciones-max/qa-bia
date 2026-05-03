@@ -2,7 +2,7 @@ name: QA BIA Automatico
 
 on:
   schedule:
-    - cron: '0 23 * * *'
+    - cron: '*/5 * * * *' # Cada 5 minutos
   workflow_dispatch:
 
 jobs:
