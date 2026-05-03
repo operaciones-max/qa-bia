@@ -36,7 +36,9 @@ if os.environ.get('GROQ_API_KEY'):
         ARCHIVO_PROCESADOS   = "actas_procesadas.json"
         CARPETA_REPORTES     = "reportes_qa"
         TIPOS_SERVICIO_VALIDOS = ["Instalación", "Visita previa"]
-        ESTADOS_ANALIZAR       = ["CLOSURE_SUCCESSFUL", "CLOSURE_FAILED"]
+        ESTADOS_EXITOSOS       = ["CLOSURE_SUCCESSFUL", "COMPLETED"]
+        ESTADOS_FALLIDOS       = ["CLOSURE_FAILED", "ELECTRICIAN_FAILED_VISIT"]
+        ESTADOS_ANALIZAR       = ESTADOS_EXITOSOS + ESTADOS_FALLIDOS
         OR_PLANNERS = {
             "ESSA":   "Ervison Plata",
             "EPM":    "Ervison Plata",
@@ -92,14 +94,16 @@ def obtener_actas_nuevas():
     omitidas     = 0
 
     for fila in lector:
-        tipo      = fila.get("Tipo de servicio", "").strip()
-        estado    = fila.get("electrician_status_id", "").strip()
-        acta_id   = fila.get("id", "").strip()
-        pdf_url   = fila.get("act_pdf_url", "").strip()
-        fecha_str = fila.get("start", "").strip()
+        tipo       = fila.get("Tipo de servicio", "").strip()
+        estado     = fila.get("electrician_status_id", "").strip()
+        acta_id    = fila.get("id", "").strip()
+        pdf_url    = fila.get("act_pdf_url", "").strip()
+        fecha_str  = fila.get("start", "").strip()
+        tiene_acta = fila.get("Tiene Acta", "").strip()
 
         if not (tipo in config.TIPOS_SERVICIO_VALIDOS
                 and estado in config.ESTADOS_ANALIZAR
+                and tiene_acta == "Con Acta"
                 and pdf_url):
             continue
         try:
@@ -141,7 +145,7 @@ def descargar_y_leer_pdf(url):
 
 def analizar_acta(texto_pdf, tipo_servicio, estado_electricista, internal_bia_code=""):
     tipo_label = "INSTALACION" if "nstala" in tipo_servicio else "VISITA PREVIA"
-    es_exitosa = estado_electricista == "CLOSURE_SUCCESSFUL"
+    es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
 
     prompt = f"""
 Eres un auditor QA experto en ordenes de trabajo de medicion electrica en Colombia para BIA Energy.
@@ -262,7 +266,12 @@ def guardar_reporte(acta, resultado_qa):
     return ruta
 
 def enviar_slack(acta, resultado_qa):
-    if not config.SLACK_WEBHOOK_URL or "REEMPLAZA" in config.SLACK_WEBHOOK_URL:
+    url = (config.SLACK_WEBHOOK_URL or "").strip().strip('"').strip("'")
+    if not url or "REEMPLAZA" in url:
+        print("  Slack: SLACK_WEBHOOK_URL vacio. Se omite envio.")
+        return
+    if not url.startswith("https://"):
+        print(f"  Slack: URL invalida (debe empezar con https://). Se omite envio.")
         return
 
     es_exitosa     = resultado_qa.get("estado_ot") == "EXITOSA"
@@ -318,8 +327,11 @@ def enviar_slack(acta, resultado_qa):
     }
 
     try:
-        requests.post(config.SLACK_WEBHOOK_URL, json=payload, timeout=10)
-        print("  Slack enviado.")
+        r = requests.post(url, json=payload, timeout=10)
+        if 200 <= r.status_code < 300:
+            print("  Slack enviado.")
+        else:
+            print(f"  ERROR Slack: HTTP {r.status_code} -> {r.text[:200]}")
     except Exception as e:
         print(f"  ERROR Slack: {e}")
 
