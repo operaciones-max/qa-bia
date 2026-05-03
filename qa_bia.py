@@ -30,7 +30,7 @@ if os.environ.get('GROQ_API_KEY'):
         MODO_PRUEBA          = False
         MODO_UNICO           = True
         ACTAS_PRUEBA         = 2
-        FECHA_INICIO         = "2026-04-27"
+        FECHA_INICIO         = "2026-05-02"
         PAUSA_GROQ_SEGUNDOS  = 5
         INTERVALO_SEGUNDOS   = 300
         ARCHIVO_PROCESADOS   = "actas_procesadas.json"
