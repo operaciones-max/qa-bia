@@ -47,10 +47,79 @@ if os.environ.get('GROQ_API_KEY'):
             "AFINIA": "Ervison Plata",
         }
         PLANNER_DEFAULT = "Dinovi Sanchez"
+        SLACK_USER_IDS = {
+            "Ervison Plata":  "D090K7XK0R1",
+            "Dinovi Sanchez": "D06PM8PT6GY",
+        }
 else:
     import config
 
 cliente_groq = Groq(api_key=config.GROQ_API_KEY)
+
+CATALOGO_CAUSAS_FALLA = [
+    "Cliente abandona proceso",
+    "Cliente no conoce alcance de la actividad",
+    "Documentacion incompleta",
+    "OR no conoce requerimiento descargos",
+    "OR no tiene conocimiento de la actividad",
+    "Propietario no conoce alcance de la actividad",
+    "Datos de ubicacion erroneos",
+    "Permisos de ingreso",
+    "Error en la creacion de la OT",
+    "Falta activar frontera para realizar actividad",
+    "La OT ya fue realizada",
+    "OT Duplicada",
+    "OT Fuera de SLA",
+    "No se cancelo actividad apesar de solicitud del cliente",
+    "Falla en la red, debe normalizar OR",
+    "OR exige adecuaciones adicionales",
+    "OR no asiste o llega tarde",
+    "OR no cumple requerimientos de la actividad",
+    "Permisos del municipio",
+    "Documentacion SST",
+    "Coordinador no confirma actividad",
+    "Contratista/Tecnico no llega a la hora programada",
+    "Informacion faltante/erronea en acta",
+    "Confirmacion de alcance en actividad",
+    "Fallas en el alistamiento operativo",
+    "Contratista no asiste o llega tarde",
+    "Error en alcance",
+    "Certificados de equipo",
+    "Equipos en sitio",
+    "Averia de equipo pre instalacion",
+    "Sim card",
+    "Permisos propietario",
+    "Falla cliente-Gestion",
+    "Agendamiento cliente",
+    "Demora en el acceso",
+    "Acceso a gabinete",
+    "Cliente retira los equipos",
+    "Cliente en reclamacion",
+    "Cliente realizo pago",
+    "Cliente suspendido",
+    "Cliente fuera del mercado BIA",
+    "Cliente en cobro juridico",
+    "Acuerdo de pago en punto",
+    "Animales impiden acceso a la medida",
+    "Riesgo electrico",
+    "Codigo duplicado",
+    "Lluvias",
+    "Acceso a la medida",
+    "Manifestaciones / bloqueos / carretera cerrada",
+    "Cobertura en datos moviles",
+    "Medidor averiado",
+    "Configuracion del modem",
+    "No hay registro del medidor BIA encontrado",
+    "No se encuentra medidor",
+    "No se encuentra modem",
+    "Modem averiado",
+    "Telemedida conecta y normalizada antes de visita",
+    "Equipos averiados",
+    "Se requiere acompañamiento policial",
+    "Sin acceso a la plataforma para pagar",
+    "Medida es compartida",
+    "Predio desocupado, imposibilidad de acceso a la medida",
+]
 
 def ahora():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -116,7 +185,7 @@ def obtener_actas_nuevas():
             continue
         pendientes.append(fila)
 
-    pendientes.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    pendientes.sort(key=lambda x: (x.get("start", ""), x.get("created_at", "")))
     print(f"  {len(pendientes)} acta(s) nueva(s) (omitidas por fecha: {omitidas})")
 
     if config.MODO_PRUEBA and len(pendientes) > config.ACTAS_PRUEBA:
@@ -146,6 +215,7 @@ def descargar_y_leer_pdf(url):
 def analizar_acta(texto_pdf, tipo_servicio, estado_electricista, internal_bia_code=""):
     tipo_label = "INSTALACION" if "nstala" in tipo_servicio else "VISITA PREVIA"
     es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
+    catalogo_str = "\n".join(f"- {c}" for c in CATALOGO_CAUSAS_FALLA)
 
     prompt = f"""
 Eres un auditor QA experto en ordenes de trabajo de medicion electrica en Colombia para BIA Energy.
@@ -178,10 +248,16 @@ Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
   }},
   "resumen_observaciones": "<Para INSTALACION: lee la seccion Observaciones del acta (numerada 1,2,3...) y redactala de forma tecnica y profesional en un parrafo continuo incluyendo hora de llegada, tipo de medida encontrada, equipos retirados e instalados con sus seriales, pruebas realizadas y resultado final. Para VISITA PREVIA: resume lo encontrado y el alcance de la actividad>",
   "tipificacion_falla": {{
-    "causa_raiz": "<solo si FALLIDA: causa raiz en una linea>",
-    "responsable": "<Cliente | Technical Expert | BIA | OR>",
-    "detalle": "<descripcion tecnica especifica basada en el acta>",
-    "mejora": "<accion correctiva o prerequisito antes de reprogramar>",
+    "responsable": "<EXACTAMENTE uno de los items del CATALOGO_CAUSAS abajo. Si nada aplica, usa el mas cercano>",
+    "categoria_falla": "<Cliente | Operador de Red | BIA | Contratista | Documentacion | Equipo | Acceso | Externo>",
+    "actor_a_contactar": "<Cliente | Operador de Red | BIA | Contratista>",
+    "criticidad": "<ALTA | MEDIA | BAJA>",
+    "causa_raiz": "<una linea explicando la causa concreta segun el acta, no genericoa>",
+    "detalle": "<descripcion tecnica de 2-3 lineas basada literalmente en lo que dice el acta>",
+    "accion_inmediata": "<que hacer en las proximas 24 horas>",
+    "requiere_reprogramacion": <true o false>,
+    "prerequisitos_reprogramacion": ["<requisito 1>", "<requisito 2>"],
+    "mejora": "<accion correctiva estructural>",
     "cinco_por_que": [
       "1. Por que la OT fue fallida? Porque [razon concreta]",
       "2. Por que [problema]? Porque [causa tecnica]",
@@ -194,7 +270,15 @@ Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
   "alertas_qa": ["alertas menores, lista vacia si no hay"]
 }}
 
-REGLAS:
+CATALOGO_CAUSAS (responsable DEBE ser EXACTAMENTE uno de estos, copia el texto literal):
+{catalogo_str}
+
+CRITERIO DE CRITICIDAD:
+- ALTA: bloquea SLA, riesgo electrico, manifestaciones, daño a equipo, cliente en cobro juridico, codigo duplicado, OT fuera de SLA.
+- MEDIA: requiere reprogramar, OR/cliente ausente, documentacion faltante, demora.
+- BAJA: ajustes menores, lluvias, configuracion modem.
+
+REGLAS DE MEDIDA:
 DIRECTA: Es CORRECTO que TCs y TPs NO esten. Solo es error si ESTAN presentes.
 SEMIDIRECTA: TCs pueden estar. TPs NO deben estar.
 INDIRECTA: TCs y TPs DEBEN estar completos.
@@ -203,7 +287,7 @@ VISITA PREVIA: medidor vs factura, direccion vs marca de agua,
 observaciones deben incluir alcance de la actividad.
 
 --- TEXTO DEL ACTA ---
-{texto_pdf[:9000]}
+{texto_pdf[:8000]}
 """
 
     intentos = 3
@@ -282,9 +366,15 @@ def enviar_slack(acta, resultado_qa):
     med_acta       = resultado_qa.get("medidor_instalado_acta", "N/A")
     bloque_medidor = f"*Medidor instalado en acta:* {med_acta}\n*Medidor WMS asignado:* Pendiente\n"
 
+    user_ids   = getattr(config, "SLACK_USER_IDS", {}) or {}
+    slack_id   = user_ids.get(planner)
+    mention    = f"<@{slack_id}>" if slack_id else f"*{planner}*"
+    encabezado = f"{mention} {planner}\n"
+
     if es_exitosa:
         cuerpo = (
-            f"*Codigo interno Bia:* {resultado_qa.get('internal_bia_code', acta.get('internal_bia_code', 'N/A'))}\n"
+            encabezado
+            + f"*Codigo interno Bia:* {resultado_qa.get('internal_bia_code', acta.get('internal_bia_code', 'N/A'))}\n"
             f"*Tipo de servicio:* {acta.get('Tipo de servicio', 'N/A')}\n"
             f"{bloque_medidor}"
             f"*IP del medidor:* {resultado_qa.get('modem_ip', 'N/A')}\n"
@@ -297,11 +387,21 @@ def enviar_slack(acta, resultado_qa):
         )
     else:
         falla  = resultado_qa.get("tipificacion_falla", {})
+        prereqs = falla.get("prerequisitos_reprogramacion") or []
+        bloque_prereqs = ""
+        if prereqs:
+            bloque_prereqs = "*Prerequisitos para reprogramar:*\n" + "\n".join(f"- {p}" for p in prereqs) + "\n"
         cuerpo = (
-            f"*Tipificacion de la OT fallida*\n"
-            f"*Causa raiz:* {falla.get('causa_raiz', 'N/A')}\n"
+            encabezado
+            + f"*Tipificacion de la OT fallida*\n"
             f"*Responsable:* {falla.get('responsable', 'N/A')}\n"
+            f"*Categoria:* {falla.get('categoria_falla', 'N/A')}  |  *Criticidad:* {falla.get('criticidad', 'N/A')}\n"
+            f"*Actor a contactar:* {falla.get('actor_a_contactar', 'N/A')}\n"
+            f"*Causa raiz:* {falla.get('causa_raiz', 'N/A')}\n"
             f"*Detalle:* {falla.get('detalle', 'N/A')}\n"
+            f"*Accion inmediata:* {falla.get('accion_inmediata', 'N/A')}\n"
+            f"*Reprogramar:* {'Si' if falla.get('requiere_reprogramacion') else 'No'}\n"
+            f"{bloque_prereqs}"
             f"*Mejora:* {falla.get('mejora', 'N/A')}\n\n"
             f"{bloque_medidor}"
         )
