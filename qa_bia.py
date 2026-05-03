@@ -48,8 +48,8 @@ if os.environ.get('GROQ_API_KEY'):
         }
         PLANNER_DEFAULT = "Dinovi Sanchez"
         SLACK_USER_IDS = {
-            "Ervison Plata":  "D090K7XK0R1",
-            "Dinovi Sanchez": "D06PM8PT6GY",
+            "Ervison Plata":  "U090B8YQMAM",
+            "Dinovi Sanchez": "U06NVHEE9GD",
         }
 else:
     import config
@@ -228,7 +228,14 @@ INSTRUCCIONES CRITICAS:
 - Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
 - NO inventes datos. Si un campo no esta en el acta usa null.
 - MARCAS: si el campo "Marca del medidor", "Marca del modem", "Marca del totalizador", etc. dice "Otra" u "Otro", usa el valor del campo siguiente "Ingresar marca..." como marca real. NUNCA concatenes "Otra" con el nombre real.
-- "serie_coincide_foto": busca la serie EXACTA del medidor en el texto de la seccion "Registro fotografico" siguiente. true si aparece literalmente, false si no aparece o aparece distinta. Solo null si no hay seccion de fotos.
+- "serie_coincide_foto" ES OBLIGATORIO: SIEMPRE devuelve true o false (NUNCA null si hay foto).
+  COMO EVALUAR:
+    1. Toma el valor exacto del campo "Serie del medidor" (ej: "23081142").
+    2. Despues del bloque "Registro fotografico medidor, sellos y celdas" (o similar) viene texto extraido de las fotos del medidor (placas, etiquetas, OCR).
+    3. Busca esa serie literal en ese texto. Tambien acepta variantes con espacios o cero a la izquierda.
+    4. Si aparece -> true. Si no aparece -> false. Solo null cuando no hay seccion "Registro fotografico" en absoluto.
+  Lo mismo aplica para medidor_instalado contra el "Registro fotografico" cercano a "Medidor principal instalado".
+  En "observacion_serie_foto" pon: si true escribe null. Si false explica brevemente (ej: "serie en foto: 1080174, no coincide" o "foto presente pero no se ve la serie").
 - Para "observaciones_tecnicas": redacta un parrafo tecnico denso de 3-5 lineas que incluya hora de llegada, lo encontrado, lo instalado con seriales, pruebas, resultado final.
 
 REGLAS POR TIPO DE MEDIDA:
