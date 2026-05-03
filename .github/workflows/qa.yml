@@ -2,7 +2,7 @@ name: QA BIA Automatico
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # Cada 5 minutos
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -34,6 +34,6 @@ jobs:
         run: |
           git config user.email "qa-bot@bia.app"
           git config user.name "QA Bot"
-          git add actas_procesadas.json || true
+          git add -f actas_procesadas.json || true
           git diff --staged --quiet || git commit -m "Actualizar actas procesadas [skip ci]"
           git push || true
