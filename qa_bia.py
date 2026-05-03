@@ -226,9 +226,10 @@ CODIGO INTERNO BIA: {internal_bia_code}
 
 INSTRUCCIONES CRITICAS:
 - Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
-- NO inventes datos. Si un campo no esta en el acta usa null o "NO APLICA".
-- "serie_coincide_foto": busca la serie del medidor en el texto OCR de la seccion "Registro fotografico" cercana. true si la serie aparece literalmente, false si no, null si no hay foto.
-- Para "observaciones_tecnicas": redacta un parrafo tecnico denso que incluya hora de llegada, lo encontrado, lo instalado con seriales, pruebas, resultado final.
+- NO inventes datos. Si un campo no esta en el acta usa null.
+- MARCAS: si el campo "Marca del medidor", "Marca del modem", "Marca del totalizador", etc. dice "Otra" u "Otro", usa el valor del campo siguiente "Ingresar marca..." como marca real. NUNCA concatenes "Otra" con el nombre real.
+- "serie_coincide_foto": busca la serie EXACTA del medidor en el texto de la seccion "Registro fotografico" siguiente. true si aparece literalmente, false si no aparece o aparece distinta. Solo null si no hay seccion de fotos.
+- Para "observaciones_tecnicas": redacta un parrafo tecnico denso de 3-5 lineas que incluya hora de llegada, lo encontrado, lo instalado con seriales, pruebas, resultado final.
 
 REGLAS POR TIPO DE MEDIDA:
 - DIRECTA: tcs_*, tps_*, bloque_pruebas_*, cable_control_* TODOS con "aplica": false.
@@ -375,16 +376,11 @@ JSON ESPERADO:
   }},
 
   "tipificacion_falla": {{
-    "responsable": "<EXACTAMENTE uno del CATALOGO_CAUSAS, solo si FALLIDA>",
-    "categoria_falla": "Cliente | Operador de Red | BIA | Contratista | Documentacion | Equipo | Acceso | Externo",
-    "actor_a_contactar": "Cliente | Operador de Red | BIA | Contratista",
-    "criticidad": "ALTA | MEDIA | BAJA",
-    "causa_raiz": "<una linea concreta>",
-    "detalle": "<2-3 lineas basadas en el acta>",
-    "accion_inmediata": "<24 horas>",
-    "requiere_reprogramacion": <bool>,
-    "prerequisitos_reprogramacion": ["<requisito>"],
-    "mejora": "<accion correctiva estructural>",
+    "causa_raiz": "<frase corta de 4-10 palabras que titula el problema. Ej: 'Inconsistencia con Operador de Red', 'Cliente abandona proceso', 'Espacio insuficiente para medidor'>",
+    "responsable": "Cliente | Operador de Red | BIA | Contratista | Externo",
+    "detalle": "<parrafo tecnico de 2-4 lineas explicando que paso, citando datos del acta>",
+    "mejora": "<accion correctiva estructural en 1-2 lineas>",
+    "tipificacion_codigo": "<si aplica, uno de la LISTA DE TIPIFICACION_CODIGO de abajo. Si nada calza usa null>",
     "cinco_por_que": [
       "1. Por que la OT fue fallida? Porque [razon]",
       "2. Por que [problema]? Porque [causa]",
@@ -398,13 +394,8 @@ JSON ESPERADO:
   "alertas_qa": ["alertas menores"]
 }}
 
-CATALOGO_CAUSAS (si FALLIDA, responsable DEBE ser EXACTAMENTE uno copiado literal):
+LISTA DE TIPIFICACION_CODIGO (opcional, solo si calza claramente):
 {catalogo_str}
-
-CRITERIO DE CRITICIDAD:
-- ALTA: bloquea SLA, riesgo electrico, manifestaciones, daño a equipo, cliente en cobro juridico, codigo duplicado, OT fuera de SLA.
-- MEDIA: requiere reprogramar, OR/cliente ausente, documentacion faltante, demora.
-- BAJA: ajustes menores, lluvias, configuracion modem.
 
 REGLA OR_FIRMA:
 - SI solo si "El Operador de Red asistio" dice "Si" Y hay nombre, cedula y telefono reales (no guiones).
@@ -481,9 +472,9 @@ def _v(x, na="N/A"):
 
 def _check(ok):
     if ok is True:
-        return ":white_check_mark:"
+        return "✅"
     if ok is False:
-        return ":x:"
+        return "❌"
     return ""
 
 def _seccion_transformador(t):
@@ -500,30 +491,32 @@ def _seccion_transformador(t):
 def _seccion_medidor_encontrado(m):
     if not m:
         return ""
-    chk = _check(m.get("serie_coincide_foto"))
-    obs = m.get("observacion_serie_foto")
-    linea_foto = f"  Verificacion serie vs foto: {chk} {_v(obs, '')}".rstrip()
-    return (
+    base = (
         "*Medidor encontrado*\n"
         f"  Serie: {_v(m.get('serie'))}  |  Marca: {_v(m.get('marca'))}  |  Ref: {_v(m.get('referencia'))}\n"
         f"  Lectura activa: {_v(m.get('lectura_activa_kwh'))} kWh  |  Reactiva: {_v(m.get('lectura_reactiva_kvarh'))} kVArh\n"
-        f"{linea_foto}\n"
     )
+    chk = _check(m.get("serie_coincide_foto"))
+    if chk:
+        obs = _v(m.get("observacion_serie_foto"), "")
+        base += f"  Verificacion serie vs foto: {chk} {obs}".rstrip() + "\n"
+    return base
 
 def _seccion_medidor_instalado(m):
     if not m or not m.get("aplica"):
         return ""
     if not m.get("se_instalo"):
         return "*Medidor instalado:* No se instalo\n"
-    chk = _check(m.get("serie_coincide_foto"))
-    obs = m.get("observacion_serie_foto")
-    linea_foto = f"  Verificacion serie vs foto: {chk} {_v(obs, '')}".rstrip()
-    return (
+    base = (
         "*Medidor instalado*\n"
         f"  Serie: {_v(m.get('serie'))}  |  Marca: {_v(m.get('marca'))}  |  Ref: {_v(m.get('referencia'))}\n"
         f"  Lectura activa: {_v(m.get('lectura_activa_kwh'))} kWh\n"
-        f"{linea_foto}\n"
     )
+    chk = _check(m.get("serie_coincide_foto"))
+    if chk:
+        obs = _v(m.get("observacion_serie_foto"), "")
+        base += f"  Verificacion serie vs foto: {chk} {obs}".rstrip() + "\n"
+    return base
 
 def _seccion_sellos(s):
     if not s or not s.get("aplica"):
@@ -611,10 +604,8 @@ def _seccion_cables_inst(c):
     )
 
 def _seccion_aplica_simple(label, d, key_estado="tiene", txt_no="No", extras=None):
-    if not d:
+    if not d or not d.get("aplica"):
         return ""
-    if not d.get("aplica"):
-        return f"*{label}:* No aplica para esta medida\n"
     if not d.get(key_estado):
         return f"*{label}:* {txt_no}\n"
     if extras:
@@ -622,22 +613,18 @@ def _seccion_aplica_simple(label, d, key_estado="tiene", txt_no="No", extras=Non
     return f"*{label}:* {_v(d.get('detalles'))}\n"
 
 def _seccion_bloque_pruebas(b, instalado=False):
-    label = "Bloque de pruebas instalado" if instalado else "Bloque de pruebas encontrado"
-    if not b:
+    if not b or not b.get("aplica"):
         return ""
-    if not b.get("aplica"):
-        return f"*{label}:* No aplica para esta medida\n"
+    label = "Bloque de pruebas instalado" if instalado else "Bloque de pruebas encontrado"
     estado_key = "se_instalo" if instalado else "tiene"
     if not b.get(estado_key):
         return f"*{label}:* {'No se instalo' if instalado else 'No'}\n"
     return f"*{label}*\n  Marca: {_v(b.get('marca'))}  |  Tipo: {_v(b.get('tipo'))}\n"
 
 def _seccion_cable_control(c, instalado=False):
-    label = "Cable de control instalado" if instalado else "Cable de control encontrado"
-    if not c:
+    if not c or not c.get("aplica"):
         return ""
-    if not c.get("aplica"):
-        return f"*{label}:* No aplica para esta medida\n"
+    label = "Cable de control instalado" if instalado else "Cable de control encontrado"
     estado_key = "se_instalo" if instalado else "tiene"
     if not c.get(estado_key):
         return f"*{label}:* {'No se instalo' if instalado else 'No'}\n"
@@ -699,26 +686,16 @@ def _construir_cuerpo_exitosa(acta, qa, encabezado):
     return "".join(s for s in secciones if s)
 
 def _construir_cuerpo_fallida(acta, qa, encabezado):
-    falla   = qa.get("tipificacion_falla") or {}
-    prereqs = falla.get("prerequisitos_reprogramacion") or []
-    bloque_prereqs = ""
-    if prereqs:
-        bloque_prereqs = "*Prerequisitos para reprogramar:*\n" + "\n".join(f"- {p}" for p in prereqs) + "\n"
-
+    falla = qa.get("tipificacion_falla") or {}
     cuerpo = (
         encabezado
         + f"*Codigo interno Bia:* {_v(qa.get('internal_bia_code', acta.get('internal_bia_code')))}\n"
         f"*Tipo de servicio:* {_v(acta.get('Tipo de servicio'))}\n"
         f"*Tipo de medida:* {_v(qa.get('tipo_medida'))}  |  *Factor:* {_v(qa.get('factor_medida'))}\n\n"
         f"*Tipificacion de la OT fallida*\n"
-        f"*Responsable:* {_v(falla.get('responsable'))}\n"
-        f"*Categoria:* {_v(falla.get('categoria_falla'))}  |  *Criticidad:* {_v(falla.get('criticidad'))}\n"
-        f"*Actor a contactar:* {_v(falla.get('actor_a_contactar'))}\n"
         f"*Causa raiz:* {_v(falla.get('causa_raiz'))}\n"
+        f"*Responsable:* {_v(falla.get('responsable'))}\n"
         f"*Detalle:* {_v(falla.get('detalle'))}\n"
-        f"*Accion inmediata:* {_v(falla.get('accion_inmediata'))}\n"
-        f"*Reprogramar:* {'Si' if falla.get('requiere_reprogramacion') else 'No'}\n"
-        f"{bloque_prereqs}"
         f"*Mejora:* {_v(falla.get('mejora'))}\n\n"
         f"*Observaciones tecnicas:*\n{_v(qa.get('observaciones_tecnicas'))}\n"
     )
