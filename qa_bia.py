@@ -1,7 +1,7 @@
 # =============================================================
 #  qa_bia.py  —  SISTEMA QA AUTOMATIZADO DE ACTAS BIA ENERGY
 #  Motor de IA: Groq (Llama)
-#  Version: 2.1 — WMS via Lambda
+#  Version: 2.2 — WMS activo
 # =============================================================
 
 import os
@@ -77,42 +77,30 @@ def identificar_planner(or_norm):
     return config.PLANNER_DEFAULT
 
 # =============================================================
-#  INVENTARIO WMS via Lambda
+#  INVENTARIO WMS
 # =============================================================
 
 def cargar_inventario_wms():
     try:
-        r = requests.post(
-            "https://vdok732ielv7dwmia5lmxyd6je0frxpz.lambda-url.us-west-2.on.aws/",
-            json={"resource_id": 69202},
-            headers={"Content-Type": "application/json"},
-            timeout=15
+        r = requests.get(
+            "https://bia.metabaseapp.com/public/question/67f6d437-6326-415a-a799-1ee34b9648b0.csv",
+            timeout=30
         )
         r.raise_for_status()
-        csv_url = r.json().get("iframeUrl", "")
-        if not csv_url:
-            print("  ERROR WMS: No se obtuvo URL del endpoint.")
-            return {}
-
-        r2 = requests.get(csv_url, timeout=30)
-        r2.raise_for_status()
-
-        lector = csv.DictReader(io.StringIO(r2.content.decode('utf-8')))
+        lector = csv.DictReader(io.StringIO(r.content.decode('utf-8')))
         wms = {}
         for fila in lector:
-            bia_code = fila.get("bia_code", "").strip()
-            tipo     = fila.get("tipo_sku", "").strip().lower()
-            estado   = fila.get("estado", "").strip().upper()
-            serial   = fila.get("serial", "").strip()
-            marca    = fila.get("marca", "").strip()
+            bia_code = fila.get("Bia Code", "").strip()
+            tipo     = fila.get("Tipo Sku", "").strip().lower()
+            estado   = fila.get("Estado", "").strip().upper()
+            serial   = fila.get("Serial", "").strip()
+            marca    = fila.get("Marca", "").strip()
             if not bia_code or tipo != "medidor" or not serial:
                 continue
             if estado in ["ASIGNADO", "INSTALADO"]:
                 wms[bia_code] = {"medidor": serial, "marca": marca, "estado": estado}
-
         print(f"  WMS cargado: {len(wms)} medidores.")
         return wms
-
     except Exception as e:
         print(f"  ERROR WMS: {e}")
         print("  Continuando sin validacion de medidor.")
@@ -197,7 +185,7 @@ def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
                   internal_bia_code="", serial_asignado_wms=""):
     tipo_label = "INSTALACION" if "nstala" in tipo_servicio else "VISITA PREVIA"
     es_exitosa = estado_electricista == "CLOSURE_SUCCESSFUL"
-    wms_info   = serial_asignado_wms if serial_asignado_wms else "Pendiente"
+    wms_info   = serial_asignado_wms if serial_asignado_wms else "No disponible"
 
     prompt = f"""
 Eres un auditor QA experto en ordenes de trabajo de medicion electrica en Colombia para BIA Energy.
@@ -214,7 +202,7 @@ Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
   "estado_ot": "<EXITOSA | FALLIDA>",
   "medidor_instalado_acta": "<serie exacta del medidor instalado en el acta>",
   "medidor_marca": "<marca del medidor>",
-  "medidor_coincide_wms": <true si coincide con WMS, false si no coincide, null si WMS es Pendiente>,
+  "medidor_coincide_wms": <true si medidor_instalado_acta coincide exactamente con MEDIDOR ASIGNADO EN SISTEMA WMS, false si no coincide, null si WMS dice No disponible>,
   "modem_serie": "<serie del modem de telemedida, null si no hay>",
   "modem_marca": "<marca del modem, null si no hay>",
   "modem_ip": "<IP del modem, null si no hay>",
@@ -250,7 +238,8 @@ REGLAS:
 DIRECTA: Es CORRECTO que TCs y TPs NO esten. Solo es error si ESTAN presentes.
 SEMIDIRECTA: TCs pueden estar. TPs NO deben estar.
 INDIRECTA: TCs y TPs DEBEN estar completos.
-INSTALACION: comparar medidor instalado vs WMS. Modem debe tener IP, Puerto, Serie, Marca e IMEI.
+INSTALACION: Comparar medidor_instalado_acta vs MEDIDOR ASIGNADO EN SISTEMA WMS.
+  Si no coinciden es error critico. Modem debe tener IP, Puerto, Serie, Marca e IMEI.
 VISITA PREVIA: medidor vs factura, direccion vs marca de agua, observaciones con alcance.
 
 --- TEXTO DEL ACTA ---
@@ -334,15 +323,15 @@ def enviar_slack(acta, resultado_qa):
     planner     = resultado_qa.get("planner", "N/A")
     or_norm     = resultado_qa.get("or_norm", acta.get("OR_NORM", "N/A"))
     med_acta    = resultado_qa.get("medidor_instalado_acta", "N/A")
-    med_wms     = resultado_qa.get("medidor_wms_asignado", "Pendiente")
+    med_wms     = resultado_qa.get("medidor_wms_asignado", "")
     coincide    = resultado_qa.get("medidor_coincide_wms")
 
     if coincide is True:
-        bloque_medidor = f"*Medidor instalado en acta:* {med_acta}\n*Medidor WMS asignado:* {med_wms}\n*Coincidencia:* SI\n"
+        bloque_medidor = f"*Medidor WMS asignado:* {med_wms}\n*Medidor instalado en acta:* {med_acta}\n*Coincidencia:* SI\n"
     elif coincide is False:
-        bloque_medidor = f"*Medidor instalado en acta:* {med_acta}\n*Medidor WMS asignado:* {med_wms}\n*Coincidencia:* NO - ALERTA\n"
+        bloque_medidor = f"*Medidor WMS asignado:* {med_wms}\n*Medidor instalado en acta:* {med_acta}\n*Coincidencia:* NO - ALERTA\n"
     else:
-        bloque_medidor = f"*Medidor instalado en acta:* {med_acta}\n*Medidor WMS asignado:* {med_wms if med_wms else 'Pendiente'}\n"
+        bloque_medidor = f"*Medidor instalado en acta:* {med_acta}\n*Medidor WMS asignado:* {med_wms if med_wms else 'No disponible'}\n"
 
     if es_exitosa:
         cuerpo = (
@@ -402,6 +391,8 @@ def enviar_whatsapp(acta, resultado_qa):
     estado_txt = "EXITOSA" if es_exitosa else "FALLIDA"
     planner    = resultado_qa.get("planner", "N/A")
     med_acta   = resultado_qa.get("medidor_instalado_acta", "N/A")
+    coincide   = resultado_qa.get("medidor_coincide_wms")
+    alerta_wms = " | MEDIDOR NO COINCIDE WMS" if coincide is False else ""
     errores    = resultado_qa.get("validaciones", {}).get("errores_encontrados", [])
     txt_err    = (" | " + " | ".join(errores[:2])) if errores else ""
 
@@ -411,7 +402,7 @@ def enviar_whatsapp(acta, resultado_qa):
         f"{acta.get('Tipo de servicio', '')} | {resultado_qa.get('tipo_medida', '')}\n"
         f"Medidor: {med_acta}\n"
         f"{acta.get('address', 'N/A')}"
-        f"{txt_err}"
+        f"{txt_err}{alerta_wms}"
     )
 
     try:
@@ -463,7 +454,7 @@ def procesar_acta(acta, wms):
     resultado_qa["planner"]              = planner
     resultado_qa["or_norm"]              = or_norm
     resultado_qa["internal_bia_code"]    = internal_bia_code
-    resultado_qa["medidor_wms_asignado"] = serial_asignado if serial_asignado else "Pendiente"
+    resultado_qa["medidor_wms_asignado"] = serial_asignado if serial_asignado else "No disponible"
 
     print(f"     Resultado: {resultado_qa.get('estado_ot')} | Medida: {resultado_qa.get('tipo_medida')}")
     if resultado_qa.get("medidor_coincide_wms") is False and serial_asignado:
