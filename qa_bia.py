@@ -1,7 +1,7 @@
 # =============================================================
 #  qa_bia.py  —  SISTEMA QA AUTOMATIZADO DE ACTAS BIA ENERGY
 #  Motor de IA: Groq (Llama)
-#  Version: 2.2 — WMS activo
+#  Version: 3.0 — WMS coherente + tipificacion profesional + render por seccion
 # =============================================================
 
 import os
@@ -20,6 +20,7 @@ from twilio.rest import Client as TwilioClient
 if os.environ.get('GROQ_API_KEY'):
     class config:
         METABASE_CSV_URL     = "https://bia.metabaseapp.com/public/question/5ec265f5-182d-409d-bfbd-45303880da2d.csv"
+        WMS_CSV_URL          = "https://bia.metabaseapp.com/public/question/67f6d437-6326-415a-a799-1ee34b9648b0.csv"
         GROQ_API_KEY         = os.environ['GROQ_API_KEY']
         GROQ_MODEL           = "llama-3.1-8b-instant"
         SLACK_WEBHOOK_URL    = os.environ.get('SLACK_WEBHOOK_URL', '')
@@ -33,10 +34,13 @@ if os.environ.get('GROQ_API_KEY'):
         FECHA_INICIO         = "2026-04-27"
         PAUSA_GROQ_SEGUNDOS  = 5
         INTERVALO_SEGUNDOS   = 300
+        MAX_ACTAS_POR_RUN    = 10
         ARCHIVO_PROCESADOS   = "actas_procesadas.json"
         CARPETA_REPORTES     = "reportes_qa"
         TIPOS_SERVICIO_VALIDOS = ["Instalación", "Visita previa"]
-        ESTADOS_ANALIZAR       = ["CLOSURE_SUCCESSFUL", "CLOSURE_FAILED"]
+        ESTADOS_EXITOSOS       = ["CLOSURE_SUCCESSFUL", "COMPLETED"]
+        ESTADOS_FALLIDOS       = ["CLOSURE_FAILED", "ELECTRICIAN_FAILED_VISIT"]
+        ESTADOS_ANALIZAR       = ESTADOS_EXITOSOS + ESTADOS_FALLIDOS
         OR_PLANNERS = {
             "ESSA":   "Ervison Plata",
             "EPM":    "Ervison Plata",
@@ -45,6 +49,10 @@ if os.environ.get('GROQ_API_KEY'):
             "AFINIA": "Ervison Plata",
         }
         PLANNER_DEFAULT = "Dinovi Sanchez"
+        SLACK_USER_IDS = {
+            "Ervison Plata":  "U090B8YQMAM",
+            "Dinovi Sanchez": "U06NVHEE9GD",
+        }
 else:
     import config
 
@@ -76,16 +84,19 @@ def identificar_planner(or_norm):
             return planner
     return config.PLANNER_DEFAULT
 
+def _normalizar_serial(s):
+    if not s:
+        return ""
+    return re.sub(r"[\s\-_/]", "", str(s)).lstrip("0").upper()
+
 # =============================================================
 #  INVENTARIO WMS
 # =============================================================
 
 def cargar_inventario_wms():
     try:
-        r = requests.get(
-            "https://bia.metabaseapp.com/public/question/67f6d437-6326-415a-a799-1ee34b9648b0.csv",
-            timeout=30
-        )
+        url = getattr(config, "WMS_CSV_URL", "https://bia.metabaseapp.com/public/question/67f6d437-6326-415a-a799-1ee34b9648b0.csv")
+        r = requests.get(url, timeout=30)
         r.raise_for_status()
         lector = csv.DictReader(io.StringIO(r.content.decode('utf-8')))
         wms = {}
@@ -126,14 +137,16 @@ def obtener_actas_nuevas():
     omitidas     = 0
 
     for fila in lector:
-        tipo      = fila.get("Tipo de servicio", "").strip()
-        estado    = fila.get("electrician_status_id", "").strip()
-        acta_id   = fila.get("id", "").strip()
-        pdf_url   = fila.get("act_pdf_url", "").strip()
-        fecha_str = fila.get("start", "").strip()
+        tipo       = fila.get("Tipo de servicio", "").strip()
+        estado     = fila.get("electrician_status_id", "").strip()
+        acta_id    = fila.get("id", "").strip()
+        pdf_url    = fila.get("act_pdf_url", "").strip()
+        fecha_str  = fila.get("start", "").strip()
+        tiene_acta = fila.get("Tiene Acta", "").strip()
 
         if not (tipo in config.TIPOS_SERVICIO_VALIDOS
                 and estado in config.ESTADOS_ANALIZAR
+                and tiene_acta == "Con Acta"
                 and pdf_url):
             continue
         try:
@@ -146,8 +159,13 @@ def obtener_actas_nuevas():
             continue
         pendientes.append(fila)
 
-    pendientes.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    pendientes.sort(key=lambda x: (x.get("start", ""), x.get("created_at", "")))
     print(f"  {len(pendientes)} acta(s) nueva(s) (omitidas por fecha: {omitidas})")
+
+    cap = getattr(config, "MAX_ACTAS_POR_RUN", 0)
+    if cap and len(pendientes) > cap:
+        print(f"  Cap por run: tomando {cap} mas antiguas, {len(pendientes) - cap} quedan para proximos runs.")
+        pendientes = pendientes[:cap]
 
     if config.MODO_PRUEBA and len(pendientes) > config.ACTAS_PRUEBA:
         print(f"  [MODO PRUEBA] Solo {config.ACTAS_PRUEBA} de {len(pendientes)}.")
@@ -182,46 +200,152 @@ def descargar_y_leer_pdf(url):
 # =============================================================
 
 def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
-                  internal_bia_code="", serial_asignado_wms=""):
+                  internal_bia_code="", serial_asignado_wms="", marca_asignada_wms=""):
     tipo_label = "INSTALACION" if "nstala" in tipo_servicio else "VISITA PREVIA"
-    es_exitosa = estado_electricista == "CLOSURE_SUCCESSFUL"
-    wms_info   = serial_asignado_wms if serial_asignado_wms else "No disponible"
+    es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
+    es_visita  = "previa" in tipo_servicio.lower()
+    debe_comparar_wms = es_exitosa and not es_visita and bool(serial_asignado_wms)
+    wms_info = serial_asignado_wms if debe_comparar_wms else "No aplica"
+    marca_wms = marca_asignada_wms if debe_comparar_wms else ""
 
     prompt = f"""
-Eres un auditor QA experto en ordenes de trabajo de medicion electrica en Colombia para BIA Energy.
+Eres un auditor QA SENIOR de ordenes de trabajo de medicion electrica en Colombia para BIA Energy.
+Tu redaccion debe ser tecnica, profesional y estructural, NO descriptiva basica.
 
 TIPO DE SERVICIO: {tipo_label}
 RESULTADO EN APP: {"EXITOSA" if es_exitosa else "FALLIDA"}
 CODIGO INTERNO BIA: {internal_bia_code}
-MEDIDOR ASIGNADO EN SISTEMA WMS: {wms_info}
+MEDIDOR ASIGNADO EN SISTEMA WMS: {wms_info} {("(" + marca_wms + ")") if marca_wms else ""}
 
-Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
+INSTRUCCIONES CRITICAS:
+- Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
+- NO inventes datos. Si un campo no esta en el acta usa null.
+- MARCAS: si "Marca del medidor", "Marca del modem", "Marca del totalizador" dice "Otra"/"Otro", usa el valor del siguiente campo "Ingresar marca..." como marca real. NUNCA concatenes.
+- "serie_coincide_foto" SIEMPRE true o false (nunca null si hay seccion Registro fotografico):
+    1. Toma la serie EXACTA del campo "Serie del medidor".
+    2. En el bloque "Registro fotografico medidor, sellos y celdas" siguiente busca esa misma cadena.
+    3. Si aparece -> true. Si no aparece o aparece distinta -> false.
+    4. Si true: "observacion_serie_foto" = null. Si false: explica brevemente con la serie real vista.
+- WMS: Si arriba dice "No aplica" -> "medidor_coincide_wms": null. Si no, comparar serie_instalada vs WMS, ignorando ceros a la izquierda y espacios.
 
+REGLAS POR TIPO DE MEDIDA:
+- DIRECTA: tcs_*, tps_*, bloque_pruebas_*, cable_control_* TODOS aplica=false.
+- SEMIDIRECTA: tps_* aplica=false. Resto aplica.
+- INDIRECTA: TODOS aplican.
+
+REGLAS POR TIPO DE SERVICIO:
+- INSTALACION: campos *_instalado se llenan si se instalo el equipo (se_instalo true) o false.
+- VISITA PREVIA: TODOS los *_instalado tienen aplica=false.
+
+JSON ESPERADO:
 {{
-  "tipo_medida": "<DIRECTA | SEMIDIRECTA | INDIRECTA>",
-  "estado_ot": "<EXITOSA | FALLIDA>",
-  "medidor_instalado_acta": "<serie exacta del medidor instalado en el acta>",
-  "medidor_marca": "<marca del medidor>",
-  "medidor_coincide_wms": <true si medidor_instalado_acta coincide exactamente con MEDIDOR ASIGNADO EN SISTEMA WMS, false si no coincide, null si WMS dice No disponible>,
-  "modem_serie": "<serie del modem de telemedida, null si no hay>",
-  "modem_marca": "<marca del modem, null si no hay>",
-  "modem_ip": "<IP del modem, null si no hay>",
-  "factor_medida": "<factor de medida del primer panel>",
-  "transformador": "<COMPARTIDO | EXCLUSIVO | NO APLICA>",
-  "or_firma": "<SI solo si El Operador de Red asistio dice Si Y el nombre tiene datos reales. Si dice No o campos con guion escribe NO>",
-  "validaciones": {{
-    "tcs_ok": <true o false>,
-    "tps_ok": <true o false>,
-    "campos_completos": <true o false>,
-    "coherencia": "<COHERENTE | INCOHERENTE | INCOMPLETO>",
-    "errores_encontrados": ["errores reales, lista vacia si no hay"]
+  "tipo_medida": "DIRECTA | SEMIDIRECTA | INDIRECTA",
+  "factor_medida": "<numero como string>",
+  "estado_ot": "EXITOSA | FALLIDA",
+
+  "transformador": {{
+    "tiene": <bool>,
+    "numero": "<o null>",
+    "capacidad_kva": "<o null>",
+    "ubicacion": "<o null>",
+    "tipo_uso": "COMPARTIDO | EXCLUSIVO | NO APLICA"
   }},
-  "resumen_observaciones": "<Para INSTALACION: lee la seccion Observaciones del acta (numerada 1,2,3...) y redactala de forma tecnica y profesional en un parrafo continuo incluyendo hora de llegada, tipo de medida encontrada, equipos retirados e instalados con sus seriales, pruebas realizadas y resultado final. Para VISITA PREVIA: resume lo encontrado y el alcance de la actividad>",
+
+  "medidor_encontrado": {{
+    "serie": "<o null>",
+    "marca": "<o null>",
+    "referencia": "<o null>",
+    "lectura_activa_kwh": "<o null>",
+    "lectura_reactiva_kvarh": "<o null>",
+    "serie_coincide_foto": <bool>,
+    "observacion_serie_foto": "<o null>"
+  }},
+
+  "medidor_instalado": {{
+    "aplica": <bool>,
+    "se_instalo": <bool>,
+    "serie": "<o null>",
+    "marca": "<o null>",
+    "referencia": "<o null>",
+    "lectura_activa_kwh": "<o null>",
+    "serie_coincide_foto": <bool>,
+    "observacion_serie_foto": "<o null>"
+  }},
+
+  "medidor_coincide_wms": <true | false | null>,
+  "medidor_instalado_acta": "<serie del medidor instalado, conveniencia>",
+  "medidor_marca": "<marca del medidor instalado, conveniencia>",
+
+  "sellos_instalados": {{
+    "aplica": <bool>,
+    "total": <int>,
+    "todos_completos": <bool>,
+    "campos_faltantes": ["<descripcion>"]
+  }},
+
+  "medidor_respaldo_instalado": {{
+    "aplica": <bool>,
+    "se_instalo": <bool>,
+    "serie": "<o null>",
+    "marca": "<o null>"
+  }},
+
+  "telemedida_encontrada": {{
+    "tiene": <bool>,
+    "ip": "<o null>", "puerto": "<o null>",
+    "serie": "<o null>", "marca": "<o null>", "imei": "<o null>"
+  }},
+
+  "telemedida_instalada": {{
+    "aplica": <bool>, "se_instalo": <bool>,
+    "ip": "<o null>", "puerto": "<o null>",
+    "serie": "<o null>", "marca": "<o null>", "imei": "<o null>",
+    "operador_sim": "<o null>", "serie_sim": "<o null>"
+  }},
+
+  "totalizador_encontrado": {{ "tiene": <bool>, "marca": "<o null>", "capacidad_a": "<o null>", "fases": "<o null>" }},
+  "totalizador_instalado":  {{ "aplica": <bool>, "se_instalo": <bool>, "marca": "<o null>", "capacidad_a": "<o null>", "fases": "<o null>" }},
+
+  "cables_potencia_encontrados": {{
+    "tiene": <bool>,
+    "calibre_parcial": "<o null>", "cables_por_fase_parcial": "<o null>",
+    "calibre_acometida": "<o null>", "cables_por_fase_acometida": "<o null>"
+  }},
+  "cables_potencia_instalados": {{
+    "aplica": <bool>, "se_instalo": <bool>,
+    "calibre_parcial": "<o null>", "cables_por_fase_parcial": "<o null>",
+    "calibre_acometida": "<o null>", "cables_por_fase_acometida": "<o null>"
+  }},
+
+  "tcs_encontrados":      {{ "aplica": <bool>, "tiene": <bool>, "detalles": "<o null>" }},
+  "tcs_instalados":       {{ "aplica": <bool>, "se_instalo": <bool>, "detalles": "<o null>" }},
+  "tps_encontrados":      {{ "aplica": <bool>, "tiene": <bool>, "detalles": "<o null>" }},
+  "tps_instalados":       {{ "aplica": <bool>, "se_instalo": <bool>, "detalles": "<o null>" }},
+
+  "bloque_pruebas_encontrado": {{ "aplica": <bool>, "tiene": <bool>, "marca": "<o null>", "tipo": "<o null>" }},
+  "bloque_pruebas_instalado":  {{ "aplica": <bool>, "se_instalo": <bool>, "marca": "<o null>", "tipo": "<o null>" }},
+
+  "cable_control_encontrado": {{ "aplica": <bool>, "tiene": <bool>, "marca": "<o null>", "calibre_corriente": "<o null>", "calibre_tension": "<o null>", "metros": "<o null>" }},
+  "cable_control_instalado":  {{ "aplica": <bool>, "se_instalo": <bool>, "marca": "<o null>", "calibre_corriente": "<o null>", "calibre_tension": "<o null>", "metros": "<o null>" }},
+
+  "pruebas_funcionamiento": {{ "se_realizaron": <bool>, "resumen": "<o null>" }},
+  "equipo_patron":          {{ "se_uso": <bool>, "resumen": "<o null>" }},
+  "diagrama_unifilar":      {{ "tiene_foto": <bool> }},
+
+  "observaciones_tecnicas": "<parrafo tecnico denso de 3-5 lineas: hora llegada, encontrado, instalado con seriales, pruebas, resultado>",
+  "or_firma": "SI | NO",
+
+  "validaciones": {{
+    "campos_completos": <bool>,
+    "coherencia": "COHERENTE | INCOHERENTE | INCOMPLETO",
+    "errores_encontrados": ["lista de errores reales"]
+  }},
+
   "tipificacion_falla": {{
-    "causa_raiz": "<solo si FALLIDA: causa raiz en una linea>",
-    "responsable": "<Cliente | Technical Expert | BIA | OR>",
-    "detalle": "<descripcion tecnica especifica basada en el acta>",
-    "mejora": "<accion correctiva o prerequisito antes de reprogramar>",
+    "causa_raiz": "<TITULO ANALITICO de 3-7 palabras. NO descriptivo. Ejemplos validos: 'Condiciones tecnicas no viables', 'Falta de viabilidad operativa en visita previa', 'Inconsistencia con Operador de Red', 'Desconocimiento del alcance por el cliente'. EJEMPLOS MALOS (no usar): 'No se pudo instalar', 'Problema con cliente'>",
+    "responsable": "<rol especifico del area que debe gestionar. Puede ser combinado con / si dos areas son responsables. Opciones recomendadas: Technical Expert | Coordinador Operativo | Planeacion | Comercial | Operador de Red | Cliente | Contratista | BIA Operaciones | Externo>",
+    "detalle": "<2-4 lineas. INCLUYE: cifras concretas (medidas en cm, calibres, capacidades), referencia explicita al codigo BIA ({internal_bia_code}), si la condicion estaba detectada en visita previa menciona 'aunque esta condicion ya estaba identificada en la visita previa', cita literal del acta cuando ayude>",
+    "mejora": "<accion ESTRUCTURAL de proceso, no operativa. NO escribas 'reprogramar la visita'. SI escribe cambios sistemicos. Ejemplo gold: 'Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseño, materiales y permisos) antes de agendar la OT.'>",
     "cinco_por_que": [
       "1. Por que la OT fue fallida? Porque [razon concreta]",
       "2. Por que [problema]? Porque [causa tecnica]",
@@ -230,20 +354,25 @@ Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
       "5. Por que no se corrigio? Porque [limitacion]"
     ]
   }},
+
   "observacion_automatica": "<texto listo para copiar en la app>",
-  "alertas_qa": ["alertas menores, lista vacia si no hay"]
+  "alertas_qa": ["alertas menores"]
 }}
 
-REGLAS:
-DIRECTA: Es CORRECTO que TCs y TPs NO esten. Solo es error si ESTAN presentes.
-SEMIDIRECTA: TCs pueden estar. TPs NO deben estar.
-INDIRECTA: TCs y TPs DEBEN estar completos.
-INSTALACION: Comparar medidor_instalado_acta vs MEDIDOR ASIGNADO EN SISTEMA WMS.
-  Si no coinciden es error critico. Modem debe tener IP, Puerto, Serie, Marca e IMEI.
-VISITA PREVIA: medidor vs factura, direccion vs marca de agua, observaciones con alcance.
+EJEMPLO GOLD DE TIPIFICACION (replica este nivel):
+{{
+  "causa_raiz": "Condiciones tecnicas no viables",
+  "responsable": "Technical Expert / Coordinador Operativo",
+  "detalle": "En la OT CO0400006548, no fue posible realizar la instalacion del medidor debido a que el espacio disponible en el gabinete (25 cm x 20 cm) no permite la instalacion ni el radio de curvatura del cable 1/0. Aunque esta condicion ya estaba identificada en la visita previa, no se gestionaron soluciones tecnicas ni aprobaciones necesarias antes de la ejecucion.",
+  "mejora": "Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseño, materiales y permisos) antes de agendar la OT."
+}}
+
+REGLA OR_FIRMA:
+- SI solo si "El Operador de Red asistio" dice "Si" Y hay nombre, cedula y telefono reales (no guiones).
+- NO en cualquier otro caso.
 
 --- TEXTO DEL ACTA ---
-{texto_pdf[:9000]}
+{texto_pdf[:7500]}
 """
 
     intentos = 3
@@ -281,6 +410,34 @@ VISITA PREVIA: medidor vs factura, direccion vs marca de agua, observaciones con
     return None
 
 # =============================================================
+#  POST-VALIDACIONES (defensivas)
+# =============================================================
+
+def _post_corregir_serie_foto(item):
+    """Si modelo dice false pero la observacion contiene la misma serie, corregir."""
+    if not isinstance(item, dict):
+        return
+    serie = (item.get("serie") or "").strip()
+    obs   = (item.get("observacion_serie_foto") or "")
+    if item.get("serie_coincide_foto") is False and serie:
+        norm_serie = _normalizar_serial(serie)
+        norm_obs   = _normalizar_serial(obs)
+        if norm_serie and norm_serie in norm_obs:
+            item["serie_coincide_foto"] = True
+            item["observacion_serie_foto"] = None
+
+def _validar_coincidencia_wms(qa, serial_wms, debe_comparar):
+    if not debe_comparar or not serial_wms:
+        qa["medidor_coincide_wms"] = None
+        return
+    inst = qa.get("medidor_instalado") or {}
+    serie_inst = (inst.get("serie") or "").strip() or (qa.get("medidor_instalado_acta") or "").strip()
+    if not serie_inst:
+        qa["medidor_coincide_wms"] = None
+        return
+    qa["medidor_coincide_wms"] = _normalizar_serial(serie_inst) == _normalizar_serial(serial_wms)
+
+# =============================================================
 #  GUARDAR REPORTE
 # =============================================================
 
@@ -310,92 +467,320 @@ def guardar_reporte(acta, resultado_qa):
     return ruta
 
 # =============================================================
+#  SLACK HELPERS
+# =============================================================
+
+def _v(x, na="N/A"):
+    if x is None:
+        return na
+    s = str(x).strip()
+    return s if s and s not in ("-", "null", "None") else na
+
+def _check(ok):
+    if ok is True:
+        return "✅"
+    if ok is False:
+        return "❌"
+    return ""
+
+def _seccion_transformador(t):
+    if not t:
+        return ""
+    if not t.get("tiene"):
+        return "*Transformador:* No reporta\n"
+    return (
+        "*Transformador*\n"
+        f"  Numero: {_v(t.get('numero'))}  |  Capacidad: {_v(t.get('capacidad_kva'))} kVA\n"
+        f"  Ubicacion: {_v(t.get('ubicacion'))}  |  Uso: {_v(t.get('tipo_uso'))}\n"
+    )
+
+def _seccion_medidor_encontrado(m):
+    if not m:
+        return ""
+    base = (
+        "*Medidor encontrado*\n"
+        f"  Serie: {_v(m.get('serie'))}  |  Marca: {_v(m.get('marca'))}  |  Ref: {_v(m.get('referencia'))}\n"
+        f"  Lectura activa: {_v(m.get('lectura_activa_kwh'))} kWh  |  Reactiva: {_v(m.get('lectura_reactiva_kvarh'))} kVArh\n"
+    )
+    chk = _check(m.get("serie_coincide_foto"))
+    if chk:
+        obs = _v(m.get("observacion_serie_foto"), "")
+        base += f"  Verificacion serie vs foto: {chk} {obs}".rstrip() + "\n"
+    return base
+
+def _seccion_medidor_instalado(m, coincide_wms=None, serial_wms=""):
+    if not m or not m.get("aplica"):
+        return ""
+    if not m.get("se_instalo"):
+        return "*Medidor instalado:* No se instalo\n"
+    base = (
+        "*Medidor instalado*\n"
+        f"  Serie: {_v(m.get('serie'))}  |  Marca: {_v(m.get('marca'))}  |  Ref: {_v(m.get('referencia'))}\n"
+        f"  Lectura activa: {_v(m.get('lectura_activa_kwh'))} kWh\n"
+    )
+    chk = _check(m.get("serie_coincide_foto"))
+    if chk:
+        obs = _v(m.get("observacion_serie_foto"), "")
+        base += f"  Verificacion serie vs foto: {chk} {obs}".rstrip() + "\n"
+    if coincide_wms is True:
+        base += f"  WMS asignado: {serial_wms} ✅ Coincide\n"
+    elif coincide_wms is False:
+        base += f"  WMS asignado: {serial_wms} ❌ NO coincide\n"
+    return base
+
+def _seccion_sellos(s):
+    if not s or not s.get("aplica"):
+        return ""
+    chk = _check(s.get("todos_completos"))
+    falt = s.get("campos_faltantes") or []
+    base = f"*Sellos instalados:* {_v(s.get('total'))} sellos {chk}\n"
+    if falt:
+        base += "  Campos incompletos:\n" + "\n".join(f"   - {f}" for f in falt) + "\n"
+    return base
+
+def _seccion_medidor_respaldo(m):
+    if not m or not m.get("aplica"):
+        return ""
+    if not m.get("se_instalo"):
+        return "*Medidor de respaldo:* No se instalo\n"
+    return (
+        "*Medidor de respaldo instalado*\n"
+        f"  Serie: {_v(m.get('serie'))}  |  Marca: {_v(m.get('marca'))}\n"
+    )
+
+def _seccion_telemedida_encontrada(t):
+    if not t:
+        return ""
+    if not t.get("tiene"):
+        return "*Telemedida encontrada:* No\n"
+    return (
+        "*Telemedida encontrada*\n"
+        f"  IP: {_v(t.get('ip'))}  |  Puerto: {_v(t.get('puerto'))}\n"
+        f"  Serie: {_v(t.get('serie'))}  |  Marca: {_v(t.get('marca'))}  |  IMEI: {_v(t.get('imei'))}\n"
+    )
+
+def _seccion_telemedida_instalada(t):
+    if not t or not t.get("aplica"):
+        return ""
+    if not t.get("se_instalo"):
+        return "*Telemedida instalada:* No se realizaron cambios en el modem\n"
+    return (
+        "*Telemedida instalada*\n"
+        f"  IP: {_v(t.get('ip'))}  |  Puerto: {_v(t.get('puerto'))}\n"
+        f"  Serie: {_v(t.get('serie'))}  |  Marca: {_v(t.get('marca'))}  |  IMEI: {_v(t.get('imei'))}\n"
+        f"  Operador SIM: {_v(t.get('operador_sim'))}  |  Serie SIM: {_v(t.get('serie_sim'))}\n"
+    )
+
+def _seccion_totalizador_encontrado(t):
+    if not t:
+        return ""
+    if not t.get("tiene"):
+        return "*Totalizador encontrado:* No\n"
+    return (
+        "*Totalizador encontrado*\n"
+        f"  Marca: {_v(t.get('marca'))}  |  Capacidad: {_v(t.get('capacidad_a'))} A  |  Fases: {_v(t.get('fases'))}\n"
+    )
+
+def _seccion_totalizador_instalado(t):
+    if not t or not t.get("aplica"):
+        return ""
+    if not t.get("se_instalo"):
+        return "*Totalizador instalado:* No se instalo\n"
+    return (
+        "*Totalizador instalado*\n"
+        f"  Marca: {_v(t.get('marca'))}  |  Capacidad: {_v(t.get('capacidad_a'))} A  |  Fases: {_v(t.get('fases'))}\n"
+    )
+
+def _seccion_cables_enc(c):
+    if not c:
+        return ""
+    if not c.get("tiene"):
+        return "*Cables de potencia encontrados:* No\n"
+    return (
+        "*Cables de potencia encontrados*\n"
+        f"  Parcial: calibre {_v(c.get('calibre_parcial'))}, {_v(c.get('cables_por_fase_parcial'))} cable(s) por fase\n"
+        f"  Acometida: calibre {_v(c.get('calibre_acometida'))}, {_v(c.get('cables_por_fase_acometida'))} cable(s) por fase\n"
+    )
+
+def _seccion_cables_inst(c):
+    if not c or not c.get("aplica"):
+        return ""
+    if not c.get("se_instalo"):
+        return "*Cables de potencia instalados:* No se instalo cable de potencia\n"
+    return (
+        "*Cables de potencia instalados*\n"
+        f"  Parcial: calibre {_v(c.get('calibre_parcial'))}, {_v(c.get('cables_por_fase_parcial'))} cable(s) por fase\n"
+        f"  Acometida: calibre {_v(c.get('calibre_acometida'))}, {_v(c.get('cables_por_fase_acometida'))} cable(s) por fase\n"
+    )
+
+def _seccion_aplica_simple(label, d, key_estado="tiene", txt_no="No"):
+    if not d or not d.get("aplica"):
+        return ""
+    if not d.get(key_estado):
+        return f"*{label}:* {txt_no}\n"
+    return f"*{label}:* {_v(d.get('detalles'))}\n"
+
+def _seccion_bloque_pruebas(b, instalado=False):
+    if not b or not b.get("aplica"):
+        return ""
+    label = "Bloque de pruebas instalado" if instalado else "Bloque de pruebas encontrado"
+    estado_key = "se_instalo" if instalado else "tiene"
+    if not b.get(estado_key):
+        return f"*{label}:* {'No se instalo' if instalado else 'No'}\n"
+    return f"*{label}*\n  Marca: {_v(b.get('marca'))}  |  Tipo: {_v(b.get('tipo'))}\n"
+
+def _seccion_cable_control(c, instalado=False):
+    if not c or not c.get("aplica"):
+        return ""
+    label = "Cable de control instalado" if instalado else "Cable de control encontrado"
+    estado_key = "se_instalo" if instalado else "tiene"
+    if not c.get(estado_key):
+        return f"*{label}:* {'No se instalo' if instalado else 'No'}\n"
+    return (
+        f"*{label}*\n"
+        f"  Marca: {_v(c.get('marca'))}\n"
+        f"  Calibre corriente: {_v(c.get('calibre_corriente'))}  |  Tension: {_v(c.get('calibre_tension'))}  |  Metros: {_v(c.get('metros'))}\n"
+    )
+
+def _seccion_pruebas(p):
+    if not p:
+        return ""
+    if not p.get("se_realizaron"):
+        return "*Pruebas de funcionamiento:* No\n"
+    return f"*Pruebas de funcionamiento*\n  {_v(p.get('resumen'))}\n"
+
+def _seccion_equipo_patron(e):
+    if not e:
+        return ""
+    if not e.get("se_uso"):
+        return "*Equipo patron:* No\n"
+    return f"*Equipo patron*\n  {_v(e.get('resumen'))}\n"
+
+def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
+    coincide_wms = qa.get("medidor_coincide_wms")
+    secciones = [
+        encabezado,
+        f"*Codigo interno Bia:* {_v(qa.get('internal_bia_code', acta.get('internal_bia_code')))}\n",
+        f"*Tipo de servicio:* {_v(acta.get('Tipo de servicio'))}\n",
+        f"*Tipo de medida:* {_v(qa.get('tipo_medida'))}  |  *Factor:* {_v(qa.get('factor_medida'))}\n\n",
+        _seccion_transformador(qa.get("transformador")),
+        _seccion_medidor_encontrado(qa.get("medidor_encontrado")),
+        _seccion_medidor_instalado(qa.get("medidor_instalado"), coincide_wms, serial_wms_asignado),
+        _seccion_sellos(qa.get("sellos_instalados")),
+        _seccion_medidor_respaldo(qa.get("medidor_respaldo_instalado")),
+        _seccion_telemedida_encontrada(qa.get("telemedida_encontrada")),
+        _seccion_telemedida_instalada(qa.get("telemedida_instalada")),
+        _seccion_totalizador_encontrado(qa.get("totalizador_encontrado")),
+        _seccion_totalizador_instalado(qa.get("totalizador_instalado")),
+        _seccion_cables_enc(qa.get("cables_potencia_encontrados")),
+        _seccion_cables_inst(qa.get("cables_potencia_instalados")),
+        _seccion_aplica_simple("TCs encontrados", qa.get("tcs_encontrados")),
+        _seccion_aplica_simple("TCs instalados", qa.get("tcs_instalados"), key_estado="se_instalo", txt_no="No se instalo"),
+        _seccion_aplica_simple("TPs encontrados", qa.get("tps_encontrados")),
+        _seccion_aplica_simple("TPs instalados", qa.get("tps_instalados"), key_estado="se_instalo", txt_no="No se instalo"),
+        _seccion_bloque_pruebas(qa.get("bloque_pruebas_encontrado")),
+        _seccion_bloque_pruebas(qa.get("bloque_pruebas_instalado"), instalado=True),
+        _seccion_cable_control(qa.get("cable_control_encontrado")),
+        _seccion_cable_control(qa.get("cable_control_instalado"), instalado=True),
+        _seccion_pruebas(qa.get("pruebas_funcionamiento")),
+        _seccion_equipo_patron(qa.get("equipo_patron")),
+        f"*Diagrama unifilar:* {'Foto presente' if (qa.get('diagrama_unifilar') or {}).get('tiene_foto') else 'Sin foto'}\n",
+        f"*Con OR:* {_v(qa.get('or_firma'))}\n\n",
+        f"*Observaciones tecnicas:*\n{_v(qa.get('observaciones_tecnicas'))}\n",
+    ]
+    alertas = qa.get("alertas_qa") or []
+    if alertas:
+        secciones.append("\n*Alertas QA:*\n" + "\n".join(f"- {a}" for a in alertas) + "\n")
+    return "".join(s for s in secciones if s)
+
+def _construir_cuerpo_fallida(acta, qa, encabezado):
+    falla = qa.get("tipificacion_falla") or {}
+    return (
+        encabezado
+        + f"*Codigo interno Bia:* {_v(qa.get('internal_bia_code', acta.get('internal_bia_code')))}\n"
+        f"*Tipo de servicio:* {_v(acta.get('Tipo de servicio'))}\n"
+        f"*Tipo de medida:* {_v(qa.get('tipo_medida'))}  |  *Factor:* {_v(qa.get('factor_medida'))}\n\n"
+        f"*Tipificacion de la OT fallida*\n"
+        f"*Causa raiz:* {_v(falla.get('causa_raiz'))}\n"
+        f"*Responsable:* {_v(falla.get('responsable'))}\n"
+        f"*Detalle:* {_v(falla.get('detalle'))}\n"
+        f"*Mejora:* {_v(falla.get('mejora'))}\n\n"
+        f"*Observaciones tecnicas:*\n{_v(qa.get('observaciones_tecnicas'))}\n"
+    )
+
+# =============================================================
 #  ALERTAS
 # =============================================================
 
-def enviar_slack(acta, resultado_qa):
-    if not config.SLACK_WEBHOOK_URL or "REEMPLAZA" in config.SLACK_WEBHOOK_URL:
+def enviar_slack(acta, resultado_qa, serial_wms_asignado=""):
+    url = (config.SLACK_WEBHOOK_URL or "").strip().strip('"').strip("'")
+    if not url or "REEMPLAZA" in url:
+        print("  Slack: SLACK_WEBHOOK_URL vacio. Se omite envio.")
+        return
+    if not url.startswith("https://"):
+        print(f"  Slack: URL invalida (debe empezar con https://). Se omite envio.")
         return
 
-    es_exitosa  = resultado_qa.get("estado_ot") == "EXITOSA"
-    color       = "#2eb886" if es_exitosa else "#e01e5a"
-    estado_txt  = "EXITOSA" if es_exitosa else "FALLIDA"
-    planner     = resultado_qa.get("planner", "N/A")
-    or_norm     = resultado_qa.get("or_norm", acta.get("OR_NORM", "N/A"))
-    med_acta    = resultado_qa.get("medidor_instalado_acta", "N/A")
-    med_wms     = resultado_qa.get("medidor_wms_asignado", "")
-    coincide    = resultado_qa.get("medidor_coincide_wms")
+    es_exitosa = resultado_qa.get("estado_ot") == "EXITOSA"
+    color      = "#2eb886" if es_exitosa else "#e01e5a"
+    estado_txt = "EXITOSA" if es_exitosa else "FALLIDA"
+    planner    = resultado_qa.get("planner", "N/A")
+    or_norm    = resultado_qa.get("or_norm", acta.get("OR_NORM", "N/A"))
 
-    if coincide is True:
-        bloque_medidor = f"*Medidor WMS asignado:* {med_wms}\n*Medidor instalado en acta:* {med_acta}\n*Coincidencia:* SI\n"
-    elif coincide is False:
-        bloque_medidor = f"*Medidor WMS asignado:* {med_wms}\n*Medidor instalado en acta:* {med_acta}\n*Coincidencia:* NO - ALERTA\n"
+    user_ids = getattr(config, "SLACK_USER_IDS", {}) or {}
+    slack_id = user_ids.get(planner)
+    if slack_id:
+        encabezado = f"<@{slack_id}>\n\n"
     else:
-        bloque_medidor = f"*Medidor instalado en acta:* {med_acta}\n*Medidor WMS asignado:* {med_wms if med_wms else 'No disponible'}\n"
+        encabezado = f"*{planner}*\n\n"
 
     if es_exitosa:
-        cuerpo = (
-            f"*Codigo interno Bia:* {resultado_qa.get('internal_bia_code', acta.get('internal_bia_code', 'N/A'))}\n"
-            f"*Tipo de servicio:* {acta.get('Tipo de servicio', 'N/A')}\n"
-            f"{bloque_medidor}"
-            f"*IP del medidor:* {resultado_qa.get('modem_ip', 'N/A')}\n"
-            f"*Modem Inst:* {resultado_qa.get('modem_serie', 'N/A')}\n"
-            f"*Marca modem:* {resultado_qa.get('modem_marca', 'N/A')}\n"
-            f"*Factor de medida:* {resultado_qa.get('factor_medida', 'N/A')}\n"
-            f"*Transformador:* {resultado_qa.get('transformador', 'N/A')}\n"
-            f"*Con OR:* {resultado_qa.get('or_firma', 'N/A')}\n"
-            f"*Observaciones:* {resultado_qa.get('resumen_observaciones', 'N/A')}"
-        )
+        cuerpo = _construir_cuerpo_exitosa(acta, resultado_qa, encabezado, serial_wms_asignado)
     else:
-        falla  = resultado_qa.get("tipificacion_falla", {})
-        cuerpo = (
-            f"*Tipificacion de la OT fallida*\n"
-            f"*Causa raiz:* {falla.get('causa_raiz', 'N/A')}\n"
-            f"*Responsable:* {falla.get('responsable', 'N/A')}\n"
-            f"*Detalle:* {falla.get('detalle', 'N/A')}\n"
-            f"*Mejora:* {falla.get('mejora', 'N/A')}\n\n"
-            f"{bloque_medidor}"
-        )
-        alertas = resultado_qa.get("alertas_qa", [])
-        if alertas:
-            cuerpo += "\n*Alertas QA:*\n" + "\n".join(f"- {a}" for a in alertas)
+        cuerpo = _construir_cuerpo_fallida(acta, resultado_qa, encabezado)
+
+    if len(cuerpo) > 7800:
+        cuerpo = cuerpo[:7800] + "\n... (truncado)"
 
     payload = {
         "attachments": [{
             "color": color,
             "title": f"[{estado_txt}] {acta.get('title', 'Sin titulo')}",
             "fields": [
-                {"title": "Tipo",    "value": acta.get("Tipo de servicio", ""), "short": True},
-                {"title": "Medida",  "value": resultado_qa.get("tipo_medida", ""), "short": True},
-                {"title": "OR",      "value": or_norm,  "short": True},
-                {"title": "Planner", "value": planner,  "short": True},
-                {"title": "Fecha",   "value": acta.get("start", ""), "short": True},
-                {"title": "Empresa", "value": acta.get("company_name", ""), "short": True},
+                {"title": "Tipo",    "value": _v(acta.get("Tipo de servicio")), "short": True},
+                {"title": "Medida",  "value": _v(resultado_qa.get("tipo_medida")), "short": True},
+                {"title": "OR",      "value": _v(or_norm),  "short": True},
+                {"title": "Planner", "value": _v(planner),  "short": True},
+                {"title": "Fecha",   "value": _v(acta.get("start")), "short": True},
+                {"title": "Empresa", "value": _v(acta.get("company_name")), "short": True},
             ],
             "text":   cuerpo,
-            "footer": acta.get("address", ""),
+            "footer": _v(acta.get("address"), ""),
+            "mrkdwn_in": ["text"],
         }]
     }
 
     try:
-        requests.post(config.SLACK_WEBHOOK_URL, json=payload, timeout=10)
-        print("  Slack enviado.")
+        r = requests.post(url, json=payload, timeout=10)
+        if 200 <= r.status_code < 300:
+            print("  Slack enviado.")
+        else:
+            print(f"  ERROR Slack: HTTP {r.status_code} -> {r.text[:200]}")
     except Exception as e:
         print(f"  ERROR Slack: {e}")
 
 def enviar_whatsapp(acta, resultado_qa):
     if not config.TWILIO_ACCOUNT_SID or "xxxxx" in config.TWILIO_ACCOUNT_SID:
         return
-
     es_exitosa = resultado_qa.get("estado_ot") == "EXITOSA"
     estado_txt = "EXITOSA" if es_exitosa else "FALLIDA"
     planner    = resultado_qa.get("planner", "N/A")
-    med_acta   = resultado_qa.get("medidor_instalado_acta", "N/A")
+    inst       = resultado_qa.get("medidor_instalado") or {}
+    med_acta   = inst.get("serie") or resultado_qa.get("medidor_instalado_acta", "N/A")
     coincide   = resultado_qa.get("medidor_coincide_wms")
     alerta_wms = " | MEDIDOR NO COINCIDE WMS" if coincide is False else ""
     errores    = resultado_qa.get("validaciones", {}).get("errores_encontrados", [])
     txt_err    = (" | " + " | ".join(errores[:2])) if errores else ""
-
     mensaje = (
         f"{estado_txt} - {acta.get('title', 'N/A')}\n"
         f"Planner: {planner}\n"
@@ -404,7 +789,6 @@ def enviar_whatsapp(acta, resultado_qa):
         f"{acta.get('address', 'N/A')}"
         f"{txt_err}{alerta_wms}"
     )
-
     try:
         cliente = TwilioClient(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN)
         cliente.messages.create(
@@ -433,11 +817,15 @@ def procesar_acta(acta, wms):
     serial_asignado = medidor_wms.get("medidor", "")
     marca_asignada  = medidor_wms.get("marca", "")
 
+    es_exitosa = estado in config.ESTADOS_EXITOSOS
+    es_visita  = "previa" in tipo.lower()
+    debe_comparar_wms = es_exitosa and not es_visita and bool(serial_asignado)
+
     print(f"\n  -> Procesando: {ot_nombre}")
     print(f"     Tipo: {tipo} | Estado: {estado}")
     print(f"     OR: {or_norm} | Planner: {planner}")
     if serial_asignado:
-        print(f"     Medidor WMS: {serial_asignado} ({marca_asignada})")
+        print(f"     Medidor WMS: {serial_asignado} ({marca_asignada}) | Comparar: {debe_comparar_wms}")
     else:
         print(f"     Medidor WMS: No encontrado para {internal_bia_code}")
 
@@ -447,24 +835,33 @@ def procesar_acta(acta, wms):
         return False
 
     print(f"     Analizando con Groq ({config.GROQ_MODEL})...")
-    resultado_qa = analizar_acta(texto_pdf, tipo, estado, internal_bia_code, serial_asignado)
+    resultado_qa = analizar_acta(
+        texto_pdf, tipo, estado, internal_bia_code,
+        serial_asignado if debe_comparar_wms else "",
+        marca_asignada if debe_comparar_wms else "",
+    )
     if not resultado_qa:
         return False
+
+    # Post-validaciones defensivas
+    _post_corregir_serie_foto(resultado_qa.get("medidor_encontrado"))
+    _post_corregir_serie_foto(resultado_qa.get("medidor_instalado"))
+    _validar_coincidencia_wms(resultado_qa, serial_asignado, debe_comparar_wms)
 
     resultado_qa["planner"]              = planner
     resultado_qa["or_norm"]              = or_norm
     resultado_qa["internal_bia_code"]    = internal_bia_code
-    resultado_qa["medidor_wms_asignado"] = serial_asignado if serial_asignado else "No disponible"
+    resultado_qa["medidor_wms_asignado"] = serial_asignado if debe_comparar_wms else "No aplica"
 
     print(f"     Resultado: {resultado_qa.get('estado_ot')} | Medida: {resultado_qa.get('tipo_medida')}")
-    if resultado_qa.get("medidor_coincide_wms") is False and serial_asignado:
-        print(f"     ALERTA: Medidor acta {resultado_qa.get('medidor_instalado_acta')} != WMS {serial_asignado}")
+    if resultado_qa.get("medidor_coincide_wms") is False:
+        print(f"     ALERTA: Medidor instalado != WMS asignado {serial_asignado}")
     errores = resultado_qa.get("validaciones", {}).get("errores_encontrados", [])
     if errores:
         print(f"     Errores QA: {', '.join(errores)}")
 
     guardar_reporte(acta, resultado_qa)
-    enviar_slack(acta, resultado_qa)
+    enviar_slack(acta, resultado_qa, serial_asignado if debe_comparar_wms else "")
     enviar_whatsapp(acta, resultado_qa)
     guardar_procesado(acta.get("id"))
     print(f"     OK: {ot_nombre} auditada.")
@@ -499,13 +896,11 @@ def main():
             if i < len(actas) - 1:
                 print("     Pausa " + str(config.PAUSA_GROQ_SEGUNDOS) + "s...")
                 time.sleep(config.PAUSA_GROQ_SEGUNDOS)
-
         print("")
         print("=" * 58)
         print("   PRUEBA TERMINADA - " + str(procesadas) + " acta(s) auditada(s)")
         print("   Reportes en: " + os.path.abspath(config.CARPETA_REPORTES))
         print("=" * 58)
-
     else:
         actas = obtener_actas_nuevas()
         if actas:
@@ -528,7 +923,6 @@ def main():
                             time.sleep(config.PAUSA_GROQ_SEGUNDOS)
                 else:
                     print("[" + ahora() + "] Sin actas nuevas. Revisando en " + str(config.INTERVALO_SEGUNDOS) + "s...")
-
 
 if __name__ == "__main__":
     main()
