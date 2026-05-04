@@ -106,11 +106,20 @@ def cargar_inventario_wms():
             estado   = fila.get("Estado", "").strip().upper()
             serial   = fila.get("Serial", "").strip()
             marca    = fila.get("Marca", "").strip()
-            if not bia_code or tipo != "medidor" or not serial:
+            if not bia_code or not serial or estado not in ("ASIGNADO", "INSTALADO"):
                 continue
-            if estado in ["ASIGNADO", "INSTALADO"]:
-                wms[bia_code] = {"medidor": serial, "marca": marca, "estado": estado}
-        print(f"  WMS cargado: {len(wms)} medidores.")
+            entry = wms.setdefault(bia_code, {"medidor": None, "tcs": [], "tps": []})
+            item = {"serial": serial, "marca": marca, "estado": estado}
+            if tipo == "medidor":
+                entry["medidor"] = item
+            elif "transformador de corriente" in tipo:
+                entry["tcs"].append(item)
+            elif "transformador de potencial" in tipo or "transformador de potencia" in tipo:
+                entry["tps"].append(item)
+        meds = sum(1 for v in wms.values() if v.get("medidor"))
+        tcs  = sum(len(v.get("tcs", []))  for v in wms.values())
+        tps  = sum(len(v.get("tps", []))  for v in wms.values())
+        print(f"  WMS cargado: {meds} medidores, {tcs} TCs, {tps} TPs.")
         return wms
     except Exception as e:
         print(f"  ERROR WMS: {e}")
@@ -200,13 +209,18 @@ def descargar_y_leer_pdf(url):
 # =============================================================
 
 def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
-                  internal_bia_code="", serial_asignado_wms="", marca_asignada_wms=""):
+                  internal_bia_code="", serial_asignado_wms="", marca_asignada_wms="",
+                  tcs_asignados_wms=None, tps_asignados_wms=None):
     tipo_label = "INSTALACION" if "nstala" in tipo_servicio else "VISITA PREVIA"
     es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
     es_visita  = "previa" in tipo_servicio.lower()
     debe_comparar_wms = es_exitosa and not es_visita and bool(serial_asignado_wms)
     wms_info = serial_asignado_wms if debe_comparar_wms else "No aplica"
     marca_wms = marca_asignada_wms if debe_comparar_wms else ""
+    tcs_asignados_wms = tcs_asignados_wms or []
+    tps_asignados_wms = tps_asignados_wms or []
+    tcs_wms_info = ", ".join(tcs_asignados_wms) if (debe_comparar_wms and tcs_asignados_wms) else "No aplica"
+    tps_wms_info = ", ".join(tps_asignados_wms) if (debe_comparar_wms and tps_asignados_wms) else "No aplica"
 
     prompt = f"""
 Eres un auditor QA SENIOR de ordenes de trabajo de medicion electrica en Colombia para BIA Energy.
@@ -216,6 +230,8 @@ TIPO DE SERVICIO: {tipo_label}
 RESULTADO EN APP: {"EXITOSA" if es_exitosa else "FALLIDA"}
 CODIGO INTERNO BIA: {internal_bia_code}
 MEDIDOR ASIGNADO EN SISTEMA WMS: {wms_info} {("(" + marca_wms + ")") if marca_wms else ""}
+TCs ASIGNADOS EN WMS (semidirecta/indirecta): {tcs_wms_info}
+TPs ASIGNADOS EN WMS (solo indirecta): {tps_wms_info}
 
 INSTRUCCIONES CRITICAS:
 - Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
@@ -226,7 +242,10 @@ INSTRUCCIONES CRITICAS:
     2. En el bloque "Registro fotografico medidor, sellos y celdas" siguiente busca esa misma cadena.
     3. Si aparece -> true. Si no aparece o aparece distinta -> false.
     4. Si true: "observacion_serie_foto" = null. Si false: explica brevemente con la serie real vista.
-- WMS: Si arriba dice "No aplica" -> "medidor_coincide_wms": null. Si no, comparar serie_instalada vs WMS, ignorando ceros a la izquierda y espacios.
+- WMS comparacion (ignorando ceros a la izquierda y espacios):
+  * "medidor_coincide_wms": Si MEDIDOR ASIGNADO arriba dice "No aplica" -> null. Si no, true/false comparando serie_instalada vs WMS.
+  * "tcs_coinciden_wms": null si DIRECTA o si TCs ASIGNADOS dice "No aplica". Si no, true solo si CADA serial asignado en WMS aparece tambien en tcs_instalados.seriales (orden libre, comparacion por conjunto).
+  * "tps_coinciden_wms": null si DIRECTA o SEMIDIRECTA o si TPs ASIGNADOS dice "No aplica". Si no, true solo si CADA serial asignado en WMS aparece tambien en tps_instalados.seriales.
 
 REGLAS POR TIPO DE MEDIDA:
 - DIRECTA: tcs_*, tps_*, bloque_pruebas_*, cable_control_* TODOS aplica=false.
@@ -317,10 +336,13 @@ JSON ESPERADO:
     "calibre_acometida": "<o null>", "cables_por_fase_acometida": "<o null>"
   }},
 
-  "tcs_encontrados":      {{ "aplica": <bool>, "tiene": <bool>, "detalles": "<o null>" }},
-  "tcs_instalados":       {{ "aplica": <bool>, "se_instalo": <bool>, "detalles": "<o null>" }},
-  "tps_encontrados":      {{ "aplica": <bool>, "tiene": <bool>, "detalles": "<o null>" }},
-  "tps_instalados":       {{ "aplica": <bool>, "se_instalo": <bool>, "detalles": "<o null>" }},
+  "tcs_encontrados":      {{ "aplica": <bool>, "tiene": <bool>, "seriales": ["<serial>"], "detalles": "<o null>" }},
+  "tcs_instalados":       {{ "aplica": <bool>, "se_instalo": <bool>, "seriales": ["<serial de cada TC instalado>"], "marca": "<o null>", "detalles": "<o null>" }},
+  "tps_encontrados":      {{ "aplica": <bool>, "tiene": <bool>, "seriales": ["<serial>"], "detalles": "<o null>" }},
+  "tps_instalados":       {{ "aplica": <bool>, "se_instalo": <bool>, "seriales": ["<serial de cada TP instalado>"], "marca": "<o null>", "detalles": "<o null>" }},
+
+  "tcs_coinciden_wms": <true | false | null>,
+  "tps_coinciden_wms": <true | false | null>,
 
   "bloque_pruebas_encontrado": {{ "aplica": <bool>, "tiene": <bool>, "marca": "<o null>", "tipo": "<o null>" }},
   "bloque_pruebas_instalado":  {{ "aplica": <bool>, "se_instalo": <bool>, "marca": "<o null>", "tipo": "<o null>" }},
@@ -426,16 +448,39 @@ def _post_corregir_serie_foto(item):
             item["serie_coincide_foto"] = True
             item["observacion_serie_foto"] = None
 
-def _validar_coincidencia_wms(qa, serial_wms, debe_comparar):
-    if not debe_comparar or not serial_wms:
+def _validar_coincidencia_wms(qa, serial_wms, tcs_wms, tps_wms, debe_comparar):
+    # Medidor
+    if debe_comparar and serial_wms:
+        inst = qa.get("medidor_instalado") or {}
+        serie_inst = (inst.get("serie") or "").strip() or (qa.get("medidor_instalado_acta") or "").strip()
+        if serie_inst:
+            qa["medidor_coincide_wms"] = _normalizar_serial(serie_inst) == _normalizar_serial(serial_wms)
+        else:
+            qa["medidor_coincide_wms"] = None
+    else:
         qa["medidor_coincide_wms"] = None
-        return
-    inst = qa.get("medidor_instalado") or {}
-    serie_inst = (inst.get("serie") or "").strip() or (qa.get("medidor_instalado_acta") or "").strip()
-    if not serie_inst:
-        qa["medidor_coincide_wms"] = None
-        return
-    qa["medidor_coincide_wms"] = _normalizar_serial(serie_inst) == _normalizar_serial(serial_wms)
+
+    tipo_medida = (qa.get("tipo_medida") or "").upper()
+
+    # TCs (aplica para SEMIDIRECTA e INDIRECTA)
+    if debe_comparar and tcs_wms and tipo_medida in ("SEMIDIRECTA", "INDIRECTA"):
+        tcs_inst = (qa.get("tcs_instalados") or {}).get("seriales") or []
+        wms_set  = {_normalizar_serial(s) for s in tcs_wms if s}
+        acta_set = {_normalizar_serial(s) for s in tcs_inst if s}
+        wms_set.discard(""); acta_set.discard("")
+        qa["tcs_coinciden_wms"] = bool(wms_set) and wms_set.issubset(acta_set)
+    else:
+        qa["tcs_coinciden_wms"] = None
+
+    # TPs (aplica solo para INDIRECTA)
+    if debe_comparar and tps_wms and tipo_medida == "INDIRECTA":
+        tps_inst = (qa.get("tps_instalados") or {}).get("seriales") or []
+        wms_set  = {_normalizar_serial(s) for s in tps_wms if s}
+        acta_set = {_normalizar_serial(s) for s in tps_inst if s}
+        wms_set.discard(""); acta_set.discard("")
+        qa["tps_coinciden_wms"] = bool(wms_set) and wms_set.issubset(acta_set)
+    else:
+        qa["tps_coinciden_wms"] = None
 
 # =============================================================
 #  GUARDAR REPORTE
@@ -620,6 +665,26 @@ def _seccion_aplica_simple(label, d, key_estado="tiene", txt_no="No"):
         return f"*{label}:* {txt_no}\n"
     return f"*{label}:* {_v(d.get('detalles'))}\n"
 
+def _seccion_tc_tp_instalados(label, d, wms_asignados, coincide):
+    if not d or not d.get("aplica"):
+        return ""
+    if not d.get("se_instalo"):
+        return f"*{label}:* No se instalo\n"
+    seriales = d.get("seriales") or []
+    base = f"*{label}*\n"
+    if seriales:
+        base += f"  Seriales acta: {', '.join(seriales)}\n"
+    elif d.get("detalles"):
+        base += f"  {_v(d.get('detalles'))}\n"
+    if d.get("marca"):
+        base += f"  Marca: {_v(d.get('marca'))}\n"
+    if wms_asignados:
+        base += f"  WMS asignado: {', '.join(wms_asignados)}\n"
+        chk = _check(coincide)
+        if chk:
+            base += f"  Coincidencia WMS: {chk}\n"
+    return base
+
 def _seccion_bloque_pruebas(b, instalado=False):
     if not b or not b.get("aplica"):
         return ""
@@ -658,6 +723,8 @@ def _seccion_equipo_patron(e):
 
 def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
     coincide_wms = qa.get("medidor_coincide_wms")
+    tcs_wms = qa.get("tcs_wms_asignados") or []
+    tps_wms = qa.get("tps_wms_asignados") or []
     secciones = [
         encabezado,
         f"*Codigo interno Bia:* {_v(qa.get('internal_bia_code', acta.get('internal_bia_code')))}\n",
@@ -675,9 +742,9 @@ def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
         _seccion_cables_enc(qa.get("cables_potencia_encontrados")),
         _seccion_cables_inst(qa.get("cables_potencia_instalados")),
         _seccion_aplica_simple("TCs encontrados", qa.get("tcs_encontrados")),
-        _seccion_aplica_simple("TCs instalados", qa.get("tcs_instalados"), key_estado="se_instalo", txt_no="No se instalo"),
+        _seccion_tc_tp_instalados("TCs instalados", qa.get("tcs_instalados"), tcs_wms, qa.get("tcs_coinciden_wms")),
         _seccion_aplica_simple("TPs encontrados", qa.get("tps_encontrados")),
-        _seccion_aplica_simple("TPs instalados", qa.get("tps_instalados"), key_estado="se_instalo", txt_no="No se instalo"),
+        _seccion_tc_tp_instalados("TPs instalados", qa.get("tps_instalados"), tps_wms, qa.get("tps_coinciden_wms")),
         _seccion_bloque_pruebas(qa.get("bloque_pruebas_encontrado")),
         _seccion_bloque_pruebas(qa.get("bloque_pruebas_instalado"), instalado=True),
         _seccion_cable_control(qa.get("cable_control_encontrado")),
@@ -813,9 +880,12 @@ def procesar_acta(acta, wms):
     internal_bia_code = acta.get("internal_bia_code", "")
     planner           = identificar_planner(or_norm)
 
-    medidor_wms     = wms.get(internal_bia_code, {})
-    serial_asignado = medidor_wms.get("medidor", "")
+    entry_wms       = wms.get(internal_bia_code, {})
+    medidor_wms     = entry_wms.get("medidor") or {}
+    serial_asignado = medidor_wms.get("serial", "")
     marca_asignada  = medidor_wms.get("marca", "")
+    tcs_asignados   = [t.get("serial", "") for t in entry_wms.get("tcs", []) if t.get("serial")]
+    tps_asignados   = [t.get("serial", "") for t in entry_wms.get("tps", []) if t.get("serial")]
 
     es_exitosa = estado in config.ESTADOS_EXITOSOS
     es_visita  = "previa" in tipo.lower()
@@ -825,9 +895,9 @@ def procesar_acta(acta, wms):
     print(f"     Tipo: {tipo} | Estado: {estado}")
     print(f"     OR: {or_norm} | Planner: {planner}")
     if serial_asignado:
-        print(f"     Medidor WMS: {serial_asignado} ({marca_asignada}) | Comparar: {debe_comparar_wms}")
+        print(f"     WMS: medidor={serial_asignado} | TCs={len(tcs_asignados)} | TPs={len(tps_asignados)} | Comparar={debe_comparar_wms}")
     else:
-        print(f"     Medidor WMS: No encontrado para {internal_bia_code}")
+        print(f"     WMS: No encontrado para {internal_bia_code}")
 
     texto_pdf = descargar_y_leer_pdf(pdf_url)
     if not texto_pdf:
@@ -839,6 +909,8 @@ def procesar_acta(acta, wms):
         texto_pdf, tipo, estado, internal_bia_code,
         serial_asignado if debe_comparar_wms else "",
         marca_asignada if debe_comparar_wms else "",
+        tcs_asignados if debe_comparar_wms else [],
+        tps_asignados if debe_comparar_wms else [],
     )
     if not resultado_qa:
         return False
@@ -846,16 +918,28 @@ def procesar_acta(acta, wms):
     # Post-validaciones defensivas
     _post_corregir_serie_foto(resultado_qa.get("medidor_encontrado"))
     _post_corregir_serie_foto(resultado_qa.get("medidor_instalado"))
-    _validar_coincidencia_wms(resultado_qa, serial_asignado, debe_comparar_wms)
+    _validar_coincidencia_wms(
+        resultado_qa,
+        serial_asignado if debe_comparar_wms else "",
+        tcs_asignados   if debe_comparar_wms else [],
+        tps_asignados   if debe_comparar_wms else [],
+        debe_comparar_wms,
+    )
 
     resultado_qa["planner"]              = planner
     resultado_qa["or_norm"]              = or_norm
     resultado_qa["internal_bia_code"]    = internal_bia_code
     resultado_qa["medidor_wms_asignado"] = serial_asignado if debe_comparar_wms else "No aplica"
+    resultado_qa["tcs_wms_asignados"]    = tcs_asignados if debe_comparar_wms else []
+    resultado_qa["tps_wms_asignados"]    = tps_asignados if debe_comparar_wms else []
 
     print(f"     Resultado: {resultado_qa.get('estado_ot')} | Medida: {resultado_qa.get('tipo_medida')}")
     if resultado_qa.get("medidor_coincide_wms") is False:
         print(f"     ALERTA: Medidor instalado != WMS asignado {serial_asignado}")
+    if resultado_qa.get("tcs_coinciden_wms") is False:
+        print(f"     ALERTA: TCs instalados != WMS asignados")
+    if resultado_qa.get("tps_coinciden_wms") is False:
+        print(f"     ALERTA: TPs instalados != WMS asignados")
     errores = resultado_qa.get("validaciones", {}).get("errores_encontrados", [])
     if errores:
         print(f"     Errores QA: {', '.join(errores)}")
