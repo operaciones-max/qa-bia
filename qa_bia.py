@@ -586,12 +586,17 @@ def _seccion_medidor_instalado(m, coincide_wms=None, serial_wms=""):
         return ""
     if not m.get("se_instalo"):
         return "*Medidor instalado:* No se instalo\n"
+    foto_ok = m.get("serie_coincide_foto")
+    overall = True
+    if foto_ok is False or coincide_wms is False:
+        overall = False
+    titulo_chk = _check(overall)
     base = (
-        "*Medidor instalado*\n"
+        f"*Medidor instalado* {titulo_chk}".rstrip() + "\n"
         f"  Serie: {_v(m.get('serie'))}  |  Marca: {_v(m.get('marca'))}  |  Ref: {_v(m.get('referencia'))}\n"
         f"  Lectura activa: {_v(m.get('lectura_activa_kwh'))} kWh\n"
     )
-    chk = _check(m.get("serie_coincide_foto"))
+    chk = _check(foto_ok)
     if chk:
         obs = _v(m.get("observacion_serie_foto"), "")
         base += f"  Verificacion serie vs foto: {chk} {obs}".rstrip() + "\n"
@@ -706,7 +711,8 @@ def _seccion_tc_tp_instalados(label, d, wms_asignados, coincide):
     if not d.get("se_instalo"):
         return f"*{label}:* No se instalo\n"
     seriales = d.get("seriales") or []
-    base = f"*{label}*\n"
+    titulo_chk = _check(coincide) if coincide is not None else _check(bool(seriales))
+    base = f"*{label}* {titulo_chk}".rstrip() + "\n"
     if seriales:
         base += f"  Seriales acta: {', '.join(seriales)}\n"
     elif d.get("detalles"):
