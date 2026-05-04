@@ -448,6 +448,34 @@ def _post_corregir_serie_foto(item):
             item["serie_coincide_foto"] = True
             item["observacion_serie_foto"] = None
 
+def _enforce_reglas_medida_servicio(qa, tipo_servicio):
+    """Fuerza aplica=false en secciones que no aplican segun tipo_medida y tipo_servicio.
+    Defensivo contra errores del modelo."""
+    tipo_medida = (qa.get("tipo_medida") or "").upper()
+    es_visita   = "previa" in (tipo_servicio or "").lower()
+
+    def _force_false(key):
+        if isinstance(qa.get(key), dict):
+            qa[key]["aplica"] = False
+
+    if tipo_medida == "DIRECTA":
+        for k in ("tcs_encontrados", "tcs_instalados",
+                  "tps_encontrados", "tps_instalados",
+                  "bloque_pruebas_encontrado", "bloque_pruebas_instalado",
+                  "cable_control_encontrado", "cable_control_instalado"):
+            _force_false(k)
+    elif tipo_medida == "SEMIDIRECTA":
+        for k in ("tps_encontrados", "tps_instalados"):
+            _force_false(k)
+
+    if es_visita:
+        for k in ("medidor_instalado", "tcs_instalados", "tps_instalados",
+                  "bloque_pruebas_instalado", "cable_control_instalado",
+                  "telemedida_instalada", "totalizador_instalado",
+                  "cables_potencia_instalados", "medidor_respaldo_instalado",
+                  "sellos_instalados"):
+            _force_false(k)
+
 def _validar_coincidencia_wms(qa, serial_wms, tcs_wms, tps_wms, debe_comparar):
     # Medidor
     if debe_comparar and serial_wms:
@@ -576,9 +604,16 @@ def _seccion_medidor_instalado(m, coincide_wms=None, serial_wms=""):
 def _seccion_sellos(s):
     if not s or not s.get("aplica"):
         return ""
-    chk = _check(s.get("todos_completos"))
-    falt = s.get("campos_faltantes") or []
-    base = f"*Sellos instalados:* {_v(s.get('total'))} sellos {chk}\n"
+    total = s.get("total")
+    chk   = _check(s.get("todos_completos"))
+    falt  = s.get("campos_faltantes") or []
+    if total is None or (isinstance(total, str) and not total.strip()):
+        if not falt and chk == "":
+            return ""
+        cant = "N/A"
+    else:
+        cant = str(total)
+    base = f"*Sellos instalados:* {cant} sello(s) {chk}".rstrip() + "\n"
     if falt:
         base += "  Campos incompletos:\n" + "\n".join(f"   - {f}" for f in falt) + "\n"
     return base
@@ -916,6 +951,7 @@ def procesar_acta(acta, wms):
         return False
 
     # Post-validaciones defensivas
+    _enforce_reglas_medida_servicio(resultado_qa, tipo)
     _post_corregir_serie_foto(resultado_qa.get("medidor_encontrado"))
     _post_corregir_serie_foto(resultado_qa.get("medidor_instalado"))
     _validar_coincidencia_wms(
