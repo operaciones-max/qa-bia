@@ -30,10 +30,10 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: python qa_bia.py
 
-      - name: Guardar actas procesadas
+      - name: Guardar estado procesados
         run: |
           git config user.email "qa-bot@bia.app"
           git config user.name "QA Bot"
-          git add -f actas_procesadas.json || true
-          git diff --staged --quiet || git commit -m "Actualizar actas procesadas [skip ci]"
+          git add -f actas_procesadas.json visitas_previas.json alcances_procesados.json || true
+          git diff --staged --quiet || git commit -m "Actualizar estado procesados [skip ci]"
           git push || true

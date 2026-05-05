@@ -1,7 +1,7 @@
 # =============================================================
 #  qa_bia.py  —  SISTEMA QA AUTOMATIZADO DE ACTAS BIA ENERGY
 #  Motor de IA: Groq (Llama)
-#  Version: 3.0 — WMS coherente + tipificacion profesional + render por seccion
+#  Version: 4.0 — Alcances ingenieria + tecnico + comparacion VP
 # =============================================================
 
 import os
@@ -21,6 +21,7 @@ if os.environ.get('GROQ_API_KEY'):
     class config:
         METABASE_CSV_URL     = "https://bia.metabaseapp.com/public/question/5ec265f5-182d-409d-bfbd-45303880da2d.csv"
         WMS_CSV_URL          = "https://bia.metabaseapp.com/public/question/67f6d437-6326-415a-a799-1ee34b9648b0.csv"
+        ALCANCES_CSV_URL     = "https://bia.metabaseapp.com/public/question/52353a69-6510-405b-9bbd-754d762a2597.csv"
         GROQ_API_KEY         = os.environ['GROQ_API_KEY']
         GROQ_MODEL           = "llama-3.1-8b-instant"
         SLACK_WEBHOOK_URL    = os.environ.get('SLACK_WEBHOOK_URL', '')
@@ -31,11 +32,14 @@ if os.environ.get('GROQ_API_KEY'):
         MODO_PRUEBA          = False
         MODO_UNICO           = True
         ACTAS_PRUEBA         = 2
-        FECHA_INICIO         = "2026-05-04"
+        FECHA_INICIO          = "2026-05-04"
+        FECHA_INICIO_ALCANCES = "2026-05-02"
         PAUSA_GROQ_SEGUNDOS  = 5
         INTERVALO_SEGUNDOS   = 300
         MAX_ACTAS_POR_RUN    = 10
-        ARCHIVO_PROCESADOS   = "actas_procesadas.json"
+        ARCHIVO_PROCESADOS          = "actas_procesadas.json"
+        ARCHIVO_VISITAS_PREVIAS     = "visitas_previas.json"
+        ARCHIVO_ALCANCES_PROCESADOS = "alcances_procesados.json"
         CARPETA_REPORTES     = "reportes_qa"
         TIPOS_SERVICIO_VALIDOS = ["Instalación", "Visita previa"]
         ESTADOS_EXITOSOS       = ["CLOSURE_SUCCESSFUL", "COMPLETED"]
@@ -76,6 +80,35 @@ def guardar_procesado(acta_id):
     if acta_id not in procesados:
         procesados.append(acta_id)
     with open(config.ARCHIVO_PROCESADOS, "w", encoding="utf-8") as f:
+        json.dump(procesados, f, ensure_ascii=False, indent=2)
+
+def cargar_visitas_previas():
+    arch = getattr(config, "ARCHIVO_VISITAS_PREVIAS", "visitas_previas.json")
+    if os.path.exists(arch):
+        with open(arch, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+def guardar_visita_previa(co_code, data):
+    arch = getattr(config, "ARCHIVO_VISITAS_PREVIAS", "visitas_previas.json")
+    vp = cargar_visitas_previas()
+    vp[co_code] = data
+    with open(arch, "w", encoding="utf-8") as f:
+        json.dump(vp, f, ensure_ascii=False, indent=2)
+
+def cargar_alcances_procesados():
+    arch = getattr(config, "ARCHIVO_ALCANCES_PROCESADOS", "alcances_procesados.json")
+    if os.path.exists(arch):
+        with open(arch, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def guardar_alcance_procesado(alcance_id):
+    arch = getattr(config, "ARCHIVO_ALCANCES_PROCESADOS", "alcances_procesados.json")
+    procesados = cargar_alcances_procesados()
+    if alcance_id not in procesados:
+        procesados.append(alcance_id)
+    with open(arch, "w", encoding="utf-8") as f:
         json.dump(procesados, f, ensure_ascii=False, indent=2)
 
 def identificar_planner(or_norm):
@@ -124,6 +157,31 @@ def cargar_inventario_wms():
     except Exception as e:
         print(f"  ERROR WMS: {e}")
         print("  Continuando sin validacion de medidor.")
+        return {}
+
+# =============================================================
+#  ALCANCES INGENIERIA
+# =============================================================
+
+def cargar_alcances():
+    try:
+        url = getattr(config, "ALCANCES_CSV_URL", "https://bia.metabaseapp.com/public/question/52353a69-6510-405b-9bbd-754d762a2597.csv")
+        r = requests.get(url, timeout=30)
+        r.raise_for_status()
+        lector = csv.DictReader(io.StringIO(r.content.decode('utf-8', errors='replace')))
+        alcances = {}
+        for fila in lector:
+            co    = fila.get("Codigo Interno Bia", "").strip()
+            fecha = fila.get("Creado El", "").strip()
+            if not co:
+                continue
+            existing = alcances.get(co)
+            if not existing or fecha > existing.get("Creado El", ""):
+                alcances[co] = dict(fila)
+        print(f"  Alcances cargados: {len(alcances)} codigos.")
+        return alcances
+    except Exception as e:
+        print(f"  ERROR alcances: {e}")
         return {}
 
 # =============================================================
@@ -250,6 +308,15 @@ INSTRUCCIONES CRITICAS:
   * "medidor_coincide_wms": Si MEDIDOR ASIGNADO arriba dice "No aplica" -> null. Si no, true/false comparando serie_instalada vs WMS.
   * "tcs_coinciden_wms": null si DIRECTA o si TCs ASIGNADOS dice "No aplica". Si no, true solo si CADA serial asignado en WMS aparece tambien en tcs_instalados.seriales (orden libre, comparacion por conjunto).
   * "tps_coinciden_wms": null si DIRECTA o SEMIDIRECTA o si TPs ASIGNADOS dice "No aplica". Si no, true solo si CADA serial asignado en WMS aparece tambien en tps_instalados.seriales.
+- TECNICO EJECUTOR: Busca en el acta quien ejecuto la actividad (firma del tecnico, nombre del electricista, operario). Si el acta indica empresa contratista diferente a BIA Energy, marca tecnico_empresa="CONTRATISTA" y registra el nombre de la empresa en contratista_nombre. Si es empleado directo BIA Energy, marca tecnico_empresa="BIA" y contratista_nombre=null.
+- OBSERVACION VERBATIM: Copia LETRA POR LETRA el contenido del campo "Observaciones" del acta. NO resumas, NO parafrasees, NO corrijas ortografia, NO agregues nada. Si hay varias secciones de observaciones concatena con salto de linea. Si no existe el campo usa null.
+- SELLOS: Cuenta los sellos visibles/reportados en el acta para cada equipo:
+  * "sellos_medidor_encontrado": sellos presentes en el medidor encontrado (int, 0 si no tiene, null si no se reporta).
+  * "sellos_tcs_encontrados": sellos en TCs encontrados (null si DIRECTA).
+  * "sellos_tps_encontrados": sellos en TPs encontrados (null si DIRECTA o SEMIDIRECTA).
+  * "sellos_medidor_instalado": sellos colocados al medidor instalado (null si VISITA PREVIA o no se instalo).
+  * "sellos_tcs_instalados": sellos colocados a TCs instalados (null si no aplica).
+  * "sellos_tps_instalados": sellos colocados a TPs instalados (null si no aplica).
 
 REGLAS POR TIPO DE MEDIDA:
 - DIRECTA: tcs_*, tps_*, bloque_pruebas_*, cable_control_* TODOS aplica=false.
@@ -265,6 +332,11 @@ JSON ESPERADO:
   "tipo_medida": "DIRECTA | SEMIDIRECTA | INDIRECTA",
   "factor_medida": "<numero como string>",
   "estado_ot": "EXITOSA | FALLIDA",
+
+  "tecnico_nombre": "<nombre completo del tecnico que ejecuto la actividad, o null>",
+  "tecnico_empresa": "BIA | CONTRATISTA",
+  "contratista_nombre": "<nombre empresa contratista si aplica, null si es BIA>",
+  "observacion_tecnico_verbatim": "<texto EXACTO del campo observaciones del acta, null si no hay>",
 
   "transformador": {{
     "tiene": <bool>,
@@ -298,6 +370,13 @@ JSON ESPERADO:
   "medidor_coincide_wms": <true | false | null>,
   "medidor_instalado_acta": "<serie del medidor instalado, conveniencia>",
   "medidor_marca": "<marca del medidor instalado, conveniencia>",
+
+  "sellos_medidor_encontrado": <int o null>,
+  "sellos_tcs_encontrados": <int o null>,
+  "sellos_tps_encontrados": <int o null>,
+  "sellos_medidor_instalado": <int o null>,
+  "sellos_tcs_instalados": <int o null>,
+  "sellos_tps_instalados": <int o null>,
 
   "sellos_instalados": {{
     "aplica": <bool>,
@@ -375,7 +454,7 @@ JSON ESPERADO:
     "causa_raiz": "<TITULO ANALITICO de 3-7 palabras. NO descriptivo. Ejemplos validos: 'Condiciones tecnicas no viables', 'Falta de viabilidad operativa en visita previa', 'Inconsistencia con Operador de Red', 'Desconocimiento del alcance por el cliente'. EJEMPLOS MALOS (no usar): 'No se pudo instalar', 'Problema con cliente'>",
     "responsable": "<rol especifico del area que debe gestionar. Puede ser combinado con / si dos areas son responsables. Opciones recomendadas: Technical Expert | Coordinador Operativo | Planeacion | Comercial | Operador de Red | Cliente | Contratista | BIA Operaciones | Externo>",
     "detalle": "<2-4 lineas. INCLUYE: cifras concretas (medidas en cm, calibres, capacidades), referencia explicita al codigo BIA ({internal_bia_code}), si la condicion estaba detectada en visita previa menciona 'aunque esta condicion ya estaba identificada en la visita previa', cita literal del acta cuando ayude>",
-    "mejora": "<accion ESTRUCTURAL de proceso, no operativa. NO escribas 'reprogramar la visita'. SI escribe cambios sistemicos. Ejemplo gold: 'Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseño, materiales y permisos) antes de agendar la OT.'>",
+    "mejora": "<accion ESTRUCTURAL de proceso, no operativa. NO escribas 'reprogramar la visita'. SI escribe cambios sistemicos. Ejemplo gold: 'Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseno, materiales y permisos) antes de agendar la OT.'>",
     "cinco_por_que": [
       "1. Por que la OT fue fallida? Porque [razon concreta]",
       "2. Por que [problema]? Porque [causa tecnica]",
@@ -394,7 +473,7 @@ EJEMPLO GOLD DE TIPIFICACION (replica este nivel):
   "causa_raiz": "Condiciones tecnicas no viables",
   "responsable": "Technical Expert / Coordinador Operativo",
   "detalle": "En la OT CO0400006548, no fue posible realizar la instalacion del medidor debido a que el espacio disponible en el gabinete (25 cm x 20 cm) no permite la instalacion ni el radio de curvatura del cable 1/0. Aunque esta condicion ya estaba identificada en la visita previa, no se gestionaron soluciones tecnicas ni aprobaciones necesarias antes de la ejecucion.",
-  "mejora": "Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseño, materiales y permisos) antes de agendar la OT."
+  "mejora": "Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseno, materiales y permisos) antes de agendar la OT."
 }}
 
 REGLA OR_FIRMA:
@@ -444,7 +523,6 @@ REGLA OR_FIRMA:
 # =============================================================
 
 def _post_corregir_serie_foto(item):
-    """Si modelo dice false pero la observacion contiene la misma serie, corregir."""
     if not isinstance(item, dict):
         return
     serie = (item.get("serie") or "").strip()
@@ -457,8 +535,6 @@ def _post_corregir_serie_foto(item):
             item["observacion_serie_foto"] = None
 
 def _enforce_reglas_medida_servicio(qa, tipo_servicio):
-    """Fuerza aplica=false en secciones que no aplican segun tipo_medida y tipo_servicio.
-    Defensivo contra errores del modelo."""
     tipo_medida = (qa.get("tipo_medida") or "").upper()
     es_visita   = "previa" in (tipo_servicio or "").lower()
 
@@ -488,7 +564,6 @@ def _enforce_reglas_medida_servicio(qa, tipo_servicio):
             _force_false(k)
 
 def _validar_coincidencia_wms(qa, serial_wms, tcs_wms, tps_wms, debe_comparar):
-    # Medidor
     if debe_comparar and serial_wms:
         inst = qa.get("medidor_instalado") or {}
         serie_inst = (inst.get("serie") or "").strip() or (qa.get("medidor_instalado_acta") or "").strip()
@@ -501,7 +576,6 @@ def _validar_coincidencia_wms(qa, serial_wms, tcs_wms, tps_wms, debe_comparar):
 
     tipo_medida = (qa.get("tipo_medida") or "").upper()
 
-    # TCs (aplica para SEMIDIRECTA e INDIRECTA)
     if debe_comparar and tcs_wms and tipo_medida in ("SEMIDIRECTA", "INDIRECTA"):
         tcs_inst = (qa.get("tcs_instalados") or {}).get("seriales") or []
         wms_set  = {_normalizar_serial(s) for s in tcs_wms if s}
@@ -511,7 +585,6 @@ def _validar_coincidencia_wms(qa, serial_wms, tcs_wms, tps_wms, debe_comparar):
     else:
         qa["tcs_coinciden_wms"] = None
 
-    # TPs (aplica solo para INDIRECTA)
     if debe_comparar and tps_wms and tipo_medida == "INDIRECTA":
         tps_inst = (qa.get("tps_instalados") or {}).get("seriales") or []
         wms_set  = {_normalizar_serial(s) for s in tps_wms if s}
@@ -560,12 +633,26 @@ def _v(x, na="N/A"):
     s = str(x).strip()
     return s if s and s not in ("-", "null", "None") else na
 
+def _av(fila, *cols):
+    """Get first non-empty value from alcance CSV row."""
+    for col in cols:
+        v = (fila.get(col) or "").strip()
+        if v and v not in ("-", "N/A", "n/a", "nan"):
+            return v
+    return "N/A"
+
 def _check(ok):
     if ok is True:
         return "✅"
     if ok is False:
         return "❌"
     return ""
+
+def _viable_ok(s):
+    """Normalize 'Sí'/'Si'/'S?' variations from CSV encoding."""
+    return s.lower().strip() in ("si", "sí", "s?", "yes", "true", "1")
+
+# --- Secciones hallazgos tecnicos ---
 
 def _seccion_transformador(t):
     if not t:
@@ -578,7 +665,7 @@ def _seccion_transformador(t):
         f"  Ubicacion: {_v(t.get('ubicacion'))}  |  Uso: {_v(t.get('tipo_uso'))}\n"
     )
 
-def _seccion_medidor_encontrado(m):
+def _seccion_medidor_encontrado(m, sellos=None):
     if not m:
         return ""
     base = (
@@ -590,9 +677,11 @@ def _seccion_medidor_encontrado(m):
     if chk:
         obs = _v(m.get("observacion_serie_foto"), "")
         base += f"  Verificacion serie vs foto: {chk} {obs}".rstrip() + "\n"
+    if sellos is not None:
+        base += f"  Sellos encontrados: {sellos}\n"
     return base
 
-def _seccion_medidor_instalado(m, coincide_wms=None, serial_wms="", fotos=None):
+def _seccion_medidor_instalado(m, coincide_wms=None, serial_wms="", fotos=None, sellos=None):
     if not m or not m.get("aplica"):
         return ""
     if not m.get("se_instalo"):
@@ -617,6 +706,8 @@ def _seccion_medidor_instalado(m, coincide_wms=None, serial_wms="", fotos=None):
         base += f"  WMS asignado: {serial_wms} ❌ NO coincide\n"
     if fotos is not None:
         base += f"  Fotos cargadas: {fotos}\n"
+    if sellos is not None:
+        base += f"  Sellos instalados: {sellos}\n"
     return base
 
 def _seccion_sellos(s):
@@ -718,7 +809,37 @@ def _seccion_aplica_simple(label, d, key_estado="tiene", txt_no="No"):
         return f"*{label}:* {txt_no}\n"
     return f"*{label}:* {_v(d.get('detalles'))}\n"
 
-def _seccion_tc_tp_instalados(label, d, wms_asignados, coincide, fotos=None):
+def _seccion_tcs_encontrados(d, sellos=None):
+    if not d or not d.get("aplica"):
+        return ""
+    if not d.get("tiene"):
+        return "*TCs encontrados:* No\n"
+    seriales = d.get("seriales") or []
+    base = "*TCs encontrados*\n"
+    if seriales:
+        base += f"  Seriales: {', '.join(seriales)}\n"
+    elif d.get("detalles"):
+        base += f"  {_v(d.get('detalles'))}\n"
+    if sellos is not None:
+        base += f"  Sellos encontrados: {sellos}\n"
+    return base
+
+def _seccion_tps_encontrados(d, sellos=None):
+    if not d or not d.get("aplica"):
+        return ""
+    if not d.get("tiene"):
+        return "*TPs encontrados:* No\n"
+    seriales = d.get("seriales") or []
+    base = "*TPs encontrados*\n"
+    if seriales:
+        base += f"  Seriales: {', '.join(seriales)}\n"
+    elif d.get("detalles"):
+        base += f"  {_v(d.get('detalles'))}\n"
+    if sellos is not None:
+        base += f"  Sellos encontrados: {sellos}\n"
+    return base
+
+def _seccion_tc_tp_instalados(label, d, wms_asignados, coincide, fotos=None, sellos=None):
     if not d or not d.get("aplica"):
         return ""
     if not d.get("se_instalo"):
@@ -739,6 +860,8 @@ def _seccion_tc_tp_instalados(label, d, wms_asignados, coincide, fotos=None):
             base += f"  Coincidencia WMS: {chk}\n"
     if fotos is not None:
         base += f"  Fotos cargadas: {fotos}\n"
+    if sellos is not None:
+        base += f"  Sellos instalados: {sellos}\n"
     return base
 
 def _seccion_bloque_pruebas(b, instalado=False):
@@ -777,22 +900,284 @@ def _seccion_equipo_patron(e):
         return "*Equipo patron:* No\n"
     return f"*Equipo patron*\n  {_v(e.get('resumen'))}\n"
 
+# --- Secciones VISITA PREVIA ---
+
+def _seccion_tecnico(qa):
+    nombre = _v(qa.get("tecnico_nombre"), "")
+    if not nombre:
+        return ""
+    empresa = (qa.get("tecnico_empresa") or "").strip()
+    contratista = _v(qa.get("contratista_nombre"), "")
+    if empresa == "CONTRATISTA" and contratista:
+        empresa_txt = f"Contratista - {contratista}"
+    elif empresa == "BIA":
+        empresa_txt = "BIA Energy"
+    else:
+        empresa_txt = empresa or "N/A"
+    return (
+        "*Tecnico ejecutor*\n"
+        f"  Nombre: {nombre}\n"
+        f"  Empresa: {empresa_txt}\n"
+    )
+
+def _seccion_observacion_tecnico(qa):
+    obs = (qa.get("observacion_tecnico_verbatim") or "").strip()
+    if not obs or obs in ("null", "N/A", "-"):
+        return ""
+    return f"*Observacion del tecnico:*\n_{obs}_\n"
+
+def _seccion_alcance_ingenieria(a):
+    """Render full engineering alcance from CSV row."""
+    if not a:
+        return "*Alcance de ingenieria:* Sin alcance registrado\n"
+
+    viable = _av(a, "Viable Para Instalar")
+    viable_chk = "✅" if _viable_ok(viable) else ("❌" if viable.lower() == "no" else "")
+
+    lines = [f"*Alcance de ingenieria* {viable_chk}\n".rstrip() + "\n"]
+    lines.append(f"  Viable para instalar: {viable}\n")
+
+    medida_inst  = _av(a, "Tipo De Medida A Instalar")
+    factor_inst  = _av(a, "Factor De Medida A Instalar")
+    nivel_inst   = _av(a, "Nivel De Tension A Instalar")
+    cambio_eq    = _av(a, "Se Require Cambio De Equipos")
+
+    if medida_inst != "N/A":  lines.append(f"  Medida a instalar: {medida_inst}\n")
+    if factor_inst != "N/A":  lines.append(f"  Factor a instalar: {factor_inst}\n")
+    if nivel_inst  != "N/A":  lines.append(f"  Nivel de tension: {nivel_inst}\n")
+    if cambio_eq   != "N/A":  lines.append(f"  Cambio de equipos: {cambio_eq}\n")
+
+    # TCs a instalar
+    tipo_tc   = _av(a, "Tipo De Tc A Instalar")
+    rel_tc    = _av(a, "Relacion De Transformacion Del Tc A Instalar")
+    burden_tc = _av(a, "Burden Del Tc A Instalar")
+    clase_tc  = _av(a, "Clase Del Tc A Instalar")
+    if any(x != "N/A" for x in [tipo_tc, rel_tc, burden_tc, clase_tc]):
+        parts = []
+        if tipo_tc   != "N/A": parts.append(f"Tipo={tipo_tc}")
+        if rel_tc    != "N/A": parts.append(f"Relacion={rel_tc}")
+        if burden_tc != "N/A": parts.append(f"Burden={burden_tc} VA")
+        if clase_tc  != "N/A": parts.append(f"Clase={clase_tc}")
+        lines.append(f"  TCs a instalar: {' | '.join(parts)}\n")
+
+    # TPs a instalar
+    tipo_tp   = _av(a, "Tipo De Tp A Instalar")
+    rel_tp    = _av(a, "Relacion De Transformacion Del Tp A Instalar")
+    burden_tp = _av(a, "Burden Del Tp A Instalar")
+    clase_tp  = _av(a, "Clase Del Tp A Instalar")
+    if any(x != "N/A" for x in [tipo_tp, rel_tp, burden_tp, clase_tp]):
+        parts = []
+        if tipo_tp   != "N/A": parts.append(f"Tipo={tipo_tp}")
+        if rel_tp    != "N/A": parts.append(f"Relacion={rel_tp}")
+        if burden_tp != "N/A": parts.append(f"Burden={burden_tp} VA")
+        if clase_tp  != "N/A": parts.append(f"Clase={clase_tp}")
+        lines.append(f"  TPs a instalar: {' | '.join(parts)}\n")
+
+    # Telemedida
+    antena   = _av(a, "Requiere Antena De Alta Ganancia")
+    oper     = _av(a, "Operador De Red Celular")
+    ubi_ant  = _av(a, "Ubicacion De La Antena")
+    if any(x != "N/A" for x in [antena, oper, ubi_ant]):
+        parts = []
+        if antena  != "N/A": parts.append(f"Antena alta ganancia: {antena}")
+        if oper    != "N/A": parts.append(f"Operador: {oper}")
+        if ubi_ant != "N/A": parts.append(f"Ubicacion: {ubi_ant}")
+        lines.append(f"  {' | '.join(parts)}\n")
+
+    # Descargos
+    descargos = _av(a, "Requiere Descargos Del Or")
+    if descargos != "N/A":
+        afecta  = _av(a, "El Descargo Afecta A Otros Usuarios")
+        cuantos = _av(a, "A Cuantos Usuarios Afecta")
+        linea   = f"  Requiere descargos OR: {descargos}"
+        if afecta != "N/A": linea += f" | Afecta otros: {afecta}"
+        if cuantos not in ("N/A", "0", "0.0"): linea += f" ({cuantos} usuarios)"
+        lines.append(linea + "\n")
+
+    maniobra = _av(a, "Maniobra")
+    tiempo   = _av(a, "Tiempo De Corte H")
+    if maniobra != "N/A" or tiempo != "N/A":
+        m_short = maniobra[:80] + "..." if len(maniobra) > 80 else maniobra
+        lines.append(f"  Maniobra: {m_short} | Tiempo corte: {tiempo} h\n")
+
+    # Bloque, reubicacion, frontera
+    cambio_bloque = _av(a, "Requiere Cambio Bloque")
+    tipo_bloque   = _av(a, "Tipo De Bloque De Pruebas A Instalar")
+    if cambio_bloque != "N/A":
+        lines.append(f"  Cambio bloque pruebas: {cambio_bloque}" +
+                     (f" | Tipo: {tipo_bloque}" if tipo_bloque != "N/A" else "") + "\n")
+
+    reubicacion = _av(a, "Reubicacion Equipos De Medida")
+    if reubicacion != "N/A": lines.append(f"  Reubicacion equipos: {reubicacion}\n")
+
+    frontera = _av(a, "Es Frontera Comercial")
+    if frontera != "N/A": lines.append(f"  Frontera comercial: {frontera}\n")
+
+    seccionamientos = _av(a, "Existen Seccionamientos Externos")
+    if seccionamientos != "N/A": lines.append(f"  Seccionamientos externos: {seccionamientos}\n")
+
+    # Trafo
+    info_trafo = _av(a, "Info Trafo")
+    if info_trafo != "N/A" and info_trafo.startswith("["):
+        info_trafo = "Ver datos trafo en sistema"
+    if info_trafo != "N/A": lines.append(f"  Info trafo: {info_trafo}\n")
+
+    cap_inst = _av(a, "Capacidad Instalada")
+    if cap_inst != "N/A": lines.append(f"  Capacidad instalada: {cap_inst}\n")
+
+    equipos = _av(a, "Equipos Necesarios")
+    if equipos != "N/A": lines.append(f"  Equipos necesarios: {equipos}\n")
+
+    pb     = _av(a, "Calculo De Pb")
+    pb_val = _av(a, "Valor De Pb Calculado")
+    if pb != "N/A" or pb_val != "N/A":
+        lines.append(f"  Calculo PB: {pb}" + (f" | Valor: {pb_val}" if pb_val != "N/A" else "") + "\n")
+
+    enlace = _av(a, "Enlace Memoria De Calculo")
+    if enlace != "N/A" and enlace.startswith("http"):
+        lines.append(f"  Enlace calculo: {enlace}\n")
+
+    obs = _av(a, "Observaciones")
+    if obs != "N/A":
+        obs_short = obs[:200] + "..." if len(obs) > 200 else obs
+        lines.append(f"  *Observaciones ing.:* {obs_short}\n")
+
+    reqs = _av(a, "Requerimientos")
+    if reqs != "N/A":
+        reqs_short = reqs[:200] + "..." if len(reqs) > 200 else reqs
+        lines.append(f"  *Requerimientos:* {reqs_short}\n")
+
+    reqs_add = _av(a, "Requerimientos Adicionales Viabilidad")
+    if reqs_add != "N/A":
+        lines.append(f"  *Reqs adicionales:* {reqs_add}\n")
+
+    return "".join(lines)
+
+def _comparar_visita_vs_alcance(qa_o_vp, alcance_row):
+    """Compare visita previa PDF findings vs engineering alcance."""
+    if not alcance_row:
+        return ""
+
+    lines = ["\n*Comparacion Visita Previa vs Alcance ingenieria*\n"]
+    tuvo_comparacion = False
+
+    # Tipo de medida encontrado
+    tipo_vp  = (qa_o_vp.get("tipo_medida") or "").strip().upper()
+    tipo_alc = (_av(alcance_row, "Tipo De Medida Encontrado") or "").strip().upper()
+    if tipo_vp and tipo_alc and tipo_alc != "N/A":
+        ok = tipo_vp == tipo_alc
+        lines.append(f"  Tipo medida encontrada: PDF={tipo_vp} | Alcance={tipo_alc} {_check(ok)}\n")
+        tuvo_comparacion = True
+
+    # Factor de medida
+    factor_vp  = _v(qa_o_vp.get("factor_medida"), "")
+    factor_alc = _av(alcance_row, "Factor De Medida Encontrado")
+    if factor_vp and factor_vp != "N/A" and factor_alc != "N/A":
+        try:
+            ok = abs(float(str(factor_vp).replace(",", ".")) - float(str(factor_alc).replace(",", "."))) < 1
+        except Exception:
+            ok = _normalizar_serial(factor_vp) == _normalizar_serial(factor_alc)
+        lines.append(f"  Factor de medida: PDF={factor_vp} | Alcance={factor_alc} {_check(ok)}\n")
+        tuvo_comparacion = True
+
+    # Serie medidor encontrado
+    med_enc    = qa_o_vp.get("medidor_encontrado")
+    serie_vp   = ""
+    if isinstance(med_enc, dict):
+        serie_vp = (med_enc.get("serie") or "").strip()
+    elif isinstance(qa_o_vp.get("medidor_enc_serie"), str):
+        serie_vp = qa_o_vp.get("medidor_enc_serie", "")
+    serie_alc = _av(alcance_row, "Serie Del Medidor")
+    if serie_vp and serie_alc != "N/A":
+        ok = _normalizar_serial(serie_vp) == _normalizar_serial(serie_alc)
+        lines.append(f"  Serie medidor encontrado: PDF={serie_vp} | Alcance={serie_alc} {_check(ok)}\n")
+        tuvo_comparacion = True
+
+    # Alertas de alcance
+    viable = _av(alcance_row, "Viable Para Instalar")
+    if not _viable_ok(viable):
+        lines.append(f"  ❌ Ingenieria determino: NO viable para instalar\n")
+        tuvo_comparacion = True
+
+    descargos = _av(alcance_row, "Requiere Descargos Del Or")
+    if _viable_ok(descargos):
+        lines.append(f"  ⚠️ Requiere descargos del OR — coordinar con operador de red\n")
+        tuvo_comparacion = True
+
+    antena = _av(alcance_row, "Requiere Antena De Alta Ganancia")
+    if _viable_ok(antena):
+        oper = _av(alcance_row, "Operador De Red Celular")
+        lines.append(f"  ⚠️ Requiere antena de alta ganancia" +
+                     (f" | Operador: {oper}" if oper != "N/A" else "") + "\n")
+        tuvo_comparacion = True
+
+    return "".join(lines) if tuvo_comparacion else ""
+
+# --- Constructores de cuerpo Slack ---
+
+def _construir_cuerpo_visita_previa(acta, qa, encabezado):
+    es_exitosa = qa.get("estado_ot") == "EXITOSA"
+    falla = qa.get("tipificacion_falla") or {}
+
+    secciones = [
+        encabezado,
+        f"*Codigo interno Bia:* {_v(qa.get('internal_bia_code', acta.get('internal_bia_code')))}\n",
+        f"*Tipo de servicio:* {_v(acta.get('Tipo de servicio'))}\n",
+        f"*Tipo de medida encontrada:* {_v(qa.get('tipo_medida'))}  |  *Factor:* {_v(qa.get('factor_medida'))}\n\n",
+        _seccion_tecnico(qa),
+        _seccion_observacion_tecnico(qa),
+        "\n",
+        _seccion_transformador(qa.get("transformador")),
+        _seccion_medidor_encontrado(qa.get("medidor_encontrado"), qa.get("sellos_medidor_encontrado")),
+        _seccion_telemedida_encontrada(qa.get("telemedida_encontrada")),
+        _seccion_totalizador_encontrado(qa.get("totalizador_encontrado")),
+        _seccion_cables_enc(qa.get("cables_potencia_encontrados")),
+        _seccion_tcs_encontrados(qa.get("tcs_encontrados"), qa.get("sellos_tcs_encontrados")),
+        _seccion_tps_encontrados(qa.get("tps_encontrados"), qa.get("sellos_tps_encontrados")),
+        _seccion_bloque_pruebas(qa.get("bloque_pruebas_encontrado")),
+        _seccion_cable_control(qa.get("cable_control_encontrado")),
+        _seccion_pruebas(qa.get("pruebas_funcionamiento")),
+        _seccion_equipo_patron(qa.get("equipo_patron")),
+        f"*Diagrama unifilar:* {'Foto presente' if (qa.get('diagrama_unifilar') or {}).get('tiene_foto') else 'Sin foto'}\n",
+        f"*Con OR:* {_v(qa.get('or_firma'))}\n",
+    ]
+
+    if not es_exitosa and falla.get("causa_raiz"):
+        secciones += [
+            f"\n*Tipificacion de la OT fallida*\n",
+            f"*Causa raiz:* {_v(falla.get('causa_raiz'))}\n",
+            f"*Responsable:* {_v(falla.get('responsable'))}\n",
+            f"*Detalle:* {_v(falla.get('detalle'))}\n",
+            f"*Mejora:* {_v(falla.get('mejora'))}\n",
+        ]
+
+    alertas = qa.get("alertas_qa") or []
+    if alertas:
+        secciones.append("\n*Alertas QA:*\n" + "\n".join(f"- {a}" for a in alertas) + "\n")
+
+    return "".join(s for s in secciones if s)
+
 def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
     coincide_wms = qa.get("medidor_coincide_wms")
-    tcs_wms = qa.get("tcs_wms_asignados") or []
-    tps_wms = qa.get("tps_wms_asignados") or []
+    tcs_wms  = qa.get("tcs_wms_asignados") or []
+    tps_wms  = qa.get("tps_wms_asignados") or []
     fotos_med = qa.get("fotos_medidor")
     fotos_tcs = qa.get("fotos_tcs")
     fotos_tps = qa.get("fotos_tps")
+    sellos_med_enc  = qa.get("sellos_medidor_encontrado")
+    sellos_med_inst = qa.get("sellos_medidor_instalado")
+    sellos_tcs_enc  = qa.get("sellos_tcs_encontrados")
+    sellos_tcs_inst = qa.get("sellos_tcs_instalados")
+    sellos_tps_enc  = qa.get("sellos_tps_encontrados")
+    sellos_tps_inst = qa.get("sellos_tps_instalados")
     secciones = [
         encabezado,
         f"*Codigo interno Bia:* {_v(qa.get('internal_bia_code', acta.get('internal_bia_code')))}\n",
         f"*Tipo de servicio:* {_v(acta.get('Tipo de servicio'))}\n",
         f"*Tipo de medida:* {_v(qa.get('tipo_medida'))}  |  *Factor:* {_v(qa.get('factor_medida'))}\n\n",
         _seccion_transformador(qa.get("transformador")),
-        _seccion_medidor_encontrado(qa.get("medidor_encontrado")),
-        _seccion_medidor_instalado(qa.get("medidor_instalado"), coincide_wms, serial_wms_asignado, fotos_med),
-        _seccion_sellos(qa.get("sellos_instalados")),
+        _seccion_medidor_encontrado(qa.get("medidor_encontrado"), sellos_med_enc),
+        _seccion_medidor_instalado(qa.get("medidor_instalado"), coincide_wms, serial_wms_asignado, fotos_med, sellos_med_inst),
         _seccion_medidor_respaldo(qa.get("medidor_respaldo_instalado")),
         _seccion_telemedida_encontrada(qa.get("telemedida_encontrada")),
         _seccion_telemedida_instalada(qa.get("telemedida_instalada")),
@@ -800,10 +1185,10 @@ def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
         _seccion_totalizador_instalado(qa.get("totalizador_instalado")),
         _seccion_cables_enc(qa.get("cables_potencia_encontrados")),
         _seccion_cables_inst(qa.get("cables_potencia_instalados")),
-        _seccion_aplica_simple("TCs encontrados", qa.get("tcs_encontrados")),
-        _seccion_tc_tp_instalados("TCs instalados", qa.get("tcs_instalados"), tcs_wms, qa.get("tcs_coinciden_wms"), fotos_tcs),
-        _seccion_aplica_simple("TPs encontrados", qa.get("tps_encontrados")),
-        _seccion_tc_tp_instalados("TPs instalados", qa.get("tps_instalados"), tps_wms, qa.get("tps_coinciden_wms"), fotos_tps),
+        _seccion_tcs_encontrados(qa.get("tcs_encontrados"), sellos_tcs_enc),
+        _seccion_tc_tp_instalados("TCs instalados", qa.get("tcs_instalados"), tcs_wms, qa.get("tcs_coinciden_wms"), fotos_tcs, sellos_tcs_inst),
+        _seccion_tps_encontrados(qa.get("tps_encontrados"), sellos_tps_enc),
+        _seccion_tc_tp_instalados("TPs instalados", qa.get("tps_instalados"), tps_wms, qa.get("tps_coinciden_wms"), fotos_tps, sellos_tps_inst),
         _seccion_bloque_pruebas(qa.get("bloque_pruebas_encontrado")),
         _seccion_bloque_pruebas(qa.get("bloque_pruebas_instalado"), instalado=True),
         _seccion_cable_control(qa.get("cable_control_encontrado")),
@@ -835,7 +1220,7 @@ def _construir_cuerpo_fallida(acta, qa, encabezado):
     )
 
 # =============================================================
-#  ALERTAS
+#  SLACK ENVIOS
 # =============================================================
 
 def enviar_slack(acta, resultado_qa, serial_wms_asignado=""):
@@ -848,7 +1233,10 @@ def enviar_slack(acta, resultado_qa, serial_wms_asignado=""):
         return
 
     es_exitosa = resultado_qa.get("estado_ot") == "EXITOSA"
+    es_visita  = "previa" in (acta.get("Tipo de servicio") or "").lower()
     color      = "#2eb886" if es_exitosa else "#e01e5a"
+    if es_visita:
+        color = "#0066cc"
     estado_txt = "EXITOSA" if es_exitosa else "FALLIDA"
     planner    = resultado_qa.get("planner", "N/A")
     or_norm    = resultado_qa.get("or_norm", acta.get("OR_NORM", "N/A"))
@@ -860,7 +1248,9 @@ def enviar_slack(acta, resultado_qa, serial_wms_asignado=""):
     else:
         encabezado = f"*{planner}*\n\n"
 
-    if es_exitosa:
+    if es_visita:
+        cuerpo = _construir_cuerpo_visita_previa(acta, resultado_qa, encabezado)
+    elif es_exitosa:
         cuerpo = _construir_cuerpo_exitosa(acta, resultado_qa, encabezado, serial_wms_asignado)
     else:
         cuerpo = _construir_cuerpo_fallida(acta, resultado_qa, encabezado)
@@ -868,10 +1258,11 @@ def enviar_slack(acta, resultado_qa, serial_wms_asignado=""):
     if len(cuerpo) > 7800:
         cuerpo = cuerpo[:7800] + "\n... (truncado)"
 
+    tipo_titulo = "VISITA PREVIA" if es_visita else estado_txt
     payload = {
         "attachments": [{
             "color": color,
-            "title": f"[{estado_txt}] {acta.get('title', 'Sin titulo')}",
+            "title": f"[{tipo_titulo}] {acta.get('title', 'Sin titulo')}",
             "fields": [
                 {"title": "Tipo",    "value": _v(acta.get("Tipo de servicio")), "short": True},
                 {"title": "Medida",  "value": _v(resultado_qa.get("tipo_medida")), "short": True},
@@ -894,6 +1285,90 @@ def enviar_slack(acta, resultado_qa, serial_wms_asignado=""):
             print(f"  ERROR Slack: HTTP {r.status_code} -> {r.text[:200]}")
     except Exception as e:
         print(f"  ERROR Slack: {e}")
+
+def enviar_slack_alcance(co_code, alcance_row, visita_data):
+    """Send Slack notification when a new engineering alcance is generated."""
+    url = (config.SLACK_WEBHOOK_URL or "").strip().strip('"').strip("'")
+    if not url or not url.startswith("https://"):
+        return
+
+    planner  = config.PLANNER_DEFAULT
+    user_ids = getattr(config, "SLACK_USER_IDS", {}) or {}
+    slack_id = user_ids.get(planner)
+    encabezado = f"<@{slack_id}>\n\n" if slack_id else f"*{planner}*\n\n"
+
+    ot_ref = (visita_data or {}).get("ot_nombre", "")
+
+    cuerpo = (
+        encabezado
+        + f"*Codigo interno Bia:* {co_code}\n"
+        + (f"*OT Visita Previa relacionada:* {ot_ref}\n" if ot_ref else "")
+        + "\n"
+        + _seccion_alcance_ingenieria(alcance_row)
+        + (_comparar_visita_vs_alcance(visita_data, alcance_row) if visita_data else "")
+    )
+
+    if len(cuerpo) > 7800:
+        cuerpo = cuerpo[:7800] + "\n... (truncado)"
+
+    viable = _av(alcance_row, "Viable Para Instalar")
+    medida_inst = _av(alcance_row, "Tipo De Medida A Instalar")
+    fecha_alc   = _av(alcance_row, "Creado El")
+
+    payload = {
+        "attachments": [{
+            "color": "#9b59b6",
+            "title": f"[ALCANCE INGENIERIA] {co_code}",
+            "fields": [
+                {"title": "Medida a instalar", "value": medida_inst, "short": True},
+                {"title": "Viable",            "value": viable,      "short": True},
+                {"title": "Fecha alcance",     "value": fecha_alc,   "short": True},
+                {"title": "VP registrada",     "value": "Si" if visita_data else "No", "short": True},
+            ],
+            "text":      cuerpo,
+            "mrkdwn_in": ["text"],
+        }]
+    }
+
+    try:
+        r = requests.post(url, json=payload, timeout=10)
+        if 200 <= r.status_code < 300:
+            print(f"  Slack alcance enviado: {co_code}")
+        else:
+            print(f"  ERROR Slack alcance: HTTP {r.status_code}")
+    except Exception as e:
+        print(f"  ERROR Slack alcance: {e}")
+
+def verificar_nuevos_alcances(alcances, visitas_previas_dict):
+    """Check alcances CSV for new entries and notify Slack."""
+    procesados   = cargar_alcances_procesados()
+    fecha_inicio = date.fromisoformat(getattr(config, "FECHA_INICIO_ALCANCES", "2026-05-02"))
+    nuevos       = 0
+
+    for co_code, alcance_row in alcances.items():
+        alcance_id = alcance_row.get("ID", "").strip()
+        if not alcance_id or alcance_id in procesados:
+            continue
+
+        fecha_str = alcance_row.get("Creado El", "").strip()
+        try:
+            if date.fromisoformat(fecha_str[:10]) < fecha_inicio:
+                continue
+        except Exception:
+            continue
+
+        visita_data = visitas_previas_dict.get(co_code)
+        print(f"\n  -> Nuevo alcance: {co_code} (VP almacenada: {'Si' if visita_data else 'No'})")
+        enviar_slack_alcance(co_code, alcance_row, visita_data)
+        guardar_alcance_procesado(alcance_id)
+        nuevos += 1
+        if nuevos < 10:
+            time.sleep(2)
+
+    if nuevos == 0:
+        print("  Sin nuevos alcances de ingenieria.")
+    else:
+        print(f"  {nuevos} alcance(s) nuevo(s) notificado(s).")
 
 def enviar_whatsapp(acta, resultado_qa):
     if not config.TWILIO_ACCOUNT_SID or "xxxxx" in config.TWILIO_ACCOUNT_SID:
@@ -930,7 +1405,7 @@ def enviar_whatsapp(acta, resultado_qa):
 #  PROCESAR UNA ACTA
 # =============================================================
 
-def procesar_acta(acta, wms):
+def procesar_acta(acta, wms, alcances=None):
     ot_nombre         = acta.get("title", acta.get("id"))
     pdf_url           = acta.get("act_pdf_url", "")
     tipo              = acta.get("Tipo de servicio", "")
@@ -993,6 +1468,7 @@ def procesar_acta(acta, wms):
     resultado_qa["tcs_wms_asignados"]    = tcs_asignados if debe_comparar_wms else []
     resultado_qa["tps_wms_asignados"]    = tps_asignados if debe_comparar_wms else []
 
+
     print(f"     Resultado: {resultado_qa.get('estado_ot')} | Medida: {resultado_qa.get('tipo_medida')}")
     if resultado_qa.get("medidor_coincide_wms") is False:
         print(f"     ALERTA: Medidor instalado != WMS asignado {serial_asignado}")
@@ -1003,6 +1479,24 @@ def procesar_acta(acta, wms):
     errores = resultado_qa.get("validaciones", {}).get("errores_encontrados", [])
     if errores:
         print(f"     Errores QA: {', '.join(errores)}")
+
+    # Guardar hallazgos de visita previa para comparacion futura con alcance
+    if es_visita and internal_bia_code:
+        vp_data = {
+            "ot_nombre":                   ot_nombre,
+            "fecha_procesada":             ahora(),
+            "tipo_medida":                 resultado_qa.get("tipo_medida"),
+            "factor_medida":               resultado_qa.get("factor_medida"),
+            "medidor_encontrado":          resultado_qa.get("medidor_encontrado"),
+            "medidor_enc_serie":           (resultado_qa.get("medidor_encontrado") or {}).get("serie"),
+            "tcs_encontrados":             resultado_qa.get("tcs_encontrados"),
+            "tps_encontrados":             resultado_qa.get("tps_encontrados"),
+            "tecnico_nombre":              resultado_qa.get("tecnico_nombre"),
+            "tecnico_empresa":             resultado_qa.get("tecnico_empresa"),
+            "contratista_nombre":          resultado_qa.get("contratista_nombre"),
+            "observacion_tecnico_verbatim": resultado_qa.get("observacion_tecnico_verbatim"),
+        }
+        guardar_visita_previa(internal_bia_code, vp_data)
 
     guardar_reporte(acta, resultado_qa)
     enviar_slack(acta, resultado_qa, serial_asignado if debe_comparar_wms else "")
@@ -1030,12 +1524,15 @@ def main():
     print("\n  Cargando inventario WMS...")
     wms = cargar_inventario_wms()
 
+    print("\n  Cargando alcances de ingenieria...")
+    alcances = cargar_alcances()
+
     if config.MODO_PRUEBA:
         print("")
         actas = obtener_actas_nuevas()
         procesadas = 0
         for i, acta in enumerate(actas):
-            if procesar_acta(acta, wms):
+            if procesar_acta(acta, wms, alcances):
                 procesadas += 1
             if i < len(actas) - 1:
                 print("     Pausa " + str(config.PAUSA_GROQ_SEGUNDOS) + "s...")
@@ -1049,24 +1546,31 @@ def main():
         actas = obtener_actas_nuevas()
         if actas:
             for i, acta in enumerate(actas):
-                procesar_acta(acta, wms)
+                procesar_acta(acta, wms, alcances)
                 if i < len(actas) - 1:
                     time.sleep(config.PAUSA_GROQ_SEGUNDOS)
         else:
             print("[" + ahora() + "] Sin actas nuevas.")
 
+        print(f"\n[{ahora()}] Verificando nuevos alcances de ingenieria...")
+        visitas_previas_dict = cargar_visitas_previas()
+        verificar_nuevos_alcances(alcances, visitas_previas_dict)
+
         if not getattr(config, 'MODO_UNICO', False):
             while True:
                 time.sleep(config.INTERVALO_SEGUNDOS)
-                wms   = cargar_inventario_wms()
-                actas = obtener_actas_nuevas()
+                wms      = cargar_inventario_wms()
+                alcances = cargar_alcances()
+                actas    = obtener_actas_nuevas()
                 if actas:
                     for i, acta in enumerate(actas):
-                        procesar_acta(acta, wms)
+                        procesar_acta(acta, wms, alcances)
                         if i < len(actas) - 1:
                             time.sleep(config.PAUSA_GROQ_SEGUNDOS)
                 else:
                     print("[" + ahora() + "] Sin actas nuevas. Revisando en " + str(config.INTERVALO_SEGUNDOS) + "s...")
+                visitas_previas_dict = cargar_visitas_previas()
+                verificar_nuevos_alcances(alcances, visitas_previas_dict)
 
 if __name__ == "__main__":
     main()
