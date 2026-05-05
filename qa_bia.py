@@ -33,7 +33,7 @@ if os.environ.get('GROQ_API_KEY'):
         MODO_UNICO           = True
         ACTAS_PRUEBA         = 2
         FECHA_INICIO          = "2026-05-04"
-        FECHA_INICIO_ALCANCES = "2026-05-02"
+        FECHA_INICIO_ALCANCES = "2026-04-30"
         PAUSA_GROQ_SEGUNDOS  = 5
         INTERVALO_SEGUNDOS   = 300
         MAX_ACTAS_POR_RUN    = 10
@@ -173,7 +173,8 @@ def cargar_alcances():
         for fila in lector:
             co    = fila.get("Codigo Interno Bia", "").strip()
             fecha = fila.get("Creado El", "").strip()
-            if not co:
+            tipo  = fila.get("Tipo De Alcance", "").strip().upper()
+            if not co or tipo != "INST":
                 continue
             existing = alcances.get(co)
             if not existing or fecha > existing.get("Creado El", ""):
@@ -1313,7 +1314,7 @@ def enviar_slack_alcance(co_code, alcance_row, visita_data):
 
     viable = _av(alcance_row, "Viable Para Instalar")
     medida_inst = _av(alcance_row, "Tipo De Medida A Instalar")
-    fecha_alc   = _av(alcance_row, "Creado El")
+    fecha_alc   = _av(alcance_row, "Creado El")[:10]
 
     payload = {
         "attachments": [{
