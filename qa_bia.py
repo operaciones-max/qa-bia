@@ -242,6 +242,10 @@ INSTRUCCIONES CRITICAS:
     2. En el bloque "Registro fotografico medidor, sellos y celdas" siguiente busca esa misma cadena.
     3. Si aparece -> true. Si no aparece o aparece distinta -> false.
     4. Si true: "observacion_serie_foto" = null. Si false: explica brevemente con la serie real vista.
+- CONTEO DE FOTOS: cada foto cargada en el acta tiene un timestamp con formato "Bia [fecha] [hora]" (ej: "Bia 2 may 2026 09:52:45"). Cuenta esos timestamps DENTRO de cada bloque "Registro fotografico" relevante:
+  * "fotos_medidor": cuenta los timestamps en los bloques "Registro fotografico medidor, sellos y celdas" (encontrado E instalado combinados). Aplica para DIRECTA/SEMIDIRECTA/INDIRECTA.
+  * "fotos_tcs": cuenta los timestamps en los bloques "Registro fotografico de TCs..." (encontrados E instalados). null si DIRECTA.
+  * "fotos_tps": cuenta los timestamps en los bloques "Registro fotografico de TPs..." (encontrados E instalados). null si DIRECTA o SEMIDIRECTA.
 - WMS comparacion (ignorando ceros a la izquierda y espacios):
   * "medidor_coincide_wms": Si MEDIDOR ASIGNADO arriba dice "No aplica" -> null. Si no, true/false comparando serie_instalada vs WMS.
   * "tcs_coinciden_wms": null si DIRECTA o si TCs ASIGNADOS dice "No aplica". Si no, true solo si CADA serial asignado en WMS aparece tambien en tcs_instalados.seriales (orden libre, comparacion por conjunto).
@@ -343,6 +347,10 @@ JSON ESPERADO:
 
   "tcs_coinciden_wms": <true | false | null>,
   "tps_coinciden_wms": <true | false | null>,
+
+  "fotos_medidor": <int o null>,
+  "fotos_tcs": <int o null>,
+  "fotos_tps": <int o null>,
 
   "bloque_pruebas_encontrado": {{ "aplica": <bool>, "tiene": <bool>, "marca": "<o null>", "tipo": "<o null>" }},
   "bloque_pruebas_instalado":  {{ "aplica": <bool>, "se_instalo": <bool>, "marca": "<o null>", "tipo": "<o null>" }},
@@ -464,9 +472,12 @@ def _enforce_reglas_medida_servicio(qa, tipo_servicio):
                   "bloque_pruebas_encontrado", "bloque_pruebas_instalado",
                   "cable_control_encontrado", "cable_control_instalado"):
             _force_false(k)
+        qa["fotos_tcs"] = None
+        qa["fotos_tps"] = None
     elif tipo_medida == "SEMIDIRECTA":
         for k in ("tps_encontrados", "tps_instalados"):
             _force_false(k)
+        qa["fotos_tps"] = None
 
     if es_visita:
         for k in ("medidor_instalado", "tcs_instalados", "tps_instalados",
@@ -581,7 +592,7 @@ def _seccion_medidor_encontrado(m):
         base += f"  Verificacion serie vs foto: {chk} {obs}".rstrip() + "\n"
     return base
 
-def _seccion_medidor_instalado(m, coincide_wms=None, serial_wms=""):
+def _seccion_medidor_instalado(m, coincide_wms=None, serial_wms="", fotos=None):
     if not m or not m.get("aplica"):
         return ""
     if not m.get("se_instalo"):
@@ -604,6 +615,8 @@ def _seccion_medidor_instalado(m, coincide_wms=None, serial_wms=""):
         base += f"  WMS asignado: {serial_wms} ✅ Coincide\n"
     elif coincide_wms is False:
         base += f"  WMS asignado: {serial_wms} ❌ NO coincide\n"
+    if fotos is not None:
+        base += f"  Fotos cargadas: {fotos}\n"
     return base
 
 def _seccion_sellos(s):
@@ -705,7 +718,7 @@ def _seccion_aplica_simple(label, d, key_estado="tiene", txt_no="No"):
         return f"*{label}:* {txt_no}\n"
     return f"*{label}:* {_v(d.get('detalles'))}\n"
 
-def _seccion_tc_tp_instalados(label, d, wms_asignados, coincide):
+def _seccion_tc_tp_instalados(label, d, wms_asignados, coincide, fotos=None):
     if not d or not d.get("aplica"):
         return ""
     if not d.get("se_instalo"):
@@ -724,6 +737,8 @@ def _seccion_tc_tp_instalados(label, d, wms_asignados, coincide):
         chk = _check(coincide)
         if chk:
             base += f"  Coincidencia WMS: {chk}\n"
+    if fotos is not None:
+        base += f"  Fotos cargadas: {fotos}\n"
     return base
 
 def _seccion_bloque_pruebas(b, instalado=False):
@@ -766,6 +781,9 @@ def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
     coincide_wms = qa.get("medidor_coincide_wms")
     tcs_wms = qa.get("tcs_wms_asignados") or []
     tps_wms = qa.get("tps_wms_asignados") or []
+    fotos_med = qa.get("fotos_medidor")
+    fotos_tcs = qa.get("fotos_tcs")
+    fotos_tps = qa.get("fotos_tps")
     secciones = [
         encabezado,
         f"*Codigo interno Bia:* {_v(qa.get('internal_bia_code', acta.get('internal_bia_code')))}\n",
@@ -773,7 +791,7 @@ def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
         f"*Tipo de medida:* {_v(qa.get('tipo_medida'))}  |  *Factor:* {_v(qa.get('factor_medida'))}\n\n",
         _seccion_transformador(qa.get("transformador")),
         _seccion_medidor_encontrado(qa.get("medidor_encontrado")),
-        _seccion_medidor_instalado(qa.get("medidor_instalado"), coincide_wms, serial_wms_asignado),
+        _seccion_medidor_instalado(qa.get("medidor_instalado"), coincide_wms, serial_wms_asignado, fotos_med),
         _seccion_sellos(qa.get("sellos_instalados")),
         _seccion_medidor_respaldo(qa.get("medidor_respaldo_instalado")),
         _seccion_telemedida_encontrada(qa.get("telemedida_encontrada")),
@@ -783,9 +801,9 @@ def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
         _seccion_cables_enc(qa.get("cables_potencia_encontrados")),
         _seccion_cables_inst(qa.get("cables_potencia_instalados")),
         _seccion_aplica_simple("TCs encontrados", qa.get("tcs_encontrados")),
-        _seccion_tc_tp_instalados("TCs instalados", qa.get("tcs_instalados"), tcs_wms, qa.get("tcs_coinciden_wms")),
+        _seccion_tc_tp_instalados("TCs instalados", qa.get("tcs_instalados"), tcs_wms, qa.get("tcs_coinciden_wms"), fotos_tcs),
         _seccion_aplica_simple("TPs encontrados", qa.get("tps_encontrados")),
-        _seccion_tc_tp_instalados("TPs instalados", qa.get("tps_instalados"), tps_wms, qa.get("tps_coinciden_wms")),
+        _seccion_tc_tp_instalados("TPs instalados", qa.get("tps_instalados"), tps_wms, qa.get("tps_coinciden_wms"), fotos_tps),
         _seccion_bloque_pruebas(qa.get("bloque_pruebas_encontrado")),
         _seccion_bloque_pruebas(qa.get("bloque_pruebas_instalado"), instalado=True),
         _seccion_cable_control(qa.get("cable_control_encontrado")),
