@@ -29,7 +29,7 @@ if os.environ.get('GROQ_API_KEY'):
         TWILIO_AUTH_TOKEN    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         TWILIO_FROM_WHATSAPP = "whatsapp:+14155238886"
         TWILIO_TO_WHATSAPP   = "whatsapp:+57TUNUMERODECELULAR"
-        MODO_PRUEBA          = False
+        MODO_PRUEBA          = True
         MODO_UNICO           = True
         ACTAS_PRUEBA         = 2
         FECHA_INICIO          = "2026-05-04"
