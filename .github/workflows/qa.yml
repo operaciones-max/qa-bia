@@ -22,7 +22,7 @@ jobs:
         run: pip install groq pdfplumber requests twilio
 
       - name: Eliminar config viejo
-        run: rm -f config.py create_config.py
+        run: rm -f config.py create_config.py && echo "Commit: $(git log -1 --oneline)"
 
       - name: Correr QA
         env:
