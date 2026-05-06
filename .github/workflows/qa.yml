@@ -12,6 +12,10 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          clean: true
 
       - name: Instalar Python
         uses: actions/setup-python@v5
@@ -21,8 +25,10 @@ jobs:
       - name: Instalar dependencias
         run: pip install groq pdfplumber requests twilio
 
-      - name: Eliminar config viejo
-        run: rm -f config.py create_config.py && echo "Commit: $(git log -1 --oneline)"
+      - name: Verificar commit y limpiar
+        run: |
+          git log -1 --oneline
+          rm -f config.py create_config.py
 
       - name: Correr QA
         env:
