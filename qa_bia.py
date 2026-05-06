@@ -486,21 +486,31 @@ REGLA OR_FIRMA:
 """
 
     intentos = 3
+    texto = ""
     for intento in range(1, intentos + 1):
         try:
             respuesta = cliente_groq.chat.completions.create(
                 model=config.GROQ_MODEL,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.1
+                temperature=0.1,
+                max_tokens=4096,
             )
             texto = respuesta.choices[0].message.content.strip()
             if "```json" in texto:
                 texto = texto.split("```json")[1].split("```")[0].strip()
             elif "```" in texto:
                 texto = texto.split("```")[1].split("```")[0].strip()
+            # Buscar primer { y ultimo } por si hay texto antes/despues
+            inicio = texto.find("{")
+            fin    = texto.rfind("}")
+            if inicio != -1 and fin != -1:
+                texto = texto[inicio:fin+1]
             return json.loads(texto)
         except json.JSONDecodeError:
-            if intento == intentos:
+            print(f"  ERROR JSON Groq (intento {intento}/{intentos}): {texto[:200]}")
+            if intento < intentos:
+                time.sleep(5)
+            else:
                 return None
         except Exception as e:
             msg = str(e)
@@ -513,6 +523,7 @@ REGLA OR_FIRMA:
                     print(f"  Limite Groq. Esperando {espera}s...")
                     time.sleep(espera)
                 else:
+                    print(f"  Limite Groq agotado tras {intentos} intentos.")
                     return None
             else:
                 print(f"  ERROR Groq: {e}")
