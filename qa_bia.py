@@ -1417,6 +1417,82 @@ def enviar_whatsapp(acta, resultado_qa):
     except Exception as e:
         print(f"  ERROR WhatsApp: {e}")
 
+def enviar_supabase(acta, resultado_qa, alcance_row=None):
+    url = os.environ.get("SUPABASE_URL", "")
+    key = os.environ.get("SUPABASE_ANON_KEY", "")
+    if not url or not key:
+        return
+
+    med_enc  = resultado_qa.get("medidor_encontrado") or {}
+    med_inst = resultado_qa.get("medidor_instalado") or {}
+    tcs_enc  = resultado_qa.get("tcs_encontrados") or {}
+    tps_enc  = resultado_qa.get("tps_encontrados") or {}
+    val      = resultado_qa.get("validaciones") or {}
+    falla    = resultado_qa.get("tipificacion_falla") or {}
+
+    registro = {
+        "procesado_en":              datetime.utcnow().isoformat() + "Z",
+        "ot_nombre":                 acta.get("title"),
+        "ot_id":                     acta.get("id"),
+        "tipo_servicio":             acta.get("Tipo de servicio"),
+        "estado_ot":                 resultado_qa.get("estado_ot"),
+        "fecha_ejecucion":           acta.get("start"),
+        "internal_bia_code":         acta.get("internal_bia_code"),
+        "or_norm":                   acta.get("OR_NORM"),
+        "planner":                   resultado_qa.get("planner"),
+        "empresa":                   acta.get("company_name"),
+        "direccion":                 acta.get("address"),
+        "tipo_medida":               resultado_qa.get("tipo_medida"),
+        "factor_medida":             str(resultado_qa.get("factor_medida") or ""),
+        "tecnico_nombre":            resultado_qa.get("tecnico_nombre"),
+        "tecnico_empresa":           resultado_qa.get("tecnico_empresa"),
+        "contratista_nombre":        resultado_qa.get("contratista_nombre"),
+        "medidor_encontrado_serie":  med_enc.get("serie"),
+        "medidor_encontrado_marca":  med_enc.get("marca"),
+        "medidor_instalado_serie":   med_inst.get("serie"),
+        "medidor_instalado_marca":   med_inst.get("marca"),
+        "medidor_coincide_wms":      resultado_qa.get("medidor_coincide_wms"),
+        "tcs_coinciden_wms":         resultado_qa.get("tcs_coinciden_wms"),
+        "tps_coinciden_wms":         resultado_qa.get("tps_coinciden_wms"),
+        "sellos_medidor_encontrado": resultado_qa.get("sellos_medidor_encontrado"),
+        "sellos_medidor_instalado":  resultado_qa.get("sellos_medidor_instalado"),
+        "sellos_tcs_encontrados":    resultado_qa.get("sellos_tcs_encontrados"),
+        "sellos_tcs_instalados":     resultado_qa.get("sellos_tcs_instalados"),
+        "tiene_tcs":                 bool(tcs_enc.get("aplica") and tcs_enc.get("tiene")),
+        "tiene_tps":                 bool(tps_enc.get("aplica") and tps_enc.get("tiene")),
+        "tiene_telemedida":          bool((resultado_qa.get("telemedida_encontrada") or {}).get("tiene")),
+        "tiene_diagrama_unifilar":   bool((resultado_qa.get("diagrama_unifilar") or {}).get("tiene_foto")),
+        "or_firma":                  resultado_qa.get("or_firma"),
+        "validacion_coherente":      val.get("coherencia"),
+        "errores_qa":                val.get("errores_encontrados") or [],
+        "alertas_qa":                resultado_qa.get("alertas_qa") or [],
+        "tipificacion_causa_raiz":   falla.get("causa_raiz"),
+        "tipificacion_responsable":  falla.get("responsable"),
+        "tiene_alcance":             alcance_row is not None,
+        "alcance_viable":            _av(alcance_row, "Viable Para Instalar") if alcance_row else None,
+        "alcance_medida_instalar":   _av(alcance_row, "Tipo De Medida A Instalar") if alcance_row else None,
+        "resultado_qa_completo":     resultado_qa,
+    }
+
+    try:
+        r = requests.post(
+            f"{url}/rest/v1/actas_qa",
+            headers={
+                "apikey":        key,
+                "Authorization": f"Bearer {key}",
+                "Content-Type":  "application/json",
+                "Prefer":        "resolution=merge-duplicates,return=minimal",
+            },
+            json=registro,
+            timeout=15,
+        )
+        if 200 <= r.status_code < 300:
+            print("  Supabase: registro guardado.")
+        else:
+            print(f"  ERROR Supabase: {r.status_code} {r.text[:200]}")
+    except Exception as e:
+        print(f"  ERROR Supabase: {e}")
+
 # =============================================================
 #  PROCESAR UNA ACTA
 # =============================================================
@@ -1527,6 +1603,7 @@ def procesar_acta(acta, wms, alcances=None):
 
     guardar_reporte(acta, resultado_qa)
     enviar_slack(acta, resultado_qa, serial_asignado if debe_comparar_wms else "")
+    enviar_supabase(acta, resultado_qa, alcances.get(internal_bia_code) if alcances else None)
     enviar_whatsapp(acta, resultado_qa)
     guardar_procesado(acta.get("id"))
     print(f"     OK: {ot_nombre} auditada.")
