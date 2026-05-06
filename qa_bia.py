@@ -31,8 +31,8 @@ if os.environ.get('GROQ_API_KEY'):
         TWILIO_TO_WHATSAPP   = "whatsapp:+57TUNUMERODECELULAR"
         MODO_PRUEBA          = True
         MODO_UNICO           = True
-        ACTAS_PRUEBA         = 2
-        FECHA_INICIO          = "2026-05-04"
+        ACTAS_PRUEBA         = 1
+        FECHA_INICIO          = "2026-04-24"
         FECHA_INICIO_ALCANCES = "2026-04-30"
         PAUSA_GROQ_SEGUNDOS  = 5
         INTERVALO_SEGUNDOS   = 300
