@@ -1176,6 +1176,9 @@ def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
         f"*Codigo interno Bia:* {_v(qa.get('internal_bia_code', acta.get('internal_bia_code')))}\n",
         f"*Tipo de servicio:* {_v(acta.get('Tipo de servicio'))}\n",
         f"*Tipo de medida:* {_v(qa.get('tipo_medida'))}  |  *Factor:* {_v(qa.get('factor_medida'))}\n\n",
+        _seccion_tecnico(qa),
+        _seccion_observacion_tecnico(qa),
+        "\n",
         _seccion_transformador(qa.get("transformador")),
         _seccion_medidor_encontrado(qa.get("medidor_encontrado"), sellos_med_enc),
         _seccion_medidor_instalado(qa.get("medidor_instalado"), coincide_wms, serial_wms_asignado, fotos_med, sellos_med_inst),
@@ -1198,7 +1201,6 @@ def _construir_cuerpo_exitosa(acta, qa, encabezado, serial_wms_asignado=""):
         _seccion_equipo_patron(qa.get("equipo_patron")),
         f"*Diagrama unifilar:* {'Foto presente' if (qa.get('diagrama_unifilar') or {}).get('tiene_foto') else 'Sin foto'}\n",
         f"*Con OR:* {_v(qa.get('or_firma'))}\n\n",
-        f"*Observaciones tecnicas:*\n{_v(qa.get('observaciones_tecnicas'))}\n",
     ]
     alertas = qa.get("alertas_qa") or []
     if alertas:
@@ -1212,12 +1214,14 @@ def _construir_cuerpo_fallida(acta, qa, encabezado):
         + f"*Codigo interno Bia:* {_v(qa.get('internal_bia_code', acta.get('internal_bia_code')))}\n"
         f"*Tipo de servicio:* {_v(acta.get('Tipo de servicio'))}\n"
         f"*Tipo de medida:* {_v(qa.get('tipo_medida'))}  |  *Factor:* {_v(qa.get('factor_medida'))}\n\n"
-        f"*Tipificacion de la OT fallida*\n"
+        + _seccion_tecnico(qa)
+        + _seccion_observacion_tecnico(qa)
+        + "\n"
+        + f"*Tipificacion de la OT fallida*\n"
         f"*Causa raiz:* {_v(falla.get('causa_raiz'))}\n"
         f"*Responsable:* {_v(falla.get('responsable'))}\n"
         f"*Detalle:* {_v(falla.get('detalle'))}\n"
-        f"*Mejora:* {_v(falla.get('mejora'))}\n\n"
-        f"*Observaciones tecnicas:*\n{_v(qa.get('observaciones_tecnicas'))}\n"
+        f"*Mejora:* {_v(falla.get('mejora'))}\n"
     )
 
 # =============================================================
@@ -1498,6 +1502,17 @@ def procesar_acta(acta, wms, alcances=None):
             "observacion_tecnico_verbatim": resultado_qa.get("observacion_tecnico_verbatim"),
         }
         guardar_visita_previa(internal_bia_code, vp_data)
+
+        # Si ya existe un alcance para este CO, enviarlo inmediatamente
+        if alcances:
+            alcance_row = alcances.get(internal_bia_code)
+            if alcance_row:
+                alcance_id = alcance_row.get("ID", "").strip()
+                procesados_alc = cargar_alcances_procesados()
+                if alcance_id and alcance_id not in procesados_alc:
+                    print(f"     Alcance encontrado para {internal_bia_code} — enviando al Slack...")
+                    enviar_slack_alcance(internal_bia_code, alcance_row, vp_data)
+                    guardar_alcance_procesado(alcance_id)
 
     guardar_reporte(acta, resultado_qa)
     enviar_slack(acta, resultado_qa, serial_asignado if debe_comparar_wms else "")
