@@ -25,7 +25,7 @@ jobs:
       - name: Instalar dependencias
         run: pip install groq pdfplumber requests twilio
 
-      - name: Verificar commit y limpiar
+      - name: Preparar entorno
         run: |
           git log -1 --oneline
           rm -f config.py create_config.py
@@ -42,4 +42,5 @@ jobs:
           git config user.name "QA Bot"
           git add -f actas_procesadas.json visitas_previas.json alcances_procesados.json || true
           git diff --staged --quiet || git commit -m "Actualizar estado procesados [skip ci]"
+          git pull --rebase origin main || true
           git push || true
