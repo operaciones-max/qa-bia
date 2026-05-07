@@ -303,7 +303,7 @@ def obtener_actas_nuevas():
 #  LEER PDF
 # =============================================================
 
-MAX_PAGINAS_VISION = 4   # techo de paginas que mandamos como imagen a Gemini
+MAX_PAGINAS_VISION = 0   # 0 = vision desactivada (volver a 4-8 cuando free tier reset)
 DPI_VISION         = 60  # resolucion de las imagenes — mas bajo = menos tokens
 
 def descargar_y_leer_pdf(url):
