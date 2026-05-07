@@ -1,6 +1,6 @@
 # =============================================================
 #  qa_bia.py  —  SISTEMA QA AUTOMATIZADO DE ACTAS BIA ENERGY
-#  Motor de IA: Groq (Llama)
+#  Motor de IA: Google Gemini
 #  Version: 4.0 — Alcances ingenieria + tecnico + comparacion VP
 # =============================================================
 
@@ -12,18 +12,19 @@ import io
 import re
 import requests
 import pdfplumber
-from groq import Groq
+from google import genai
+from google.genai import types as genai_types
 from datetime import datetime, date, timedelta
 from twilio.rest import Client as TwilioClient
 
 # GitHub Actions: leer de variables de entorno
-if os.environ.get('GROQ_API_KEY'):
+if os.environ.get('GEMINI_API_KEY'):
     class config:
         METABASE_CSV_URL     = "https://bia.metabaseapp.com/public/question/5ec265f5-182d-409d-bfbd-45303880da2d.csv"
         WMS_CSV_URL          = "https://bia.metabaseapp.com/public/question/67f6d437-6326-415a-a799-1ee34b9648b0.csv"
         ALCANCES_CSV_URL     = "https://bia.metabaseapp.com/public/question/52353a69-6510-405b-9bbd-754d762a2597.csv"
-        GROQ_API_KEY         = os.environ['GROQ_API_KEY']
-        GROQ_MODEL           = "llama-3.1-8b-instant"
+        GEMINI_API_KEY       = os.environ['GEMINI_API_KEY']
+        GEMINI_MODEL         = "gemini-2.5-flash"
         SLACK_WEBHOOK_URL    = os.environ.get('SLACK_WEBHOOK_URL', '')
         TWILIO_ACCOUNT_SID   = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         TWILIO_AUTH_TOKEN    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -60,7 +61,7 @@ if os.environ.get('GROQ_API_KEY'):
 else:
     import config
 
-cliente_groq = Groq(api_key=config.GROQ_API_KEY)
+cliente_gemini = genai.Client(api_key=config.GEMINI_API_KEY)
 
 # =============================================================
 #  UTILIDADES
@@ -111,29 +112,30 @@ def guardar_alcance_procesado(alcance_id):
     with open(arch, "w", encoding="utf-8") as f:
         json.dump(procesados, f, ensure_ascii=False, indent=2)
 
-ARCHIVO_COOLDOWN_GROQ = "groq_cooldown.json"
+ARCHIVO_COOLDOWN_LLM = "groq_cooldown.json"
 
-def _cargar_cooldown_groq():
-    if not os.path.exists(ARCHIVO_COOLDOWN_GROQ):
+def _cargar_cooldown_llm():
+    if not os.path.exists(ARCHIVO_COOLDOWN_LLM):
         return None
     try:
-        with open(ARCHIVO_COOLDOWN_GROQ, "r", encoding="utf-8") as f:
+        with open(ARCHIVO_COOLDOWN_LLM, "r", encoding="utf-8") as f:
             data = json.load(f)
         if datetime.utcnow() >= datetime.fromisoformat(data["until"].replace("Z", "")):
-            os.remove(ARCHIVO_COOLDOWN_GROQ)
+            os.remove(ARCHIVO_COOLDOWN_LLM)
             return None
         return data
     except Exception:
         return None
 
-def _activar_cooldown_groq(msg_error):
+def _activar_cooldown_llm(msg_error):
     msg = msg_error.lower()
-    if "per day" in msg or "tpd" in msg or "rpd" in msg or "daily" in msg:
-        manana = datetime.utcnow().replace(hour=0, minute=5, second=0, microsecond=0) + timedelta(days=1)
-        until = manana
+    es_diario = ("per day" in msg or "tpd" in msg or "rpd" in msg or "daily" in msg
+                 or "quota exceeded" in msg or "free_tier" in msg or "free tier" in msg)
+    if es_diario:
+        until = datetime.utcnow().replace(hour=0, minute=5, second=0, microsecond=0) + timedelta(days=1)
         razon = "daily_quota"
     else:
-        m = re.search(r"try again in (\d+\.?\d*)s", msg_error)
+        m = re.search(r"(?:try again in|retry.*?in|retry_delay.*?seconds:)\s*(\d+\.?\d*)", msg_error)
         segundos = int(float(m.group(1))) + 5 if m else 65
         until = datetime.utcnow() + timedelta(seconds=segundos)
         razon = "per_minute"
@@ -142,7 +144,7 @@ def _activar_cooldown_groq(msg_error):
         "razon":   razon,
         "activado": datetime.utcnow().isoformat(timespec="seconds") + "Z",
     }
-    with open(ARCHIVO_COOLDOWN_GROQ, "w", encoding="utf-8") as f:
+    with open(ARCHIVO_COOLDOWN_LLM, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     _alertar_slack_cooldown(data)
     return data
@@ -151,8 +153,8 @@ def _alertar_slack_cooldown(data):
     url = os.environ.get("SLACK_WEBHOOK_URL", "") or getattr(config, "SLACK_WEBHOOK_URL", "")
     if not url:
         return
-    titulo = "QA pausado: Groq agoto cuota diaria" if data["razon"] == "daily_quota" \
-             else "QA pausado: Groq rate-limit transitorio"
+    titulo = "QA pausado: Gemini agoto cuota diaria" if data["razon"] == "daily_quota" \
+             else "QA pausado: Gemini rate-limit transitorio"
     cuerpo = f"*{titulo}*\n• Reanudacion estimada (UTC): `{data['until']}`\n• Tipo: `{data['razon']}`"
     try:
         requests.post(url, json={"text": cuerpo}, timeout=10)
@@ -312,7 +314,7 @@ def descargar_y_leer_pdf(url):
         return None
 
 # =============================================================
-#  ANALISIS CON GROQ
+#  ANALISIS CON GEMINI
 # =============================================================
 
 def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
@@ -533,46 +535,52 @@ REGLA OR_FIRMA:
 {texto_pdf[:6000]}
 """
 
-    cd = _cargar_cooldown_groq()
+    cd = _cargar_cooldown_llm()
     if cd:
-        print(f"  Groq en cooldown ({cd['razon']}) hasta {cd['until']} - se omite analisis.")
+        print(f"  Gemini en cooldown ({cd['razon']}) hasta {cd['until']} - se omite analisis.")
         return None
 
     intentos = 3
     texto = ""
     for intento in range(1, intentos + 1):
         try:
-            respuesta = cliente_groq.chat.completions.create(
-                model=config.GROQ_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=1500,
+            respuesta = cliente_gemini.models.generate_content(
+                model=config.GEMINI_MODEL,
+                contents=prompt,
+                config=genai_types.GenerateContentConfig(
+                    temperature=0.1,
+                    max_output_tokens=1200,
+                    response_mime_type="application/json",
+                ),
             )
-            texto = respuesta.choices[0].message.content.strip()
+            texto = (respuesta.text or "").strip()
             if "```json" in texto:
                 texto = texto.split("```json")[1].split("```")[0].strip()
             elif "```" in texto:
                 texto = texto.split("```")[1].split("```")[0].strip()
-            # Buscar primer { y ultimo } por si hay texto antes/despues
             inicio = texto.find("{")
             fin    = texto.rfind("}")
             if inicio != -1 and fin != -1:
                 texto = texto[inicio:fin+1]
             return json.loads(texto)
         except json.JSONDecodeError:
-            print(f"  ERROR JSON Groq (intento {intento}/{intentos}): {texto[:200]}")
+            print(f"  ERROR JSON Gemini (intento {intento}/{intentos}): {texto[:200]}")
             if intento < intentos:
                 time.sleep(5)
             else:
                 return None
         except Exception as e:
             msg = str(e)
-            if "429" in msg or "rate_limit" in msg.lower():
-                cd = _activar_cooldown_groq(msg)
-                print(f"  Limite Groq detectado ({cd['razon']}). Cooldown hasta {cd['until']}. Se aborta sin reintentar.")
+            msg_lower = msg.lower()
+            es_rate_limit = ("429" in msg or "rate_limit" in msg_lower or "rate limit" in msg_lower
+                             or "resource_exhausted" in msg_lower or "resource exhausted" in msg_lower
+                             or "quota" in msg_lower)
+            if es_rate_limit:
+                cd = _activar_cooldown_llm(msg)
+                print(f"  Limite Gemini detectado ({cd['razon']}). Cooldown hasta {cd['until']}. Se aborta sin reintentar.")
                 return None
             else:
-                print(f"  ERROR Groq: {e}")
+                print(f"  ERROR Gemini: {e}")
                 return None
     return None
 
@@ -1576,7 +1584,7 @@ def procesar_acta(acta, wms, alcances=None):
         print("     No se pudo leer el PDF. Se omite.")
         return False
 
-    print(f"     Analizando con Groq ({config.GROQ_MODEL})...")
+    print(f"     Analizando con Gemini ({config.GEMINI_MODEL})...")
     resultado_qa = analizar_acta(
         texto_pdf, tipo, estado, internal_bia_code,
         serial_asignado if debe_comparar_wms else "",
@@ -1662,7 +1670,7 @@ def procesar_acta(acta, wms, alcances=None):
 def main():
     modo = "PRUEBA" if config.MODO_PRUEBA else "AUTOMATICO"
     print("=" * 58)
-    print("   SISTEMA QA BIA ENERGY  -  Motor: Groq / Llama")
+    print("   SISTEMA QA BIA ENERGY  -  Motor: Google Gemini")
     print("   Modo: " + modo)
     print("=" * 58)
     print("   Fecha inicio : " + config.FECHA_INICIO)
