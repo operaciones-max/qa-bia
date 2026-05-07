@@ -765,9 +765,15 @@ def _limpiar_errores_fantasma(qa, tipo_servicio):
         if es_semidirecta:
             if (" tp " in s or " tps " in s) and " tc " not in s and " tcs " not in s:
                 return True
-        if es_visita and "instalad" in s:
-            if "telemedida instalad" not in s and "totalizador instalad" not in s:
+        if es_visita:
+            if "instalad" in s and "telemedida instalad" not in s and "totalizador instalad" not in s:
                 return True
+            for term in ("pruebas de funcionamiento", "equipo patron", "equipo patrón",
+                         "diagrama unifilar", "no se realizaron pruebas",
+                         "no se reporta equipo", "no se reporta foto",
+                         "no se reportan fotos", "no se reportan sellos"):
+                if term in s:
+                    return True
         for term in ("medidor de respaldo", "medidor de espejo", "planta de respaldo",
                      "medidor de espejo", "no se encontro"):
             if term in s and tipo_medida == "DIRECTA":
