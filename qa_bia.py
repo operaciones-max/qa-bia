@@ -546,7 +546,7 @@ REGLA OR_FIRMA:
                 model=config.GROQ_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
-                max_tokens=2500,
+                max_tokens=1500,
             )
             texto = respuesta.choices[0].message.content.strip()
             if "```json" in texto:
