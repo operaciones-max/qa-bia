@@ -1863,11 +1863,13 @@ def procesar_acta(acta, wms, alcances=None):
     resultado_qa["wms_asignado"]         = bool(serial_asignado)
 
     # Tecnico y contratista: fuente de verdad es el CSV de Metabase, no la IA.
-    csv_tecnico    = (acta.get("Electrician Visits__name") or "").strip()
+    # contractor_name = "BIA" (literal) o "" -> empleado BIA Energy.
+    # Cualquier otro valor -> nombre del contratista.
+    csv_tecnico     = (acta.get("Electrician Visits__name") or "").strip()
     csv_contratista = (acta.get("contractor_name") or "").strip()
     if csv_tecnico:
         resultado_qa["tecnico_nombre"] = csv_tecnico
-    if csv_contratista:
+    if csv_contratista and csv_contratista.upper() != "BIA":
         resultado_qa["tecnico_empresa"]    = "CONTRATISTA"
         resultado_qa["contratista_nombre"] = csv_contratista
     else:
