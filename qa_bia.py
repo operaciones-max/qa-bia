@@ -33,6 +33,7 @@ if os.environ.get('GEMINI_API_KEY'):
         TWILIO_TO_WHATSAPP   = "whatsapp:+57TUNUMERODECELULAR"
         MODO_PRUEBA          = False
         MODO_UNICO           = True
+        MODO_BACKFILL        = True   # Silencia Slack/WhatsApp mientras se repuebla Supabase. Cambiar a False cuando termine.
         ACTAS_PRUEBA         = 2
         FECHA_INICIO          = "2026-05-01"
         FECHA_INICIO_ALCANCES = "2026-04-30"
@@ -1440,7 +1441,8 @@ def verificar_nuevos_alcances(alcances, visitas_previas_dict):
 
         visita_data = visitas_previas_dict.get(co_code)
         print(f"\n  -> Nuevo alcance: {co_code} (VP almacenada: {'Si' if visita_data else 'No'})")
-        enviar_slack_alcance(co_code, alcance_row, visita_data)
+        if not getattr(config, "MODO_BACKFILL", False):
+            enviar_slack_alcance(co_code, alcance_row, visita_data)
         actualizar_supabase_alcance(co_code, alcance_row)
         guardar_alcance_procesado(alcance_id)
         nuevos += 1
@@ -1707,13 +1709,17 @@ def procesar_acta(acta, wms, alcances=None):
                 procesados_alc = cargar_alcances_procesados()
                 if alcance_id and alcance_id not in procesados_alc:
                     print(f"     Alcance encontrado para {internal_bia_code} — enviando al Slack...")
-                    enviar_slack_alcance(internal_bia_code, alcance_row, vp_data)
+                    if not getattr(config, "MODO_BACKFILL", False):
+                        enviar_slack_alcance(internal_bia_code, alcance_row, vp_data)
                     guardar_alcance_procesado(alcance_id)
 
+    backfill = getattr(config, "MODO_BACKFILL", False)
     guardar_reporte(acta, resultado_qa)
-    enviar_slack(acta, resultado_qa, serial_asignado if debe_comparar_wms else "")
+    if not backfill:
+        enviar_slack(acta, resultado_qa, serial_asignado if debe_comparar_wms else "")
     enviar_supabase(acta, resultado_qa, alcances.get(internal_bia_code) if alcances else None)
-    enviar_whatsapp(acta, resultado_qa)
+    if not backfill:
+        enviar_whatsapp(acta, resultado_qa)
     guardar_procesado(acta.get("id"))
     print(f"     OK: {ot_nombre} auditada.")
     return True
