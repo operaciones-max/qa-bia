@@ -537,7 +537,7 @@ REGLA OR_FIRMA:
 - NO en cualquier otro caso.
 
 --- TEXTO DEL ACTA ---
-{texto_pdf[:6000]}
+{texto_pdf[:20000]}
 """
 
     cd = _cargar_cooldown_llm()
