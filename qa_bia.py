@@ -24,8 +24,8 @@ if os.environ.get('GEMINI_API_KEY'):
         WMS_CSV_URL          = "https://bia.metabaseapp.com/public/question/67f6d437-6326-415a-a799-1ee34b9648b0.csv"
         ALCANCES_CSV_URL     = "https://bia.metabaseapp.com/public/question/52353a69-6510-405b-9bbd-754d762a2597.csv"
         GEMINI_API_KEY       = os.environ['GEMINI_API_KEY']
-        GEMINI_MODEL         = "gemini-2.5-flash"
-        GEMINI_MODELS        = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]
+        GEMINI_MODEL         = "gemini-2.5-flash-lite"
+        GEMINI_MODELS        = ["gemini-2.5-flash-lite", "gemini-2.0-flash"]
         SLACK_WEBHOOK_URL    = os.environ.get('SLACK_WEBHOOK_URL', '')
         TWILIO_ACCOUNT_SID   = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         TWILIO_AUTH_TOKEN    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -36,9 +36,9 @@ if os.environ.get('GEMINI_API_KEY'):
         ACTAS_PRUEBA         = 2
         FECHA_INICIO          = "2026-05-01"
         FECHA_INICIO_ALCANCES = "2026-04-30"
-        PAUSA_GROQ_SEGUNDOS  = 5
+        PAUSA_GROQ_SEGUNDOS  = 10
         INTERVALO_SEGUNDOS   = 300
-        MAX_ACTAS_POR_RUN    = 10
+        MAX_ACTAS_POR_RUN    = 5
         ARCHIVO_PROCESADOS          = "actas_procesadas.json"
         ARCHIVO_VISITAS_PREVIAS     = "visitas_previas.json"
         ARCHIVO_ALCANCES_PROCESADOS = "alcances_procesados.json"
