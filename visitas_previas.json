@@ -1,15 +1,15 @@
 {
   "CO0800006765": {
     "ot_nombre": "VIPE_44339_3986E7",
-    "fecha_procesada": "2026-05-07 13:10:52",
-    "tipo_medida": "SEMIDIRECТА",
+    "fecha_procesada": "2026-05-07 19:33:04",
+    "tipo_medida": "SEMIDIRECTA",
     "factor_medida": "40",
     "medidor_encontrado": {
       "serie": "60714646",
       "marca": "LANDIS GYR",
       "referencia": "E550",
-      "lectura_activa_kwh": ".0",
-      "lectura_reactiva_kvarh": ".0",
+      "lectura_activa_kwh": "0.0",
+      "lectura_reactiva_kvarh": "0.0",
       "serie_coincide_foto": true,
       "observacion_serie_foto": null
     },
@@ -26,14 +26,14 @@
       "seriales": [],
       "detalles": null
     },
-    "tecnico_nombre": null,
+    "tecnico_nombre": "Duvan Cervera",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para camb"
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, Se encuentra medida semidirecta (factor 40 segun factura) en poste, transformador exclusivo de 75 KVA,\nacometida y parciales en 4/0 cobre, breaker principal de 2500 A, usuario cuenta no con paneles solares pero si con planta electrica. Se requiere para instalacion: Pasar a medida\nindirecta nivel 2. Descargo con perdida de mercado. Apoyo de carrocanasta. 3 tc's tipo exterior. 3 tp's tipo exterior. 3 dps 24 platinas. Juego de tornillos arandela ay tuercas. 14\nconectores de coraza de 1\", 25 m de coraza industrial de 1\". 13 m de cable señal 4*12. 13 m de cable señal 6*12. 2 m de cable blanco #12. 6 m de cable verde # 12. 25 m de cable #2\ndesnudo. 1 gabinete metálico. 1 medidor pa semiindirecta. 1 bloque de prueba. 2 m de cinta bandit. 2 hebillas. 1 crucetas más accesorios (ya que se debe adecuar punto de\nconexión) Administradora pide ser notificada con anticipación de la próxima visita de instalación, que no tiene inconvenientes ningun día ya que cuenta con la planta electrica.\nSe da por finalizada la actividad"
   },
   "CO0500006750": {
     "ot_nombre": "VIPE_44039_80A0C6",
-    "fecha_procesada": "2026-05-07 15:34:34",
+    "fecha_procesada": "2026-05-07 19:33:29",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -59,9 +59,9 @@
       "detalles": null
     },
     "tecnico_nombre": "JONATAN PALACIO",
-    "tecnico_empresa": "CONTRATISTA",
-    "contratista_nombre": "Bia Energy S.A.S E.S.P",
-    "observacion_tecnico_verbatim": "Código interno de Bia:* CO0500006750 tipo de servicio : visita previa con EPM *Serial del medidor : 82084260 *IP del medidor: no aplica *Se instala módem : no aplica *serie\nmodem retirado : no aplica *modem marca : no aplica *Factor de medida: 1 Transformador: 75 kva # 124185 multiusuarios uso compartido Con OR: SI Observación: 7 de Mayo del\n2026 a las 08:00 am se realiza visita previa en campo con personal de epm para proceso de cambio de comercializador usuario a razón social de inversiones Juroplast sas\nubicado la estrella Antioquia en la visita se encontró lo siguiente: Tipo de medida directa en tres elementos y nivel de tensión 1, factor 1, Medida ubicada en fachada el cliente en\ngabinete que NO cumple norma - ⁠el cliente no cuenta con sistema solar - ⁠el cliente no cuenta con planta de emergencia - ⁠El cliente si cuenta con banco de condensadores pero\nno visible la capacidad - ⁠para continuar con el proceso de cambio de comercializador técnicamente sería necesario el cambio de Gabinete certificado, cambio de medidor, \ninstalación de totalizador 3x150A ya que el existente está muy sobredimensionado para la acometida e instalación de sistema de comunicación. - ⁠se debe realizar apertura del\ntransformador multiusuarios 4 horas para la adecuación dicha suspensión afecta a 3 usuarios con el cliente, alto riesgo eléctrico para realizar la actividad en caliente - ⁠se debe\ncoordinar con el cliente hora y fecha de instalación preferiblemente en un día sábado - ⁠acometida principal que alimenta el medidor 1-1/0 x fase - ⁠totalizador existente 3x200A\nsobredimensionado - ⁠todo queda operando correctamente"
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Código interno de Bia:* CO0500006750 tipo de servicio : visita previa con EPM *Serial del medidor : 82084260 *IP del medidor: no aplica *Se instala módem : no aplica *serie\nmódem retirado : no aplica *modem marca : no aplica *Factor de medida: 1 Transformador: 75 kva # 124185 multiusuarios uso compartido Con OR: SI Observación: 7 de Mayo del\n2026 a las 08:00 am se realiza visita previa en campo con personal de epm para proceso de cambio de comercializador usuario a razón social de inversiones Juroplast sas\nubicado la estrella Antioquia en la visita se encontró lo siguiente: Tipo de medida directa en tres elementos y nivel de tensión 1, factor 1, Medida ubicada en fachada el cliente en\ngabinete que NO cumple norma - ⁠el cliente no cuenta con sistema solar - ⁠el cliente no cuenta con planta de emergencia - ⁠El cliente si cuenta con banco de condensadores pero\nno visible la capacidad - ⁠para continuar con el proceso de cambio de comercializador técnicamente sería necesario el cambio de Gabinete certificado, cambio de medidor, \ninstalación de totalizador 3x150A ya que el existente está muy sobredimensionado para la acometida e instalación de sistema de comunicación. - ⁠se debe realizar apertura del\ntransformador multiusuarios 4 horas para la adecuación dicha suspensión afecta a 3 usuarios con el cliente, alto riesgo eléctrico para realizar la actividad en caliente - ⁠se debe\ncoordinar con el cliente hora y fecha de instalación preferiblemente en un día sábado - ⁠acometida principal que alimenta el medidor 1-1/0 x fase - ⁠totalizador existente 3x200A\nsobredimensionado - ⁠todo queda operando correctamente"
   },
   "CO0500006734": {
     "ot_nombre": "VIPE_43827_95FE84",
@@ -286,5 +286,37 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "Se llega al sitio para realizar visita previa a asados del oeste se encontró medidor de directa en Gabinete compartido con otras 2 cuentas con acometida #2 cu y parciales en #2\ncu , tiene un breaker de 80 amp , transformador de 75 KVA compartido , se alimenta gabinete con una acometida 1/0 aluminio que se distribuye para las 3 cuentas y un breaker\ntotalizador de 200amp."
+  },
+  "CO4700006745": {
+    "ot_nombre": "VIPE_44639_507B86",
+    "fecha_procesada": "2026-05-07 19:33:52",
+    "tipo_medida": "DIRECTA",
+    "factor_medida": "1",
+    "medidor_encontrado": {
+      "serie": "n.v",
+      "marca": "Otra",
+      "referencia": ".o",
+      "lectura_activa_kwh": ".0",
+      "lectura_reactiva_kvarh": ".0",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "n.v",
+    "tcs_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Jorge Gelvez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, se encuentra medida directa en poste, transformador de 30 KVA compartido, breaker p/al de 125 A, acometida\ny parciales en #2 cobre. realizándole seguimiento a la acometida del usuario confirmamos que esta sea su medida eléctrica, pero no no es posible llegar hasta el medidor, debido\na la altura a la que está instalado, imposibilidad técnica debido a que se encuentra cercano a la red de media tensión. Usuario no cuenta ni con planta electrica ni con paneles\nsolares. Se requiere para cambio de Comercializador: Apoyo de carrocanasta Descargo 50 de cable #2 en cobre Amarras plásticas medianas, Cinta de colores 2 tensores de\nacometida tipo poste 1 caja Poly tipo 3-4 2 m de cinta bandit 1 medidor de directa 1 kit de telemedida 8 conectores de perforación 120/120 Se da por finalizada la actividad."
   }
 }
