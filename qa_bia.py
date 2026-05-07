@@ -301,7 +301,8 @@ def obtener_actas_nuevas():
 #  LEER PDF
 # =============================================================
 
-MAX_PAGINAS_VISION = 20  # techo de paginas que mandamos como imagen a Gemini
+MAX_PAGINAS_VISION = 8   # techo de paginas que mandamos como imagen a Gemini
+DPI_VISION         = 80  # resolucion de las imagenes — mas bajo = menos tokens
 
 def descargar_y_leer_pdf(url):
     """Devuelve (texto, lista_de_imagenes_jpeg_bytes)."""
@@ -340,7 +341,7 @@ def _renderizar_pdf_a_imagenes(pdf_bytes):
         n = min(len(doc), MAX_PAGINAS_VISION)
         for i in range(n):
             page = doc[i]
-            pix = page.get_pixmap(dpi=110)
+            pix = page.get_pixmap(dpi=DPI_VISION)
             imagenes.append(pix.tobytes("jpeg"))
         doc.close()
     except Exception as e:
