@@ -1537,6 +1537,7 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "tiene_alcance":             alcance_row is not None,
         "alcance_viable":            _av(alcance_row, "Viable Para Instalar") if alcance_row else None,
         "alcance_medida_instalar":   _av(alcance_row, "Tipo De Medida A Instalar") if alcance_row else None,
+        "alcance_completo":          dict(alcance_row) if alcance_row else None,
         "resultado_qa_completo":     resultado_qa,
     }
 
@@ -1569,6 +1570,7 @@ def actualizar_supabase_alcance(co_code, alcance_row):
         "tiene_alcance":           True,
         "alcance_viable":          _av(alcance_row, "Viable Para Instalar"),
         "alcance_medida_instalar": _av(alcance_row, "Tipo De Medida A Instalar"),
+        "alcance_completo":        dict(alcance_row),
     }
     try:
         r = requests.patch(
