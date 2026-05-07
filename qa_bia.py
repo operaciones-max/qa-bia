@@ -1483,9 +1483,15 @@ def enviar_whatsapp(acta, resultado_qa):
     except Exception as e:
         print(f"  ERROR WhatsApp: {e}")
 
+def _supabase_base_url():
+    url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
+    if url.endswith("/rest/v1"):
+        url = url[:-len("/rest/v1")]
+    return url
+
 def enviar_supabase(acta, resultado_qa, alcance_row=None):
-    url = os.environ.get("SUPABASE_URL", "")
-    key = os.environ.get("SUPABASE_ANON_KEY", "")
+    url = _supabase_base_url()
+    key = os.environ.get("SUPABASE_ANON_KEY", "").strip()
     if not url or not key:
         return
 
@@ -1561,8 +1567,8 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         print(f"  ERROR Supabase: {e}")
 
 def actualizar_supabase_alcance(co_code, alcance_row):
-    url = os.environ.get("SUPABASE_URL", "")
-    key = os.environ.get("SUPABASE_ANON_KEY", "")
+    url = _supabase_base_url()
+    key = os.environ.get("SUPABASE_ANON_KEY", "").strip()
     if not url or not key:
         return
 
