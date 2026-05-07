@@ -1441,6 +1441,7 @@ def verificar_nuevos_alcances(alcances, visitas_previas_dict):
         visita_data = visitas_previas_dict.get(co_code)
         print(f"\n  -> Nuevo alcance: {co_code} (VP almacenada: {'Si' if visita_data else 'No'})")
         enviar_slack_alcance(co_code, alcance_row, visita_data)
+        actualizar_supabase_alcance(co_code, alcance_row)
         guardar_alcance_procesado(alcance_id)
         nuevos += 1
         if nuevos < 10:
@@ -1557,6 +1558,40 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
             print(f"  ERROR Supabase: {r.status_code} {r.text[:200]}")
     except Exception as e:
         print(f"  ERROR Supabase: {e}")
+
+def actualizar_supabase_alcance(co_code, alcance_row):
+    url = os.environ.get("SUPABASE_URL", "")
+    key = os.environ.get("SUPABASE_ANON_KEY", "")
+    if not url or not key:
+        return
+
+    body = {
+        "tiene_alcance":           True,
+        "alcance_viable":          _av(alcance_row, "Viable Para Instalar"),
+        "alcance_medida_instalar": _av(alcance_row, "Tipo De Medida A Instalar"),
+    }
+    try:
+        r = requests.patch(
+            f"{url}/rest/v1/actas_qa",
+            params={
+                "internal_bia_code": f"eq.{co_code}",
+                "tipo_servicio":     "eq.Visita previa",
+            },
+            headers={
+                "apikey":        key,
+                "Authorization": f"Bearer {key}",
+                "Content-Type":  "application/json",
+                "Prefer":        "return=minimal",
+            },
+            json=body,
+            timeout=15,
+        )
+        if 200 <= r.status_code < 300:
+            print(f"  Supabase: VIPE {co_code} marcada con alcance.")
+        else:
+            print(f"  ERROR Supabase alcance: {r.status_code} {r.text[:200]}")
+    except Exception as e:
+        print(f"  ERROR Supabase alcance: {e}")
 
 # =============================================================
 #  PROCESAR UNA ACTA
