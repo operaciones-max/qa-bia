@@ -13,7 +13,7 @@ import re
 import requests
 import pdfplumber
 from groq import Groq
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from twilio.rest import Client as TwilioClient
 
 # GitHub Actions: leer de variables de entorno
@@ -110,6 +110,54 @@ def guardar_alcance_procesado(alcance_id):
         procesados.append(alcance_id)
     with open(arch, "w", encoding="utf-8") as f:
         json.dump(procesados, f, ensure_ascii=False, indent=2)
+
+ARCHIVO_COOLDOWN_GROQ = "groq_cooldown.json"
+
+def _cargar_cooldown_groq():
+    if not os.path.exists(ARCHIVO_COOLDOWN_GROQ):
+        return None
+    try:
+        with open(ARCHIVO_COOLDOWN_GROQ, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if datetime.utcnow() >= datetime.fromisoformat(data["until"].replace("Z", "")):
+            os.remove(ARCHIVO_COOLDOWN_GROQ)
+            return None
+        return data
+    except Exception:
+        return None
+
+def _activar_cooldown_groq(msg_error):
+    msg = msg_error.lower()
+    if "per day" in msg or "tpd" in msg or "rpd" in msg or "daily" in msg:
+        manana = datetime.utcnow().replace(hour=0, minute=5, second=0, microsecond=0) + timedelta(days=1)
+        until = manana
+        razon = "daily_quota"
+    else:
+        m = re.search(r"try again in (\d+\.?\d*)s", msg_error)
+        segundos = int(float(m.group(1))) + 5 if m else 65
+        until = datetime.utcnow() + timedelta(seconds=segundos)
+        razon = "per_minute"
+    data = {
+        "until":   until.isoformat(timespec="seconds") + "Z",
+        "razon":   razon,
+        "activado": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+    }
+    with open(ARCHIVO_COOLDOWN_GROQ, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    _alertar_slack_cooldown(data)
+    return data
+
+def _alertar_slack_cooldown(data):
+    url = os.environ.get("SLACK_WEBHOOK_URL", "") or getattr(config, "SLACK_WEBHOOK_URL", "")
+    if not url:
+        return
+    titulo = "QA pausado: Groq agoto cuota diaria" if data["razon"] == "daily_quota" \
+             else "QA pausado: Groq rate-limit transitorio"
+    cuerpo = f"*{titulo}*\n• Reanudacion estimada (UTC): `{data['until']}`\n• Tipo: `{data['razon']}`"
+    try:
+        requests.post(url, json={"text": cuerpo}, timeout=10)
+    except Exception as e:
+        print(f"  ERROR alerta Slack cooldown: {e}")
 
 def identificar_planner(or_norm):
     for or_key, planner in config.OR_PLANNERS.items():
@@ -482,8 +530,13 @@ REGLA OR_FIRMA:
 - NO en cualquier otro caso.
 
 --- TEXTO DEL ACTA ---
-{texto_pdf[:7500]}
+{texto_pdf[:6000]}
 """
+
+    cd = _cargar_cooldown_groq()
+    if cd:
+        print(f"  Groq en cooldown ({cd['razon']}) hasta {cd['until']} - se omite analisis.")
+        return None
 
     intentos = 3
     texto = ""
@@ -493,7 +546,7 @@ REGLA OR_FIRMA:
                 model=config.GROQ_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
-                max_tokens=4096,
+                max_tokens=2500,
             )
             texto = respuesta.choices[0].message.content.strip()
             if "```json" in texto:
@@ -515,16 +568,9 @@ REGLA OR_FIRMA:
         except Exception as e:
             msg = str(e)
             if "429" in msg or "rate_limit" in msg.lower():
-                espera = 30
-                m = re.search(r"try again in (\d+\.?\d*)s", msg)
-                if m:
-                    espera = int(float(m.group(1))) + 2
-                if intento < intentos:
-                    print(f"  Limite Groq. Esperando {espera}s...")
-                    time.sleep(espera)
-                else:
-                    print(f"  Limite Groq agotado tras {intentos} intentos.")
-                    return None
+                cd = _activar_cooldown_groq(msg)
+                print(f"  Limite Groq detectado ({cd['razon']}). Cooldown hasta {cd['until']}. Se aborta sin reintentar.")
+                return None
             else:
                 print(f"  ERROR Groq: {e}")
                 return None
