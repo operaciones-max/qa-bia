@@ -384,6 +384,21 @@ REGLAS POR TIPO DE SERVICIO:
 - INSTALACION: campos *_instalado se llenan si se instalo el equipo (se_instalo true) o false.
 - VISITA PREVIA: TODOS los *_instalado tienen aplica=false.
 
+REGLAS ESTRICTAS PARA validaciones.errores_encontrados:
+- NUNCA reportes como error el comportamiento esperado por las REGLAS POR TIPO DE MEDIDA y REGLAS POR TIPO DE SERVICIO. Por ejemplo:
+  * En DIRECTA, TCs y TPs con aplica=false NO es un error — es lo correcto. NO lo listes.
+  * En VISITA PREVIA, todos los *_instalado con se_instalo=false y aplica=false NO es un error — es lo correcto. NO lo listes.
+  * En SEMIDIRECTA, tps_* con aplica=false NO es un error.
+- Solo reporta ERRORES REALES de QA: discrepancias entre acta y foto, datos faltantes que SI deberian existir, contradicciones internas, valores fuera de rango.
+- CONSISTENCIA OBLIGATORIA: si pones "serie no coincide con foto" en errores_encontrados, entonces medidor_*.serie_coincide_foto DEBE ser false. Si pones serie_coincide_foto=true, NO listes ese error. Cero contradicciones entre campos.
+- Si la observacion del tecnico explica por que falta un dato (ej: "OR no permitio tomar fotos"), reportalo como ALERTA en alertas_qa, no como error en errores_encontrados.
+
+REGLA CRITICA DE OVERRIDE A FALLIDA:
+- Si RESULTADO EN APP dice EXITOSA pero el acta esta SUSTANCIALMENTE INCOMPLETA (ej: medidor encontrado sin serie ni marca ni lecturas, sin sellos reportados, sin fotos del medidor, sin pruebas, sin diagrama unifilar, todo simultaneamente), debes marcar estado_ot=FALLIDA aunque el RESULTADO EN APP diga EXITOSA. La data incompleta no permite cerrar el QA como exitoso.
+- Solo manten estado_ot=EXITOSA si los datos clave del acta (medidor, lecturas, fotos al menos parciales, sellos, pruebas si aplica) estan razonablemente completos.
+- Si haces este override, en tipificacion_falla.detalle empieza con: "Override automatico a FALLIDA: el acta esta cerrada como CLOSURE_SUCCESSFUL pero la informacion reportada es sustancialmente incompleta (especificar campos faltantes)." Despues sigue con el resto del detalle estandar.
+- Si el override aplica, tipificacion_falla.causa_raiz debe reflejar el problema de calidad del acta (ej: "Acta cerrada exitosa con informacion sustancialmente incompleta").
+
 JSON ESPERADO:
 {{
   "tipo_medida": "DIRECTA | SEMIDIRECTA | INDIRECTA",
