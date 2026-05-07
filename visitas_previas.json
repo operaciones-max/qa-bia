@@ -65,9 +65,9 @@
   },
   "CO0500006734": {
     "ot_nombre": "VIPE_43827_95FE84",
-    "fecha_procesada": "2026-05-07 19:04:19",
+    "fecha_procesada": "2026-05-07 21:17:44",
     "tipo_medida": "SEMIDIRECTA",
-    "factor_medida": "0",
+    "factor_medida": null,
     "medidor_encontrado": {
       "serie": "23023020",
       "marca": "MICROSTAR",
@@ -82,7 +82,7 @@
       "aplica": true,
       "tiene": false,
       "seriales": [],
-      "detalles": "No visibles gabinete sellado por NEU"
+      "detalles": null
     },
     "tps_encontrados": {
       "aplica": false,
