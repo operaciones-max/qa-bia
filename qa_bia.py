@@ -25,6 +25,7 @@ if os.environ.get('GEMINI_API_KEY'):
         ALCANCES_CSV_URL     = "https://bia.metabaseapp.com/public/question/52353a69-6510-405b-9bbd-754d762a2597.csv"
         GEMINI_API_KEY       = os.environ['GEMINI_API_KEY']
         GEMINI_MODEL         = "gemini-2.5-flash"
+        GEMINI_MODELS        = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]
         SLACK_WEBHOOK_URL    = os.environ.get('SLACK_WEBHOOK_URL', '')
         TWILIO_ACCOUNT_SID   = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         TWILIO_AUTH_TOKEN    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -544,12 +545,13 @@ REGLA OR_FIRMA:
         print(f"  Gemini en cooldown ({cd['razon']}) hasta {cd['until']} - se omite analisis.")
         return None
 
-    intentos = 3
+    modelos = getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL])
     texto = ""
-    for intento in range(1, intentos + 1):
+    for idx, modelo in enumerate(modelos):
+        es_ultimo = (idx == len(modelos) - 1)
         try:
             respuesta = cliente_gemini.models.generate_content(
-                model=config.GEMINI_MODEL,
+                model=modelo,
                 contents=prompt,
                 config=genai_types.GenerateContentConfig(
                     temperature=0.1,
@@ -566,13 +568,12 @@ REGLA OR_FIRMA:
             fin    = texto.rfind("}")
             if inicio != -1 and fin != -1:
                 texto = texto[inicio:fin+1]
-            return json.loads(texto)
+            resultado = json.loads(texto)
+            if idx > 0:
+                print(f"  Modelo usado: {modelo} (fallback)")
+            return resultado
         except json.JSONDecodeError:
-            print(f"  ERROR JSON Gemini (intento {intento}/{intentos}): {texto[:200]}")
-            if intento < intentos:
-                time.sleep(5)
-            else:
-                return None
+            print(f"  JSON invalido de {modelo}: {texto[:150]}")
         except Exception as e:
             msg = str(e)
             msg_lower = msg.lower()
@@ -581,15 +582,17 @@ REGLA OR_FIRMA:
                              or "quota" in msg_lower)
             if es_rate_limit:
                 cd = _activar_cooldown_llm(msg)
-                print(f"  Limite Gemini detectado ({cd['razon']}). Cooldown hasta {cd['until']}. Se aborta sin reintentar.")
+                print(f"  Limite Gemini detectado ({cd['razon']}). Cooldown hasta {cd['until']}. Se aborta.")
                 return None
             es_transitorio = "503" in msg or "unavailable" in msg_lower or "high demand" in msg_lower
-            if es_transitorio and intento < intentos:
-                print(f"  Gemini 503 transitorio (intento {intento}/{intentos}). Esperando 15s...")
-                time.sleep(15)
-                continue
-            print(f"  ERROR Gemini: {e}")
-            return None
+            if es_transitorio:
+                print(f"  {modelo} 503/transitorio.")
+            else:
+                print(f"  ERROR {modelo}: {e}")
+        if not es_ultimo:
+            print(f"  Probando siguiente modelo: {modelos[idx + 1]}...")
+            time.sleep(2)
+    print(f"  Todos los modelos Gemini ({len(modelos)}) fallaron.")
     return None
 
 # =============================================================
@@ -1592,7 +1595,8 @@ def procesar_acta(acta, wms, alcances=None):
         print("     No se pudo leer el PDF. Se omite.")
         return False
 
-    print(f"     Analizando con Gemini ({config.GEMINI_MODEL})...")
+    modelos_log = ", ".join(getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL]))
+    print(f"     Analizando con Gemini (chain: {modelos_log})...")
     resultado_qa = analizar_acta(
         texto_pdf, tipo, estado, internal_bia_code,
         serial_asignado if debe_comparar_wms else "",
