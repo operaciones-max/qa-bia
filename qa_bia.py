@@ -583,9 +583,13 @@ REGLA OR_FIRMA:
                 cd = _activar_cooldown_llm(msg)
                 print(f"  Limite Gemini detectado ({cd['razon']}). Cooldown hasta {cd['until']}. Se aborta sin reintentar.")
                 return None
-            else:
-                print(f"  ERROR Gemini: {e}")
-                return None
+            es_transitorio = "503" in msg or "unavailable" in msg_lower or "high demand" in msg_lower
+            if es_transitorio and intento < intentos:
+                print(f"  Gemini 503 transitorio (intento {intento}/{intentos}). Esperando 15s...")
+                time.sleep(15)
+                continue
+            print(f"  ERROR Gemini: {e}")
+            return None
     return None
 
 # =============================================================
