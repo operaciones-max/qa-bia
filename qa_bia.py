@@ -301,8 +301,8 @@ def obtener_actas_nuevas():
 #  LEER PDF
 # =============================================================
 
-MAX_PAGINAS_VISION = 8   # techo de paginas que mandamos como imagen a Gemini
-DPI_VISION         = 80  # resolucion de las imagenes — mas bajo = menos tokens
+MAX_PAGINAS_VISION = 4   # techo de paginas que mandamos como imagen a Gemini
+DPI_VISION         = 60  # resolucion de las imagenes — mas bajo = menos tokens
 
 def descargar_y_leer_pdf(url):
     """Devuelve (texto, lista_de_imagenes_jpeg_bytes)."""
