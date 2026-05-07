@@ -129,9 +129,9 @@ def _cargar_cooldown_llm():
         return None
 
 def _activar_cooldown_llm(msg_error):
+    print(f"  [cooldown] Error original Gemini: {msg_error[:400]}")
     msg = msg_error.lower()
-    es_diario = ("per day" in msg or "tpd" in msg or "rpd" in msg or "daily" in msg
-                 or "quota exceeded" in msg or "free_tier" in msg or "free tier" in msg)
+    es_diario = ("per day" in msg or "tokens per day" in msg or "requests per day" in msg)
     if es_diario:
         until = datetime.utcnow().replace(hour=0, minute=5, second=0, microsecond=0) + timedelta(days=1)
         razon = "daily_quota"
