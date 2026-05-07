@@ -1493,7 +1493,8 @@ def _supabase_base_url():
 
 def enviar_supabase(acta, resultado_qa, alcance_row=None):
     url = _supabase_base_url()
-    key = os.environ.get("SUPABASE_ANON_KEY", "").strip()
+    key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+           or os.environ.get("SUPABASE_ANON_KEY", "").strip())
     if not url or not key:
         return
 
@@ -1570,7 +1571,8 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
 
 def actualizar_supabase_alcance(co_code, alcance_row):
     url = _supabase_base_url()
-    key = os.environ.get("SUPABASE_ANON_KEY", "").strip()
+    key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+           or os.environ.get("SUPABASE_ANON_KEY", "").strip())
     if not url or not key:
         return
 
