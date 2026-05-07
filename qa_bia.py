@@ -687,6 +687,107 @@ def _validar_coincidencia_wms(qa, serial_wms, tcs_wms, tps_wms, debe_comparar):
     else:
         qa["tps_coinciden_wms"] = None
 
+_VALORES_BASURA = {
+    "", "n/a", "na", "n.v", "nv", "no aplica", "no se reporta",
+    "otra", "otro", ".0", "0.0", ".o", "0", "null", "none", "-", "—",
+}
+
+def _es_valor_basura(v):
+    if v is None:
+        return True
+    s = str(v).strip().lower()
+    return s in _VALORES_BASURA
+
+def _limpiar_errores_fantasma(qa, tipo_servicio):
+    """Saca errores que reportan comportamiento NORMAL segun reglas de medida/servicio.
+    Tambien dedupea errores vs alertas y elimina ruido."""
+    val = qa.get("validaciones") or {}
+    errores = val.get("errores_encontrados") or []
+    alertas = qa.get("alertas_qa") or []
+
+    tipo_medida    = (qa.get("tipo_medida") or "").upper()
+    es_visita      = "previa" in (tipo_servicio or "").lower()
+    es_directa     = tipo_medida == "DIRECTA"
+    es_semidirecta = tipo_medida == "SEMIDIRECTA"
+
+    def es_fantasma(item):
+        s = " " + (item or "").lower() + " "
+        if es_directa:
+            for term in (" tc ", " tcs ", " tp ", " tps ", "bloque de pruebas",
+                         "bloque pruebas", "cable de control", "cable control"):
+                if term in s:
+                    return True
+        if es_semidirecta:
+            if (" tp " in s or " tps " in s) and " tc " not in s and " tcs " not in s:
+                return True
+        if es_visita and "instalad" in s:
+            if "telemedida instalad" not in s and "totalizador instalad" not in s:
+                return True
+        for term in ("medidor de respaldo", "medidor de espejo", "planta de respaldo",
+                     "medidor de espejo", "no se encontro"):
+            if term in s and tipo_medida == "DIRECTA":
+                return True
+        return False
+
+    errores_l = [e for e in errores if not es_fantasma(e)]
+    alertas_l = [a for a in alertas if not es_fantasma(a)]
+    set_err = set(errores_l)
+    alertas_l = [a for a in alertas_l if a not in set_err]
+
+    val["errores_encontrados"] = errores_l
+    qa["validaciones"] = val
+    qa["alertas_qa"] = alertas_l
+
+def _override_fallida_si_incompleto(qa):
+    """Si estado_ot=EXITOSA pero campos criticos del medidor encontrado tienen
+    valores basura/placeholder, fuerza FALLIDA y popula tipificacion."""
+    if qa.get("estado_ot") != "EXITOSA":
+        return
+
+    med = qa.get("medidor_encontrado") or {}
+    diag = qa.get("diagrama_unifilar") or {}
+
+    flags = [
+        _es_valor_basura(med.get("serie")),
+        _es_valor_basura(med.get("marca")),
+        _es_valor_basura(med.get("referencia")),
+        _es_valor_basura(med.get("lectura_activa_kwh")),
+        _es_valor_basura(qa.get("sellos_medidor_encontrado")),
+        not diag.get("tiene_foto"),
+    ]
+
+    if sum(1 for f in flags if f) < 4:
+        return
+
+    qa["estado_ot"] = "FALLIDA"
+    co = qa.get("internal_bia_code", "")
+    falla = qa.get("tipificacion_falla") or {}
+    falla.update({
+        "causa_raiz":  "Acta cerrada exitosa con informacion sustancialmente incompleta",
+        "responsable": "Tecnico ejecutor / Coordinador Operativo",
+        "detalle": (
+            f"Override automatico a FALLIDA: la OT {co} fue cerrada como CLOSURE_SUCCESSFUL "
+            f"pero la informacion reportada en el acta es sustancialmente incompleta o contiene "
+            f"valores placeholder (n.v, .o, .0, Otra, etc.) en campos criticos del medidor "
+            f"encontrado, sellos, lecturas y registro fotografico. La data no permite cerrar "
+            f"el QA como exitoso ni validar la ejecucion."
+        ),
+        "mejora": (
+            "Implementar validacion estricta en el formulario del acta para rechazar valores "
+            "placeholder y exigir captura completa de los campos minimos del medidor (serie, "
+            "marca, referencia, lecturas, sellos, foto, diagrama unifilar) antes de permitir "
+            "el cierre exitoso de la OT. Agregar revision de calidad de captura previa al cierre."
+        ),
+        "cinco_por_que": [
+            "1. Por que se override a FALLIDA? Porque los campos criticos del medidor encontrado tienen valores invalidos o placeholder",
+            "2. Por que llegaron esos valores al acta? Porque el formulario actual permite captura con valores no validados",
+            "3. Por que el formulario lo permite? Porque no hay validacion estricta de tipos y formatos en los campos del acta",
+            "4. Por que esto afecta? Porque QA no puede determinar si la actividad fue ejecutada correctamente",
+            "5. Por que no se corrigio antes? Porque no existe un proceso de revision de calidad de captura del acta antes de cerrar la OT",
+        ],
+    })
+    qa["tipificacion_falla"] = falla
+
 # =============================================================
 #  GUARDAR REPORTE
 # =============================================================
@@ -1680,6 +1781,8 @@ def procesar_acta(acta, wms, alcances=None):
         tps_asignados   if debe_comparar_wms else [],
         debe_comparar_wms,
     )
+    _limpiar_errores_fantasma(resultado_qa, tipo)
+    _override_fallida_si_incompleto(resultado_qa)
 
     resultado_qa["planner"]              = planner
     resultado_qa["or_norm"]              = or_norm
