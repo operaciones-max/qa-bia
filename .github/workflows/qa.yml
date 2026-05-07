@@ -23,7 +23,7 @@ jobs:
           python-version: '3.11'
 
       - name: Instalar dependencias
-        run: pip install google-genai pdfplumber requests twilio
+        run: pip install google-genai pdfplumber pymupdf requests twilio
 
       - name: Preparar entorno
         run: |

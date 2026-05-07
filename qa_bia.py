@@ -301,12 +301,17 @@ def obtener_actas_nuevas():
 #  LEER PDF
 # =============================================================
 
+MAX_PAGINAS_VISION = 20  # techo de paginas que mandamos como imagen a Gemini
+
 def descargar_y_leer_pdf(url):
+    """Devuelve (texto, lista_de_imagenes_jpeg_bytes)."""
     try:
         r = requests.get(url, timeout=30)
         r.raise_for_status()
+        pdf_bytes = r.content
+
         texto = ""
-        with pdfplumber.open(io.BytesIO(r.content)) as pdf:
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
             for pagina in pdf.pages:
                 try:
                     t = pagina.extract_text()
@@ -314,10 +319,33 @@ def descargar_y_leer_pdf(url):
                         texto += t + "\n"
                 except Exception:
                     continue
-        return texto.strip() if texto.strip() else None
+
+        imagenes = _renderizar_pdf_a_imagenes(pdf_bytes)
+        texto_final = texto.strip() if texto.strip() else None
+        return texto_final, imagenes
     except Exception as e:
         print(f"  ERROR leyendo PDF: {e}")
-        return None
+        return None, []
+
+def _renderizar_pdf_a_imagenes(pdf_bytes):
+    """Renderiza paginas del PDF como JPEG bytes. Limitado a MAX_PAGINAS_VISION."""
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        print("  WARN: PyMuPDF no instalado, sin vision (solo texto)")
+        return []
+    imagenes = []
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        n = min(len(doc), MAX_PAGINAS_VISION)
+        for i in range(n):
+            page = doc[i]
+            pix = page.get_pixmap(dpi=110)
+            imagenes.append(pix.tobytes("jpeg"))
+        doc.close()
+    except Exception as e:
+        print(f"  WARN: no se pudieron renderizar imagenes del PDF: {e}")
+    return imagenes
 
 # =============================================================
 #  ANALISIS CON GEMINI
@@ -325,7 +353,7 @@ def descargar_y_leer_pdf(url):
 
 def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
                   internal_bia_code="", serial_asignado_wms="", marca_asignada_wms="",
-                  tcs_asignados_wms=None, tps_asignados_wms=None):
+                  tcs_asignados_wms=None, tps_asignados_wms=None, imagenes_pdf=None):
     tipo_label = "INSTALACION" if "nstala" in tipo_servicio else "VISITA PREVIA"
     es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
     es_visita  = "previa" in tipo_servicio.lower()
@@ -351,6 +379,12 @@ TPs ASIGNADOS EN WMS (solo indirecta): {tps_wms_info}
 INSTRUCCIONES CRITICAS:
 - Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
 - NO inventes datos. Si un campo no esta en el acta usa null.
+- VAS A RECIBIR el texto del acta Y las paginas del acta como imagenes adjuntas. USA AMBAS fuentes:
+  * Verifica visualmente las series, lecturas y marcas del medidor en las fotos del acta.
+  * Cuenta visualmente los SELLOS presentes en cada equipo (medidor, TCs, TPs) y reporta el numero exacto que veas.
+  * Si la serie escrita en el campo "Serie del medidor" NO se ve en la foto del medidor o se ve diferente, marca serie_coincide_foto=false con observacion explicita ("se ve serie XXX en foto, acta dice YYY").
+  * Si la foto muestra el diagrama unifilar, marca diagrama_unifilar.tiene_foto=true.
+  * Si las fotos estan borrosas, oscuras o no permiten leer, NO marques verificaciones como true; marca como false con observacion ("foto ilegible").
 - MARCAS: si "Marca del medidor", "Marca del modem", "Marca del totalizador" dice "Otra"/"Otro", usa el valor del siguiente campo "Ingresar marca..." como marca real. NUNCA concatenes.
 - "serie_coincide_foto" SIEMPRE true o false (nunca null si hay seccion Registro fotografico):
     1. Toma la serie EXACTA del campo "Serie del medidor".
@@ -365,7 +399,13 @@ INSTRUCCIONES CRITICAS:
   * "medidor_coincide_wms": Si MEDIDOR ASIGNADO arriba dice "No aplica" -> null. Si no, true/false comparando serie_instalada vs WMS.
   * "tcs_coinciden_wms": null si DIRECTA o si TCs ASIGNADOS dice "No aplica". Si no, true solo si CADA serial asignado en WMS aparece tambien en tcs_instalados.seriales (orden libre, comparacion por conjunto).
   * "tps_coinciden_wms": null si DIRECTA o SEMIDIRECTA o si TPs ASIGNADOS dice "No aplica". Si no, true solo si CADA serial asignado en WMS aparece tambien en tps_instalados.seriales.
-- TECNICO EJECUTOR: Busca en el acta quien ejecuto la actividad (firma del tecnico, nombre del electricista, operario). Si el acta indica empresa contratista diferente a BIA Energy, marca tecnico_empresa="CONTRATISTA" y registra el nombre de la empresa en contratista_nombre. Si es empleado directo BIA Energy, marca tecnico_empresa="BIA" y contratista_nombre=null.
+- TECNICO EJECUTOR: Busca en el acta quien ejecuto la actividad. Reglas estrictas:
+  1. Lee TODAS las firmas, sellos, encabezados y campos donde aparece "Tecnico", "Electricista", "Operario", "Ejecutor", "Empresa contratista", "Razon social".
+  2. Si el acta menciona EXPLICITAMENTE que la empresa es BIA Energy o BIA Field Services o BIA SAS o solo "BIA" como empleador del tecnico, marca tecnico_empresa="BIA" y contratista_nombre=null.
+  3. Si menciona cualquier OTRA razon social distinta a BIA (ej: "SOTO ALIRIO ENRIQUE", "CHADAZA SAS", "AYC INGENIERIA", "ELECTROCOSTA SAS", una persona natural con cedula como contratista, etc.), marca tecnico_empresa="CONTRATISTA" y contratista_nombre con la razon social EXACTA tal como aparece en el acta.
+  4. Si el acta no es claro o no menciona empresa, NO inventes — usa contratista_nombre con el texto literal que aparezca cerca del nombre del tecnico, y elige tecnico_empresa segun lo que mejor se ajuste. Si dudas: usa "CONTRATISTA" (mas seguro asumir contratista que asumir BIA).
+  5. tecnico_nombre debe ser el nombre completo de la persona que firmo o aparece como ejecutor — NO el nombre de la empresa.
+  6. NUNCA inventes nombres de empresa o de tecnico. Si no aparece, usa null.
 - OBSERVACION VERBATIM: Copia LETRA POR LETRA el contenido del campo "Observaciones" del acta. NO resumas, NO parafrasees, NO corrijas ortografia, NO agregues nada. Si hay varias secciones de observaciones concatena con salto de linea. Si no existe el campo usa null.
 - SELLOS: Cuenta los sellos visibles/reportados en el acta para cada equipo:
   * "sellos_medidor_encontrado": sellos presentes en el medidor encontrado (int, 0 si no tiene, null si no se reporta).
@@ -561,6 +601,10 @@ REGLA OR_FIRMA:
         print(f"  Gemini en cooldown ({cd['razon']}) hasta {cd['until']} - se omite analisis.")
         return None
 
+    contents = [prompt]
+    for img_bytes in (imagenes_pdf or []):
+        contents.append(genai_types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
+
     modelos = getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL])
     texto = ""
     for idx, modelo in enumerate(modelos):
@@ -568,7 +612,7 @@ REGLA OR_FIRMA:
         try:
             respuesta = cliente_gemini.models.generate_content(
                 model=modelo,
-                contents=prompt,
+                contents=contents,
                 config=genai_types.GenerateContentConfig(
                     temperature=0.1,
                     max_output_tokens=8192,
@@ -1659,6 +1703,7 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "alertas_qa":                resultado_qa.get("alertas_qa") or [],
         "tipificacion_causa_raiz":   falla.get("causa_raiz"),
         "tipificacion_responsable":  falla.get("responsable"),
+        "wms_asignado":              bool(resultado_qa.get("wms_asignado")),
         "tiene_alcance":             alcance_row is not None,
         "alcance_viable":            _av(alcance_row, "Viable Para Instalar") if alcance_row else None,
         "alcance_medida_instalar":   _av(alcance_row, "Tipo De Medida A Instalar") if alcance_row else None,
@@ -1753,19 +1798,20 @@ def procesar_acta(acta, wms, alcances=None):
     else:
         print(f"     WMS: No encontrado para {internal_bia_code}")
 
-    texto_pdf = descargar_y_leer_pdf(pdf_url)
+    texto_pdf, imagenes_pdf = descargar_y_leer_pdf(pdf_url)
     if not texto_pdf:
         print("     No se pudo leer el PDF. Se omite.")
         return False
 
     modelos_log = ", ".join(getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL]))
-    print(f"     Analizando con Gemini (chain: {modelos_log})...")
+    print(f"     Analizando con Gemini (chain: {modelos_log}) | imagenes: {len(imagenes_pdf)}")
     resultado_qa = analizar_acta(
         texto_pdf, tipo, estado, internal_bia_code,
         serial_asignado if debe_comparar_wms else "",
         marca_asignada if debe_comparar_wms else "",
         tcs_asignados if debe_comparar_wms else [],
         tps_asignados if debe_comparar_wms else [],
+        imagenes_pdf=imagenes_pdf,
     )
     if not resultado_qa:
         return False
@@ -1790,6 +1836,7 @@ def procesar_acta(acta, wms, alcances=None):
     resultado_qa["medidor_wms_asignado"] = serial_asignado if debe_comparar_wms else "No aplica"
     resultado_qa["tcs_wms_asignados"]    = tcs_asignados if debe_comparar_wms else []
     resultado_qa["tps_wms_asignados"]    = tps_asignados if debe_comparar_wms else []
+    resultado_qa["wms_asignado"]         = bool(serial_asignado)
 
 
     print(f"     Resultado: {resultado_qa.get('estado_ot')} | Medida: {resultado_qa.get('tipo_medida')}")
