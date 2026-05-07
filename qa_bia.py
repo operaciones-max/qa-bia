@@ -152,6 +152,8 @@ def _activar_cooldown_llm(msg_error):
     return data
 
 def _alertar_slack_cooldown(data):
+    if getattr(config, "MODO_BACKFILL", False):
+        return  # silenciado durante backfill — solo loguea en consola
     url = os.environ.get("SLACK_WEBHOOK_URL", "") or getattr(config, "SLACK_WEBHOOK_URL", "")
     if not url:
         return
