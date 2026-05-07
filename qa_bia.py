@@ -252,7 +252,7 @@ def obtener_actas_nuevas():
     fecha_inicio = date.fromisoformat(config.FECHA_INICIO)
     lector       = csv.DictReader(io.StringIO(respuesta.content.decode('utf-8')))
     pendientes   = []
-    omitidas     = 0
+    om_tipo = om_estado = om_sin_acta = om_sin_pdf = om_fecha = om_ya_proc = om_fecha_invalida = 0
 
     for fila in lector:
         tipo       = fila.get("Tipo de servicio", "").strip()
@@ -262,23 +262,27 @@ def obtener_actas_nuevas():
         fecha_str  = fila.get("start", "").strip()
         tiene_acta = fila.get("Tiene Acta", "").strip()
 
-        if not (tipo in config.TIPOS_SERVICIO_VALIDOS
-                and estado in config.ESTADOS_ANALIZAR
-                and tiene_acta == "Con Acta"
-                and pdf_url):
-            continue
+        if tipo not in config.TIPOS_SERVICIO_VALIDOS:
+            om_tipo += 1; continue
+        if estado not in config.ESTADOS_ANALIZAR:
+            om_estado += 1; continue
+        if tiene_acta != "Con Acta":
+            om_sin_acta += 1; continue
+        if not pdf_url:
+            om_sin_pdf += 1; continue
         try:
             if date.fromisoformat(fecha_str[:10]) < fecha_inicio:
-                omitidas += 1
-                continue
+                om_fecha += 1; continue
         except Exception:
-            continue
+            om_fecha_invalida += 1; continue
         if acta_id in procesados:
-            continue
+            om_ya_proc += 1; continue
         pendientes.append(fila)
 
     pendientes.sort(key=lambda x: (x.get("start", ""), x.get("created_at", "")))
-    print(f"  {len(pendientes)} acta(s) nueva(s) (omitidas por fecha: {omitidas})")
+    print(f"  {len(pendientes)} acta(s) nueva(s) | filtradas: tipo={om_tipo} estado={om_estado} "
+          f"sin_acta={om_sin_acta} sin_pdf={om_sin_pdf} fecha={om_fecha} fecha_invalida={om_fecha_invalida} "
+          f"ya_procesadas={om_ya_proc}")
 
     cap = getattr(config, "MAX_ACTAS_POR_RUN", 0)
     if cap and len(pendientes) > cap:
@@ -549,7 +553,7 @@ REGLA OR_FIRMA:
                 contents=prompt,
                 config=genai_types.GenerateContentConfig(
                     temperature=0.1,
-                    max_output_tokens=1200,
+                    max_output_tokens=8192,
                     response_mime_type="application/json",
                 ),
             )
