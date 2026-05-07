@@ -773,12 +773,27 @@ def _limpiar_errores_fantasma(qa, tipo_servicio):
             for term in ("pruebas de funcionamiento", "equipo patron", "equipo patrón",
                          "diagrama unifilar", "no se realizaron pruebas",
                          "no se reporta equipo", "no se reporta foto",
-                         "no se reportan fotos", "no se reportan sellos"):
+                         "no se reportan fotos", "no se reportan sellos",
+                         "no se encontraron sellos", "no se encontro sello",
+                         "no se encontraron fotos", "no se encontro foto",
+                         "no se encontro telemedida", "no se encontró telemedida",
+                         "no se encontro bloque", "no se encontró bloque",
+                         "no se encontro cable", "no se encontró cable",
+                         "medidor de respaldo", "medidor de espejo",
+                         "planta de respaldo", "planta electrica",
+                         "no se encontraron alertas", "no se encontraron tcs",
+                         "no se encontraron tps"):
                 if term in s:
                     return True
         for term in ("medidor de respaldo", "medidor de espejo", "planta de respaldo",
-                     "medidor de espejo", "no se encontro"):
+                     "no se encontro"):
             if term in s and tipo_medida == "DIRECTA":
+                return True
+        # Si es un campo del acta con valor basura (n.v, .0, .o, Otra), reportarlo
+        # como error del medidor encontrado es ruido — el override a FALLIDA
+        # ya cubre ese caso con tipificacion.
+        for term in (": n.v", ": .o", ": .0", ": otra", ": otro"):
+            if term in s and ("encontrada" in s or "encontrado" in s):
                 return True
         return False
 
