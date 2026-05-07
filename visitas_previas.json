@@ -1,0 +1,34 @@
+{
+  "CO0800006765": {
+    "ot_nombre": "VIPE_44339_3986E7",
+    "fecha_procesada": "2026-05-07 13:10:52",
+    "tipo_medida": "SEMIDIRECТА",
+    "factor_medida": "40",
+    "medidor_encontrado": {
+      "serie": "60714646",
+      "marca": "LANDIS GYR",
+      "referencia": "E550",
+      "lectura_activa_kwh": ".0",
+      "lectura_reactiva_kvarh": ".0",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "60714646",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": null,
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para camb"
+  }
+}
