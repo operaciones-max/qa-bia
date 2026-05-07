@@ -34,7 +34,7 @@ if os.environ.get('GEMINI_API_KEY'):
         MODO_PRUEBA          = False
         MODO_UNICO           = True
         ACTAS_PRUEBA         = 2
-        FECHA_INICIO          = "2026-05-05"
+        FECHA_INICIO          = "2026-05-01"
         FECHA_INICIO_ALCANCES = "2026-04-30"
         PAUSA_GROQ_SEGUNDOS  = 5
         INTERVALO_SEGUNDOS   = 300
