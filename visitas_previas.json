@@ -65,7 +65,7 @@
   },
   "CO0500006734": {
     "ot_nombre": "VIPE_43827_95FE84",
-    "fecha_procesada": "2026-05-07 22:32:44",
+    "fecha_procesada": "2026-05-08 03:49:46",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": null,
     "medidor_encontrado": {
@@ -91,8 +91,8 @@
       "detalles": null
     },
     "tecnico_nombre": "JONATAN PALACIO",
-    "tecnico_empresa": "BIA",
-    "contratista_nombre": null,
+    "tecnico_empresa": "CONTRATISTA",
+    "contratista_nombre": "ISELEC",
     "observacion_tecnico_verbatim": "Código interno de Bia:* CO0500006734 tipo de servicio : visita previa sin epm *Serial del medidor : 23023020 *IP del medidor: 10.83.243.238 *Se instala módem : no visible gabinete\nsellado por NEU *serie módem retirado : no aplica *modem marca : microstar *Factor de medida: TCs no visibles gabinete sellado por NEU Transformador: NO se visualizó en\ncampo Con OR: NO Observación: 23 de abril del 2026 a las 01:40 pm se realiza visita previa en campo por personal de BIA ENERGY para proceso de cambio de comercializador\nusuario a razón social de ARCOS DORADOS COLOMBIA SAS ubicado en Medellín Antioquia, en la vasita se encontro lo siguiente: MEDIDA SELLADA EN TAPA GABINETE POR NEU\nENERGY no se logra obtener información de los TCs Tipo de medida semidirecta en tres elementos y nivel de tensión 1, Medida ubicada en gabinete exterior en cuarto técnico\nobstruido por equipos del cliente, frontera actualmente tiene sellos del comercializador NEU ENERGY. - Gabiente actual si tiene placa del fabricante Mavill SI cumple - \tBornera no\ntiene marca de fabricante NO cumple - \tcalibra de señales de tensión y corrientes en 12 awg - \tseñales de corriente para burden en calibre 12 awg distancia no visible. - \tcódigo de\ncolores si cumple - \tel cliente no cuenta con sistema solar - \tel cliente no cuenta con planta de emergencia - \tcapacidad del banco de condesadores de 11 KVAR - \tpara continuar con\nel proceso de cambio de comercializador técnicamente sería necesario cambio de medidor, cambio TCs si no se presenta los certificados, cambio de módem de comunicación,\ncambio de bornera, recalcular el burden con los el calibre existente. Si se requiere cambiar los TCs de debe realizar suspensión del transformador del cliente 2 horas, el cliente\nrecomienda un día lunes o martes en horas de la mañana. No se requiere permisos especiales con administraciones. No se retiran sellos de la medida. Totalizador existente de\n400Amperios NO regulable Acometida NO visible todo queda operativo"
   },
   "CO1100006755": {
