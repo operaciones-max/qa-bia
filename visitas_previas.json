@@ -1,7 +1,7 @@
 {
   "CO0800006765": {
     "ot_nombre": "VIPE_44339_3986E7",
-    "fecha_procesada": "2026-05-07 19:33:04",
+    "fecha_procesada": "2026-05-08 07:12:39",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": "40",
     "medidor_encontrado": {
@@ -29,7 +29,7 @@
     "tecnico_nombre": "Duvan Cervera",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, Se encuentra medida semidirecta (factor 40 segun factura) en poste, transformador exclusivo de 75 KVA,\nacometida y parciales en 4/0 cobre, breaker principal de 2500 A, usuario cuenta no con paneles solares pero si con planta electrica. Se requiere para instalacion: Pasar a medida\nindirecta nivel 2. Descargo con perdida de mercado. Apoyo de carrocanasta. 3 tc's tipo exterior. 3 tp's tipo exterior. 3 dps 24 platinas. Juego de tornillos arandela ay tuercas. 14\nconectores de coraza de 1\", 25 m de coraza industrial de 1\". 13 m de cable señal 4*12. 13 m de cable señal 6*12. 2 m de cable blanco #12. 6 m de cable verde # 12. 25 m de cable #2\ndesnudo. 1 gabinete metálico. 1 medidor pa semiindirecta. 1 bloque de prueba. 2 m de cinta bandit. 2 hebillas. 1 crucetas más accesorios (ya que se debe adecuar punto de\nconexión) Administradora pide ser notificada con anticipación de la próxima visita de instalación, que no tiene inconvenientes ningun día ya que cuenta con la planta electrica.\nSe da por finalizada la actividad"
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, Se encuentra medida semidirecta (factor 40 según factura) en poste, transformador exclusivo de 75 KVA,\nacometida y parciales en 4/0 cobre, breaker principal de 2500 A, usuario cuenta no con paneles solares pero si con planta electrica. Se requiere para instalación: Pasar a medida\nindirecta nivel 2. Descargo con perdida de mercado. Apoyo de carrocanasta. 3 tc's tipo exterior. 3 tp's tipo exterior. 3 dps 24 platinas. Juego de tornillos arandela ay tuercas. 14\nconectores de coraza de 1\", 25 m de coraza industrial de 1\". 13 m de cable señal 4*12. 13 m de cable señal 6*12. 2 m de cable blanco #12. 6 m de cable verde # 12. 25 m de cable #2\ndesnudo. 1 gabinete metálico. 1 medidor pa semiindirecta. 1 bloque de prueba. 2 m de cinta bandit. 2 hebillas. 1 crucetas más accesorios (ya que se debe adecuar punto de\nconexión) Administradora pide ser notificada con anticipación de la próxima visita de instalación, que no tiene inconvenientes ningun día ya que cuenta con la planta electrica.\nSe da por finalizada la actividad"
   },
   "CO0500006750": {
     "ot_nombre": "VIPE_44039_80A0C6",
@@ -129,13 +129,13 @@
   },
   "CO0800006812": {
     "ot_nombre": "VIPE_45175_EA7252",
-    "fecha_procesada": "2026-05-07 19:27:53",
+    "fecha_procesada": "2026-05-08 07:12:18",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
       "serie": "41145857",
-      "marca": "Otra",
-      "referencia": "CDM N23U03",
+      "marca": "CDM",
+      "referencia": "N23U03",
       "lectura_activa_kwh": "011013.68",
       "lectura_reactiva_kvarh": "002225.24",
       "serie_coincide_foto": true,
@@ -157,7 +157,7 @@
     "tecnico_nombre": "Jonathan Rudas",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para realizar visita previa a asados del oeste se encontró medidor de directa en Gabinete compartido con otras 2 cuentas con acometida #2 cu y parciales en #2\ncu , transformador de 75 KVA compartido , se alimenta gabinete con una acometida 1/0 aluminio que se distribuye para las 3 cuentas , y un breaker totalizador de 200amp.\nse requiere para instalar medida directa:\nopción 1: validar placa de certificado si es\nviable solo es reemplazar medida de aire\ne instalar medidor de Bia sin caja\npolicarbonato. Opción 2: si no cumple el\ncertificado del gabinete se debe instalar\nmedidor Bia en seria el de Aire , fuera del\ngabinete compartido ya que no hay\nespacio para instalar caja poli , para eso\nse requieren los siguientes materiales: 1\ncaja policarbonato tipo 3-4 1 kit de\ncomunicación con simcard\nmultioperador 15 metros de cable #2\ncobre 6 metros de coraza 1\" 4 conectores\nde coraza 1\" 6 conectores de perforación\n120-120. Consumibles. Se debe realizar\nmaniobra a las 7:00 am para que no\nafecte producción del restaurante.\nmedida directa Escalera 9 pasos\nSi 15\notros usuarios que están conectados al trafo de distribución\ntubos portafusibles del trafo"
+    "observacion_tecnico_verbatim": "Se llega al sitio para realizar visita previa a asados del oeste se encontró medidor de directa en Gabinete compartido con otras 2 cuentas con acometida #2 cu y parciales en #2\ncu , transformador de 75 KVA compartido , se alimenta gabinete con una acometida 1/0 aluminio que se distribuye para las 3 cuentas , y un breaker totalizador de 200amp.\nse requiere para instalar medida directa:\nopción 1: validar placa de certificado si es\nviable solo es reemplazar medida de aire\ne instalar medidor de Bia sin caja\npolicarbonato. Opción 2: si no cumple el\ncertificado del gabinete se debe instalar\nmedidor Bia en seria el de Aire , fuera del\ngabinete compartido ya que no hay\nespacio para instalar caja poli , para eso\nse requieren los siguientes materiales: 1\ncaja policarbonato tipo 3-4 1 kit de\ncomunicación con simcard\nmultioperador 15 metros de cable #2\ncobre 6 metros de coraza 1\" 4 conectores\nde coraza 1\" 6 conectores de perforación\n120-120. Consumibles. Se debe realizar\nmaniobra a las 7:00 am para que no\nafecte producción del restaurante.\nmedida directa\nEscalera 9 pasos\nSi\n15\notros usuarios que están conectados al trafo de distribución\ntubos portafusibles del trafo"
   },
   "CO0800006811": {
     "ot_nombre": "VIPE_44705_EE6088",
@@ -193,7 +193,7 @@
   },
   "CO0800006772": {
     "ot_nombre": "VIPE_45006_66D2D3",
-    "fecha_procesada": "2026-05-07 19:26:45",
+    "fecha_procesada": "2026-05-08 07:10:59",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -221,17 +221,17 @@
     "tecnico_nombre": "Jorge Gelvez",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "*OBSERVACION* SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCUENTRO PREDIO OCUPADO FUNCIONA AUTOSERVICIO LA 18 ( VENTA DE VIVERES RANCHOS Y LICORES AL DETAL Y POR MAYOR ) CON EQUIPO DE MEDIDA NIVEL 1 MEDIDOR DE DIRECTA EN FACHADA LA CUAL NO SE ENCUENTRA ENREJADA SE TOMAN DATOS DE MEDIDOR Y LECTURAS CLIENTE SE ENCUENTRA CONECTADO A RED ABIERTA DE BT ENERGIZADA POR TRANSFORMADOR COMPARTIDO DE 74 KVA ATIENDE VISITA EL SEÑOR ALVEIRO DE JESUS BARRIOS QUIE PIDE EL CAMBIO DE MEDIDOR SE REALIZE DE LUNES A VIERNES PASADAS LAS 13:00 DE LA TARDE PARA QUE NO AFECTE SUS VENTAS YA QUE NO CUENTA CON PLANTA ELECTRICA DE RESPALDO NI PANELES SOLARES *MATERIALES REQUERIDOS PARA INSTALACION EN FACHADA* 1 MEDIDOR ( MEDIDA DIRECTA ) 1 CAJA DE PLC 1 MODEN 1 ANTENA 1 SIM CARD *MATERIALES ADICIONALES A LOS ANTERIORES PARA INSTALACION EN POSTE EN CASO DE QUE OR NO PERMITA INSTALACION EN FACHADA* 15 MTS ACOMETIDA 2×8+8 6 CONECTORES DE PERFORACIÓN 4 MTS DE CINTA BANDY 2 HEBILLAS 2 TENSORES DE ACOMETIDA 2 OJOS DE ALUMINIO"
+    "observacion_tecnico_verbatim": "SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCUENTRO PREDIO OCUPADO FUNCIONA AUTOSERVICIO LA 18 ( VENTA DE VIVERES RANCHOS Y LICORES AL DETAL Y POR MAYOR ) CON EQUIPO DE MEDIDA NIVEL 1 MEDIDOR DE DIRECTA EN FACHADA LA CUAL NO SE ENCUENTRA ENREJADA SE TOMAN DATOS DE MEDIDOR Y LECTURAS CLIENTE SE ENCUENTRA CONECTADO A RED ABIERTA DE BT ENERGIZADA POR TRANSFORMADOR COMPARTIDO DE 74 KVA ATIENDE VISITA EL SEÑOR ALVEIRO DE JESUS BARRIOS QUIE PIDE EL CAMBIO DE MEDIDOR SE REALIZE DE LUNES A VIERNES PASADAS LAS 13:00 DE LA TARDE PARA QUE NO AFECTE SUS VENTAS YA QUE NO CUENTA CON PLANTA ELECTRICA DE RESPALDO NI PANELES SOLARES *MATERIALES REQUERIDOS PARA INSTALACION EN FACHADA* 1 MEDIDOR ( MEDIDA DIRECTA ) 1 CAJA DE PLC 1 MODEN 1 ANTENA 1 SIM CARD *MATERIALES ADICIONALES A LOS ANTERIORES PARA INSTALACION EN POSTE EN CASO DE QUE OR NO PERMITA INSTALACION EN FACHADA* 15 MTS ACOMETIDA 2×8+8 6 CONECTORES DE PERFORACIÓN 4 MTS DE CINTA BANDY 2 HEBILLAS 2 TENSORES DE ACOMETIDA 2 OJOS DE ALUMINIO"
   },
   "CO0800006813": {
     "ot_nombre": "VIPE_45241_EE0C41",
-    "fecha_procesada": "2026-05-07 19:27:08",
+    "fecha_procesada": "2026-05-08 07:11:21",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
       "serie": "157866",
-      "marca": "DACO",
-      "referencia": "CDM IBD 1-3",
+      "marca": "CDM",
+      "referencia": "IBD 1-3",
       "lectura_activa_kwh": "0.0",
       "lectura_reactiva_kvarh": "0.0",
       "serie_coincide_foto": true,
@@ -253,7 +253,7 @@
     "tecnico_nombre": "Duvan Cervera",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, se encuentra medida directa en fachada del usuario en caja de policarbonato tipo 3-4 ( descolgada y en mal estado), acometida y parciales en #4 cobre, breaker p/al de 150 A. Transformador compartido en zona urbana a unos 100 m, señor usuario me atiende de manera de breve ya que está de salida, me indica que cuenta con planta electrica no con no paneles solares. Se requiere para cambio de Comercializador, Instalar medida en fachada, ya que está es de libre acceso (sin rejas), ya que el poste siguiente se encuentra con una fuerte inclinación, por riesgo electrico se descarta la posibilidad de instalar medidor en poste. También se requieren: 1 caja Poly tipo 3-4. 1 medidor de directa. 1 kit de telemedida completo. 6 m de cable #4 cobre. 6 conectores de perforación 120/120. Llevar taladro y brocas de pared, cinta de colores. Señor usuario me indica que recomienda trabajos de martes a jueves en horas de la mañana, y que por favor le notifiquen con anticipación la actividad de instalación, que le interesa sea lo antes posible. Se da por finalizada la actividad."
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, se encuentra medida directa en fachada del usuario en caja de policarbonato tipo 3-4 ( descolgada y en mal\nestado), acometida y parciales en #4 cobre, breaker p/al de 150 A. Transformador compartido en zona urbana a unos 100 m, señor usuario me atiende de manera de breve ya que\nestá de salida, me indica que cuenta con planta electrica no con no paneles solares. Se requiere para cambio de Comercializador, Instalar medida en fachada, ya que está es de\nlibre acceso (sin rejas), ya que el poste siguiente se encuentra con una fuerte inclinación, por riesgo electrico se descarta la posibilidad de instalar medidor en poste. También se\nrequieren: 1 caja Poly tipo 3-4. 1 medidor de directa. 1 kit de telemedida completo. 6 m de cable #4 cobre. 6 conectores de perforación 120/120. Llevar taladro y brocas de pared,\ncinta de colores. Señor usuario me indica que recomienda trabajos de martes a jueves en horas de la mañana, y que por favor le notifiquen con anticipación la actividad de\ninstalación, que le interesa sea lo antes posible. Se da por finalizada la actividad."
   },
   "CO0800006805": {
     "ot_nombre": "VIPE_45174_28CE40",
