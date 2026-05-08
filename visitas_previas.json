@@ -33,7 +33,7 @@
   },
   "CO0500006750": {
     "ot_nombre": "VIPE_44039_80A0C6",
-    "fecha_procesada": "2026-05-07 19:33:29",
+    "fecha_procesada": "2026-05-08 08:48:40",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -59,9 +59,9 @@
       "detalles": null
     },
     "tecnico_nombre": "JONATAN PALACIO",
-    "tecnico_empresa": "BIA",
-    "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Código interno de Bia:* CO0500006750 tipo de servicio : visita previa con EPM *Serial del medidor : 82084260 *IP del medidor: no aplica *Se instala módem : no aplica *serie\nmódem retirado : no aplica *modem marca : no aplica *Factor de medida: 1 Transformador: 75 kva # 124185 multiusuarios uso compartido Con OR: SI Observación: 7 de Mayo del\n2026 a las 08:00 am se realiza visita previa en campo con personal de epm para proceso de cambio de comercializador usuario a razón social de inversiones Juroplast sas\nubicado la estrella Antioquia en la visita se encontró lo siguiente: Tipo de medida directa en tres elementos y nivel de tensión 1, factor 1, Medida ubicada en fachada el cliente en\ngabinete que NO cumple norma - ⁠el cliente no cuenta con sistema solar - ⁠el cliente no cuenta con planta de emergencia - ⁠El cliente si cuenta con banco de condensadores pero\nno visible la capacidad - ⁠para continuar con el proceso de cambio de comercializador técnicamente sería necesario el cambio de Gabinete certificado, cambio de medidor, \ninstalación de totalizador 3x150A ya que el existente está muy sobredimensionado para la acometida e instalación de sistema de comunicación. - ⁠se debe realizar apertura del\ntransformador multiusuarios 4 horas para la adecuación dicha suspensión afecta a 3 usuarios con el cliente, alto riesgo eléctrico para realizar la actividad en caliente - ⁠se debe\ncoordinar con el cliente hora y fecha de instalación preferiblemente en un día sábado - ⁠acometida principal que alimenta el medidor 1-1/0 x fase - ⁠totalizador existente 3x200A\nsobredimensionado - ⁠todo queda operando correctamente"
+    "tecnico_empresa": "CONTRATISTA",
+    "contratista_nombre": "ISELEC",
+    "observacion_tecnico_verbatim": "Código interno de Bia:* CO0500006750 tipo de servicio : visita previa con EPM *Serial del medidor : 82084260 *IP del medidor: no aplica *Se instala módem : no aplica *serie\nmódem retirado : no aplica *modem marca : no aplica *Factor de medida: 1 Transformador: 75 kva # 124185 multiusuarios uso compartido Con OR: SI Observación: 7 de Mayo del\n2026 a las 08:00 am se realiza visita previa en campo con personal de epm para proceso de cambio de comercializador usuario a razón social de inversiones Juroplast sas\nubicado la estrella Antioquia en la visita se encontró lo siguiente: Tipo de medida directa en tres elementos y factor 1, Medida ubicada en fachada el cliente en\ngabinete que NO cumple norma - ⁠el cliente no cuenta con sistema solar - ⁠el cliente no cuenta con planta de emergencia - ⁠El cliente si cuenta con banco de condensadores pero\nno visible la capacidad - ⁠para continuar con el proceso de cambio de comercializador técnicamente sería necesario el cambio de Gabinete certificado, cambio de medidor, \ninstalación de totalizador 3x150A ya que el existente está muy sobredimensionado para la acometida e instalación de sistema de comunicación. - ⁠se debe realizar apertura del\ntransformador multiusuarios 4 horas para la adecuación dicha suspensión afecta a 3 usuarios con el cliente, alto riesgo eléctrico para realizar la actividad en caliente - ⁠se debe\ncoordinar con el cliente hora y fecha de instalación preferiblemente en un día sábado - ⁠acometida principal que alimenta el medidor 1-1/0 x fase - ⁠totalizador existente 3x200A\nsobredimensionado - ⁠todo queda operando correctamente\nRequerimientos de instalacion\nDescripción de la maniobra de Instalacion Requerimientos de equipos y consumibles para\ncambio de gabinete certificado, cambio Instalacion ¿Necesita descargo del OR? ¿El descargo afecta a otros usuarios?\nde medidor totalizador - Si Si\nUbicación para Grupo de Medida ¿Necesita carro canasta o escalera?\nexterior NA\nSeccionamientos externos\n¿Existen seccionamientos externos en MT? ¿A cuantos usuarios afecta la maniobra?\nNo 3\nDescripción de usuarios que afecta\nal cliente y dos usuarios más\nIdentificación de seccionamiento\nno"
   },
   "CO0500006734": {
     "ot_nombre": "VIPE_43827_95FE84",
@@ -257,7 +257,7 @@
   },
   "CO0800006805": {
     "ot_nombre": "VIPE_45174_28CE40",
-    "fecha_procesada": "2026-05-07 19:27:30",
+    "fecha_procesada": "2026-05-08 08:48:16",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -289,7 +289,7 @@
   },
   "CO4700006745": {
     "ot_nombre": "VIPE_44639_507B86",
-    "fecha_procesada": "2026-05-07 19:33:52",
+    "fecha_procesada": "2026-05-08 08:49:02",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -298,8 +298,8 @@
       "referencia": ".o",
       "lectura_activa_kwh": ".0",
       "lectura_reactiva_kvarh": ".0",
-      "serie_coincide_foto": true,
-      "observacion_serie_foto": null
+      "serie_coincide_foto": false,
+      "observacion_serie_foto": "Serie del medidor no visible en foto o ilegible."
     },
     "medidor_enc_serie": "n.v",
     "tcs_encontrados": {
