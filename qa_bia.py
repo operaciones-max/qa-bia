@@ -814,6 +814,26 @@ def _limpiar_errores_fantasma(qa, tipo_servicio):
     qa["validaciones"] = val
     qa["alertas_qa"] = alertas_l
 
+def _simplificar_fallida(qa):
+    """Cuando estado_ot=FALLIDA, vacia errores y deja solo alertas de firma OR/usuario.
+    La tipificacion ya explica todo lo demas — no es util listar 30 errores tecnicos."""
+    if qa.get("estado_ot") != "FALLIDA":
+        return
+    val = qa.get("validaciones") or {}
+    val["errores_encontrados"] = []
+    qa["validaciones"] = val
+    alertas = qa.get("alertas_qa") or []
+    keep = []
+    for a in alertas:
+        a_low = (a or "").lower()
+        if "firm" in a_low and ("operador" in a_low or " or " in a_low or "or " in a_low or "usuario" in a_low or "cliente" in a_low):
+            keep.append(a)
+    if (qa.get("or_firma") or "").upper() == "NO":
+        already = any("operador" in (k or "").lower() and "firm" in (k or "").lower() for k in keep)
+        if not already:
+            keep.append("El Operador de Red NO firmó el acta.")
+    qa["alertas_qa"] = keep
+
 def _override_fallida_si_incompleto(qa):
     """Si estado_ot=EXITOSA pero los datos critically incompletos, fuerza FALLIDA
     con tipificacion auto-poblada. Tambien limpia errores ya que tipificacion
@@ -1744,6 +1764,10 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "tipificacion_causa_raiz":   falla.get("causa_raiz"),
         "tipificacion_responsable":  falla.get("responsable"),
         "wms_asignado":              bool(resultado_qa.get("wms_asignado")),
+        "wms_medidor_serial":        resultado_qa.get("medidor_wms_asignado"),
+        "wms_medidor_marca":         resultado_qa.get("medidor_wms_marca"),
+        "wms_completo":              resultado_qa.get("wms_completo"),
+        "wms_marca_coincide_alcance": resultado_qa.get("wms_marca_coincide_alcance"),
         "tiene_alcance":             alcance_row is not None,
         "alcance_viable":            _av(alcance_row, "Viable Para Instalar") if alcance_row else None,
         "alcance_medida_instalar":   _av(alcance_row, "Tipo De Medida A Instalar") if alcance_row else None,
@@ -1869,15 +1893,18 @@ def procesar_acta(acta, wms, alcances=None):
     )
     _limpiar_errores_fantasma(resultado_qa, tipo)
     _override_fallida_si_incompleto(resultado_qa)
+    _simplificar_fallida(resultado_qa)
 
     resultado_qa["planner"]              = planner
     resultado_qa["or_norm"]              = or_norm
     resultado_qa["internal_bia_code"]    = internal_bia_code
-    # WMS: mostrar el serial siempre que exista (incluso en VIPE), null si no hay.
+    # WMS: serial + marca + objeto completo para que el dashboard muestre todo
     resultado_qa["medidor_wms_asignado"] = serial_asignado or None
+    resultado_qa["medidor_wms_marca"]    = marca_asignada or None
     resultado_qa["tcs_wms_asignados"]    = tcs_asignados or []
     resultado_qa["tps_wms_asignados"]    = tps_asignados or []
     resultado_qa["wms_asignado"]         = bool(serial_asignado)
+    resultado_qa["wms_completo"]         = entry_wms or None  # dict con medidor/tcs/tps completo
 
     # Tecnico y contratista: fuente de verdad es el CSV de Metabase, no la IA.
     # contractor_name = "BIA" (literal) -> empleado BIA Energy.
@@ -1896,6 +1923,16 @@ def procesar_acta(acta, wms, alcances=None):
     else:
         resultado_qa["tecnico_empresa"]    = "CONTRATISTA"
         resultado_qa["contratista_nombre"] = csv_contratista
+
+    # Comparacion WMS marca vs alcance marca (si ambos disponibles)
+    alc = (alcances or {}).get(internal_bia_code)
+    alc_marca = ((alc or {}).get("Marca Del Medidor") or "").strip()
+    if marca_asignada and alc_marca and alc_marca.upper() not in ("N/A", "-"):
+        resultado_qa["wms_marca_coincide_alcance"] = (
+            marca_asignada.strip().upper() == alc_marca.upper()
+        )
+    else:
+        resultado_qa["wms_marca_coincide_alcance"] = None
 
 
     print(f"     Resultado: {resultado_qa.get('estado_ot')} | Medida: {resultado_qa.get('tipo_medida')}")
