@@ -1,7 +1,7 @@
 {
   "CO0800006765": {
     "ot_nombre": "VIPE_44339_3986E7",
-    "fecha_procesada": "2026-05-08 07:12:39",
+    "fecha_procesada": "2026-05-08 21:13:50",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": "40",
     "medidor_encontrado": {
@@ -29,11 +29,11 @@
     "tecnico_nombre": "Duvan Cervera",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, Se encuentra medida semidirecta (factor 40 según factura) en poste, transformador exclusivo de 75 KVA,\nacometida y parciales en 4/0 cobre, breaker principal de 2500 A, usuario cuenta no con paneles solares pero si con planta electrica. Se requiere para instalación: Pasar a medida\nindirecta nivel 2. Descargo con perdida de mercado. Apoyo de carrocanasta. 3 tc's tipo exterior. 3 tp's tipo exterior. 3 dps 24 platinas. Juego de tornillos arandela ay tuercas. 14\nconectores de coraza de 1\", 25 m de coraza industrial de 1\". 13 m de cable señal 4*12. 13 m de cable señal 6*12. 2 m de cable blanco #12. 6 m de cable verde # 12. 25 m de cable #2\ndesnudo. 1 gabinete metálico. 1 medidor pa semiindirecta. 1 bloque de prueba. 2 m de cinta bandit. 2 hebillas. 1 crucetas más accesorios (ya que se debe adecuar punto de\nconexión) Administradora pide ser notificada con anticipación de la próxima visita de instalación, que no tiene inconvenientes ningun día ya que cuenta con la planta electrica.\nSe da por finalizada la actividad"
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, Se encuentra medida semidirecta (factor 40 segun factura) en poste, transformador exclusivo de 75 KVA,\nacometida y parciales en 4/0 cobre, breaker principal de 2500 A, usuario cuenta no con paneles solares pero si con planta electrica. Se requiere para instalación: Pasar a medida\nindirecta nivel 2. Descargo con perdida de mercado. Apoyo de carrocanasta. 3 tc's tipo exterior. 3 tp's tipo exterior. 3 dps 24 platinas. Juego de tornillos arandela ay tuercas. 14\nconectores de coraza de 1\", 25 m de coraza industrial de 1\". 13 m de cable señal 4*12. 13 m de cable señal 6*12. 2 m de cable blanco #12. 6 m de cable verde # 12. 25 m de cable #2\ndesnudo. 1 gabinete metálico. 1 medidor pa semiindirecta. 1 bloque de prueba. 2 m de cinta bandit. 2 hebillas. 1 crucetas más accesorios (ya que se debe adecuar punto de\nconexión) Administradora pide ser notificada con anticipación de la próxima visita de instalación, que no tiene inconvenientes ningun día ya que cuenta con la planta electrica.\nSe da por finalizada la actividad"
   },
   "CO0500006750": {
     "ot_nombre": "VIPE_44039_80A0C6",
-    "fecha_procesada": "2026-05-08 08:48:40",
+    "fecha_procesada": "2026-05-08 21:14:16",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -61,7 +61,7 @@
     "tecnico_nombre": "JONATAN PALACIO",
     "tecnico_empresa": "CONTRATISTA",
     "contratista_nombre": "ISELEC",
-    "observacion_tecnico_verbatim": "Código interno de Bia:* CO0500006750 tipo de servicio : visita previa con EPM *Serial del medidor : 82084260 *IP del medidor: no aplica *Se instala módem : no aplica *serie\nmódem retirado : no aplica *modem marca : no aplica *Factor de medida: 1 Transformador: 75 kva # 124185 multiusuarios uso compartido Con OR: SI Observación: 7 de Mayo del\n2026 a las 08:00 am se realiza visita previa en campo con personal de epm para proceso de cambio de comercializador usuario a razón social de inversiones Juroplast sas\nubicado la estrella Antioquia en la visita se encontró lo siguiente: Tipo de medida directa en tres elementos y factor 1, Medida ubicada en fachada el cliente en\ngabinete que NO cumple norma - ⁠el cliente no cuenta con sistema solar - ⁠el cliente no cuenta con planta de emergencia - ⁠El cliente si cuenta con banco de condensadores pero\nno visible la capacidad - ⁠para continuar con el proceso de cambio de comercializador técnicamente sería necesario el cambio de Gabinete certificado, cambio de medidor, \ninstalación de totalizador 3x150A ya que el existente está muy sobredimensionado para la acometida e instalación de sistema de comunicación. - ⁠se debe realizar apertura del\ntransformador multiusuarios 4 horas para la adecuación dicha suspensión afecta a 3 usuarios con el cliente, alto riesgo eléctrico para realizar la actividad en caliente - ⁠se debe\ncoordinar con el cliente hora y fecha de instalación preferiblemente en un día sábado - ⁠acometida principal que alimenta el medidor 1-1/0 x fase - ⁠totalizador existente 3x200A\nsobredimensionado - ⁠todo queda operando correctamente\nRequerimientos de instalacion\nDescripción de la maniobra de Instalacion Requerimientos de equipos y consumibles para\ncambio de gabinete certificado, cambio Instalacion ¿Necesita descargo del OR? ¿El descargo afecta a otros usuarios?\nde medidor totalizador - Si Si\nUbicación para Grupo de Medida ¿Necesita carro canasta o escalera?\nexterior NA\nSeccionamientos externos\n¿Existen seccionamientos externos en MT? ¿A cuantos usuarios afecta la maniobra?\nNo 3\nDescripción de usuarios que afecta\nal cliente y dos usuarios más\nIdentificación de seccionamiento\nno"
+    "observacion_tecnico_verbatim": "Código interno de Bia:* CO0500006750 tipo de servicio : visita previa con EPM *Serial del medidor : 82084260 *IP del medidor: no aplica *Se instala módem : no aplica *serie\nmódem retirado : no aplica *modem marca : no aplica *Factor de medida: 1 Transformador: 75 kva # 124185 multiusuarios uso compartido Con OR: SI Observación: 7 de Mayo del\n2026 a las 08:00 am se realiza visita previa en campo con personal de epm para proceso de cambio de comercializador usuario a razón social de inversiones Juroplast sas\nubicado la estrella Antioquia en la visita se encontró lo siguiente: Tipo de medida directa en tres elementos y nivel de tensión 1, factor 1, Medida ubicada en fachada el cliente en\ngabinete que NO cumple norma - ⁠el cliente no cuenta con sistema solar - ⁠el cliente no cuenta con planta de emergencia - ⁠El cliente si cuenta con banco de condensadores pero\nno visible la capacidad - ⁠para continuar con el proceso de cambio de comercializador técnicamente sería necesario el cambio de Gabinete certificado, cambio de medidor, \ninstalación de totalizador 3x150A ya que el existente está muy sobredimensionado para la acometida e instalación de sistema de comunicación. - ⁠se debe realizar apertura del\ntransformador multiusuarios 4 horas para la adecuación dicha suspensión afecta a 3 usuarios con el cliente, alto riesgo eléctrico para realizar la actividad en caliente - ⁠se debe\ncoordinar con el cliente hora y fecha de instalación preferiblemente en un día sábado - ⁠acometida principal que alimenta el medidor 1-1/0 x fase - ⁠totalizador existente 3x200A\nsobredimensionado - ⁠todo queda operando correctamente"
   },
   "CO0500006734": {
     "ot_nombre": "VIPE_43827_95FE84",
@@ -129,7 +129,7 @@
   },
   "CO0800006812": {
     "ot_nombre": "VIPE_45175_EA7252",
-    "fecha_procesada": "2026-05-08 07:12:18",
+    "fecha_procesada": "2026-05-08 21:13:26",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
