@@ -782,18 +782,26 @@ def _limpiar_errores_fantasma(qa, tipo_servicio):
                          "medidor de respaldo", "medidor de espejo",
                          "planta de respaldo", "planta electrica",
                          "no se encontraron alertas", "no se encontraron tcs",
-                         "no se encontraron tps"):
+                         "no se encontraron tps",
+                         "el acta no reporta", "no se reporta el color",
+                         "no se reporta la serie del sello",
+                         "no reporta la serie del sello",
+                         "no reporta el color del sello",
+                         "no se reporta el segundo sello", "no se reporta el tercer sello",
+                         "color del sello", "serie del sello",
+                         "no reporta lectura", "no se reporta lectura",
+                         "operador de red", "comercializador anterior"):
                 if term in s:
                     return True
         for term in ("medidor de respaldo", "medidor de espejo", "planta de respaldo",
                      "no se encontro"):
             if term in s and tipo_medida == "DIRECTA":
                 return True
-        # Si es un campo del acta con valor basura (n.v, .0, .o, Otra), reportarlo
-        # como error del medidor encontrado es ruido — el override a FALLIDA
-        # ya cubre ese caso con tipificacion.
-        for term in (": n.v", ": .o", ": .0", ": otra", ": otro"):
-            if term in s and ("encontrada" in s or "encontrado" in s):
+        # Campos del acta con valor basura: el override a FALLIDA ya tipifica eso
+        for term in (": n.v", ": .o", ": .0", ": otra", ": otro",
+                     "no reportada", "no reportado"):
+            if term in s and ("encontrada" in s or "encontrado" in s
+                              or "instalada" in s or "instalado" in s):
                 return True
         return False
 
@@ -807,13 +815,15 @@ def _limpiar_errores_fantasma(qa, tipo_servicio):
     qa["alertas_qa"] = alertas_l
 
 def _override_fallida_si_incompleto(qa):
-    """Si estado_ot=EXITOSA pero campos criticos del medidor encontrado tienen
-    valores basura/placeholder, fuerza FALLIDA y popula tipificacion."""
+    """Si estado_ot=EXITOSA pero los datos critically incompletos, fuerza FALLIDA
+    con tipificacion auto-poblada. Tambien limpia errores ya que tipificacion
+    los explica."""
     if qa.get("estado_ot") != "EXITOSA":
         return
 
     med = qa.get("medidor_encontrado") or {}
     diag = qa.get("diagrama_unifilar") or {}
+    val  = qa.get("validaciones") or {}
 
     flags = [
         _es_valor_basura(med.get("serie")),
@@ -823,11 +833,17 @@ def _override_fallida_si_incompleto(qa):
         _es_valor_basura(qa.get("sellos_medidor_encontrado")),
         not diag.get("tiene_foto"),
     ]
+    n_basura = sum(1 for f in flags if f)
+    coherencia_mala = (val.get("coherencia") or "").upper() in ("INCOHERENTE", "INCOMPLETO")
 
-    if sum(1 for f in flags if f) < 4:
+    if n_basura < 4 and not coherencia_mala:
         return
 
     qa["estado_ot"] = "FALLIDA"
+    # Limpiar errores cuando override fire — tipificacion ya explica
+    val["errores_encontrados"] = []
+    val["coherencia"] = "INCOHERENTE"
+    qa["validaciones"] = val
     co = qa.get("internal_bia_code", "")
     falla = qa.get("tipificacion_falla") or {}
     falla.update({
@@ -1857,24 +1873,29 @@ def procesar_acta(acta, wms, alcances=None):
     resultado_qa["planner"]              = planner
     resultado_qa["or_norm"]              = or_norm
     resultado_qa["internal_bia_code"]    = internal_bia_code
-    resultado_qa["medidor_wms_asignado"] = serial_asignado if debe_comparar_wms else "No aplica"
-    resultado_qa["tcs_wms_asignados"]    = tcs_asignados if debe_comparar_wms else []
-    resultado_qa["tps_wms_asignados"]    = tps_asignados if debe_comparar_wms else []
+    # WMS: mostrar el serial siempre que exista (incluso en VIPE), null si no hay.
+    resultado_qa["medidor_wms_asignado"] = serial_asignado or None
+    resultado_qa["tcs_wms_asignados"]    = tcs_asignados or []
+    resultado_qa["tps_wms_asignados"]    = tps_asignados or []
     resultado_qa["wms_asignado"]         = bool(serial_asignado)
 
     # Tecnico y contratista: fuente de verdad es el CSV de Metabase, no la IA.
-    # contractor_name = "BIA" (literal) o "" -> empleado BIA Energy.
-    # Cualquier otro valor -> nombre del contratista.
+    # contractor_name = "BIA" (literal) -> empleado BIA Energy.
+    # contractor_name = otro valor       -> contratista, nombre = ese valor.
+    # contractor_name = vacio            -> desconocido (NO mentir que es BIA).
     csv_tecnico     = (acta.get("Electrician Visits__name") or "").strip()
     csv_contratista = (acta.get("contractor_name") or "").strip()
     if csv_tecnico:
         resultado_qa["tecnico_nombre"] = csv_tecnico
-    if csv_contratista and csv_contratista.upper() != "BIA":
-        resultado_qa["tecnico_empresa"]    = "CONTRATISTA"
-        resultado_qa["contratista_nombre"] = csv_contratista
-    else:
+    if not csv_contratista:
+        resultado_qa["tecnico_empresa"]    = None
+        resultado_qa["contratista_nombre"] = None
+    elif csv_contratista.upper() == "BIA":
         resultado_qa["tecnico_empresa"]    = "BIA"
         resultado_qa["contratista_nombre"] = None
+    else:
+        resultado_qa["tecnico_empresa"]    = "CONTRATISTA"
+        resultado_qa["contratista_nombre"] = csv_contratista
 
 
     print(f"     Resultado: {resultado_qa.get('estado_ot')} | Medida: {resultado_qa.get('tipo_medida')}")
