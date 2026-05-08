@@ -318,5 +318,69 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, se encuentra medida directa en poste, transformador de 30 KVA compartido, breaker p/al de 125 A, acometida\ny parciales en #2 cobre. realizándole seguimiento a la acometida del usuario confirmamos que esta sea su medida eléctrica, pero no no es posible llegar hasta el medidor, debido\na la altura a la que está instalado, imposibilidad técnica debido a que se encuentra cercano a la red de media tensión. Usuario no cuenta ni con planta electrica ni con paneles\nsolares. Se requiere para cambio de Comercializador: Apoyo de carrocanasta Descargo 50 de cable #2 en cobre Amarras plásticas medianas, Cinta de colores 2 tensores de\nacometida tipo poste 1 caja Poly tipo 3-4 2 m de cinta bandit 1 medidor de directa 1 kit de telemedida 8 conectores de perforación 120/120 Se da por finalizada la actividad."
+  },
+  "CO0800006847": {
+    "ot_nombre": "VIPE_45839_3BEC9C",
+    "fecha_procesada": "2026-05-08 16:05:37",
+    "tipo_medida": "DIRECTA",
+    "factor_medida": "1",
+    "medidor_encontrado": {
+      "serie": null,
+      "marca": null,
+      "referencia": null,
+      "lectura_activa_kwh": null,
+      "lectura_reactiva_kvarh": null,
+      "serie_coincide_foto": false,
+      "observacion_serie_foto": "No hay registro fotografico del medidor encontrado."
+    },
+    "medidor_enc_serie": null,
+    "tcs_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Jonathan Rudas",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "cliente informa que reprogramo la visita la cual no nos podía atender del día de hoy"
+  },
+  "CO0800006848": {
+    "ot_nombre": "VIPE_45840_4770CD",
+    "fecha_procesada": "2026-05-08 16:06:03",
+    "tipo_medida": "DIRECTA",
+    "factor_medida": "1",
+    "medidor_encontrado": {
+      "serie": null,
+      "marca": null,
+      "referencia": null,
+      "lectura_activa_kwh": null,
+      "lectura_reactiva_kvarh": null,
+      "serie_coincide_foto": false,
+      "observacion_serie_foto": "No se encontro seccion de registro fotografico para medidor encontrado."
+    },
+    "medidor_enc_serie": null,
+    "tcs_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Jonathan Rudas",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "cliente reprogramo las visitas la cual no nos puede atender el día de hoy"
   }
 }
