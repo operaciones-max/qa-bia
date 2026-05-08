@@ -97,7 +97,7 @@
   },
   "CO1100006755": {
     "ot_nombre": "VIPE_44174_A6B16E",
-    "fecha_procesada": "2026-05-08 05:49:56",
+    "fecha_procesada": "2026-05-08 18:57:36",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": "60",
     "medidor_encontrado": {
@@ -161,7 +161,7 @@
   },
   "CO0800006811": {
     "ot_nombre": "VIPE_44705_EE6088",
-    "fecha_procesada": "2026-05-08 05:50:20",
+    "fecha_procesada": "2026-05-08 18:58:02",
     "tipo_medida": "INDIRECTA",
     "factor_medida": "2200",
     "medidor_encontrado": {
@@ -225,7 +225,7 @@
   },
   "CO0800006813": {
     "ot_nombre": "VIPE_45241_EE0C41",
-    "fecha_procesada": "2026-05-08 07:11:21",
+    "fecha_procesada": "2026-05-08 18:58:28",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
