@@ -382,5 +382,69 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "cliente reprogramo las visitas la cual no nos puede atender el día de hoy"
+  },
+  "CO0800006824": {
+    "ot_nombre": "VIPE_45832_936B1B",
+    "fecha_procesada": "2026-05-09 03:52:25",
+    "tipo_medida": "DIRECTA",
+    "factor_medida": "1",
+    "medidor_encontrado": {
+      "serie": "23189130",
+      "marca": "CDM",
+      "referencia": "N23U03",
+      "lectura_activa_kwh": "034956.23",
+      "lectura_reactiva_kvarh": "002969.98",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "23189130",
+    "tcs_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Jonathan Rudas",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Se llega al sitio para realizar visita previa a restaurante max gordos, se encontró medidor de directa en poste con acometida 3x6+6 aluminio parciales 3x6+6 aluminio , breaker\ndel cliente de 100 amp , cuentan con planta electrica , no cuentan con panales solares , transformador de 75 KVA compartido, Se debe realizar maniobra en la mañana para que\nno afecte producción del restaurante ,\nya que apertura al público a las 5:00 pm.\nRequerimientos de instalacion\nRequerimientos de equipos y consumibles para\nInstalacion\nDescripción de la maniobra de Instalacion se debe reemplazar medidore de aire e ,\nse debe reemplazar medidor de aire e se requiere para la instalación: 1 medidor ¿Necesita descargo del OR? ¿El descargo afecta a otros usuarios?\nNo No\ninstalar medidor Bia de directa 1 caja policarbonato tipo 3-4 1\nkit de comunicación 1 simcard\nmultioperador consumibles\nUbicación para Grupo de Medida ¿Necesita carro canasta o escalera?\nposte Escalera 9 pasos\nSeccionamientos externos\n¿Existen seccionamientos externos en MT? ¿A cuantos usuarios afecta la maniobra?\nSi 18\nDescripción de usuarios que afecta\notros usuarios del sector\nIdentificación de seccionamiento\ntubos portafusible del transformador"
+  },
+  "CO0800006773": {
+    "ot_nombre": "VIPE_45475_3F35C9",
+    "fecha_procesada": "2026-05-09 03:52:46",
+    "tipo_medida": "DIRECTA",
+    "factor_medida": "1",
+    "medidor_encontrado": {
+      "serie": null,
+      "marca": null,
+      "referencia": null,
+      "lectura_activa_kwh": "0.0",
+      "lectura_reactiva_kvarh": "0.0",
+      "serie_coincide_foto": false,
+      "observacion_serie_foto": "No se logra tomar datos de la medida ya que se requiere personal del OR con apoyo de carro canasta."
+    },
+    "medidor_enc_serie": null,
+    "tcs_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Jonathan Rudas",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Se llega a sitio para visita previa a cliente asadero cali sin acompañamiento del OR. Se encontró equipo de medida directa en gabinete compartido en sistema ami en poste cerca\nde la media tensión no se logra tomar datos de la medida ya que se requiere personal del OR con apoyo de carro canasta. Se toman evidencias fotográficas de dónde se\nencuentra la medida. Cliente cuenta con breaker totalizador de 125 amp no cuenta con paneles solares, tienen planta electrica,"
   }
 }
