@@ -37,9 +37,9 @@ if os.environ.get('GEMINI_API_KEY'):
         ACTAS_PRUEBA         = 2
         FECHA_INICIO          = "2026-05-01"
         FECHA_INICIO_ALCANCES = "2026-04-30"
-        PAUSA_GROQ_SEGUNDOS  = 10
+        PAUSA_GROQ_SEGUNDOS  = 30
         INTERVALO_SEGUNDOS   = 300
-        MAX_ACTAS_POR_RUN    = 5
+        MAX_ACTAS_POR_RUN    = 2
         ARCHIVO_PROCESADOS          = "actas_procesadas.json"
         ARCHIVO_VISITAS_PREVIAS     = "visitas_previas.json"
         ARCHIVO_ALCANCES_PROCESADOS = "alcances_procesados.json"
