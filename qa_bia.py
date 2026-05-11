@@ -165,6 +165,109 @@ def _alertar_slack_cooldown(data):
     except Exception as e:
         print(f"  ERROR alerta Slack cooldown: {e}")
 
+ARCHIVO_FACTURAS_EXTRAIDAS = "facturas_extraidas.json"
+METABASE_BASE = "https://bia.metabaseapp.com"
+METABASE_QUESTION_FACTURAS = 69895
+
+def cargar_facturas_anteriores():
+    """Carga del Metabase question 69895 las URLs de facturas anteriores por CO.
+    Devuelve dict {internal_bia_code: invoice_document_url}.
+    Requiere METABASE_API_KEY env var."""
+    api_key = os.environ.get("METABASE_API_KEY", "").strip()
+    if not api_key:
+        print("  WARN: METABASE_API_KEY no configurada — sin validacion factura anterior")
+        return {}
+    url = f"{METABASE_BASE}/api/card/{METABASE_QUESTION_FACTURAS}/query/csv"
+    try:
+        r = requests.get(url, headers={"X-API-KEY": api_key}, timeout=60)
+        r.raise_for_status()
+        lector = csv.DictReader(io.StringIO(r.content.decode("utf-8")))
+        result = {}
+        for fila in lector:
+            co = (fila.get("internal_bia_code") or "").strip()
+            inv = (fila.get("invoice_document_url") or "").strip()
+            if co and inv:
+                result[co] = inv
+        print(f"  Facturas anteriores cargadas: {len(result)} CO con URL de factura.")
+        return result
+    except Exception as e:
+        print(f"  ERROR cargando facturas anteriores: {e}")
+        return {}
+
+def _cargar_facturas_extraidas():
+    if not os.path.exists(ARCHIVO_FACTURAS_EXTRAIDAS):
+        return {}
+    try:
+        with open(ARCHIVO_FACTURAS_EXTRAIDAS, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _guardar_factura_extraida(co_code, data):
+    cache = _cargar_facturas_extraidas()
+    cache[co_code] = data
+    with open(ARCHIVO_FACTURAS_EXTRAIDAS, "w", encoding="utf-8") as f:
+        json.dump(cache, f, ensure_ascii=False, indent=2)
+
+def extraer_serial_factura(pdf_url):
+    """Descarga PDF de factura y extrae el numero de medidor via Gemini.
+    Devuelve (serial_o_None, estado)."""
+    try:
+        r = requests.get(pdf_url, timeout=30)
+        r.raise_for_status()
+        pdf_bytes = r.content
+    except Exception as e:
+        return None, f"error_descarga: {e}"
+
+    texto = ""
+    try:
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+            for p in pdf.pages:
+                t = p.extract_text()
+                if t:
+                    texto += t + "\n"
+    except Exception as e:
+        return None, f"error_pdf: {e}"
+
+    if not texto.strip():
+        return None, "pdf_vacio"
+
+    cd = _cargar_cooldown_llm()
+    if cd:
+        return None, "cooldown"
+
+    prompt = (
+        "Esta es una factura de servicio electrico colombiana del comercializador anterior. "
+        "Extrae UNICAMENTE el numero de serie del medidor electrico que aparece. "
+        "El campo puede llamarse: 'Numero', 'Medidor', 'Dispositivo', 'Serie', "
+        "'Numero del medidor', 'Serial del medidor', 'No. medidor', 'Medidor No', "
+        "'Equipo', 'Aparato'. NO inventes, si no aparece serial valido devuelve null. "
+        "Responde SOLO con JSON: {\"serial\": \"<numero>\" o null}\n\n"
+        "--- FACTURA ---\n" + texto[:6000]
+    )
+
+    modelo = (getattr(config, "GEMINI_MODELS", None) or [config.GEMINI_MODEL])[0]
+    try:
+        respuesta = cliente_gemini.models.generate_content(
+            model=modelo,
+            contents=prompt,
+            config=genai_types.GenerateContentConfig(
+                temperature=0.1,
+                max_output_tokens=200,
+                response_mime_type="application/json",
+            ),
+        )
+        texto_r = (respuesta.text or "").strip()
+        data = json.loads(texto_r)
+        serial = (data.get("serial") or "").strip() or None
+        return serial, "ok"
+    except Exception as e:
+        msg = str(e)
+        if "429" in msg or "rate" in msg.lower() or "quota" in msg.lower():
+            _activar_cooldown_llm(msg)
+            return None, "rate_limit"
+        return None, f"error_gemini: {msg[:120]}"
+
 def identificar_planner(or_norm):
     for or_key, planner in config.OR_PLANNERS.items():
         if or_key.upper() in or_norm.upper():
@@ -1766,6 +1869,8 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "wms_medidor_marca":         resultado_qa.get("medidor_wms_marca"),
         "wms_completo":              resultado_qa.get("wms_completo"),
         "wms_marca_coincide_alcance": resultado_qa.get("wms_marca_coincide_alcance"),
+        "serial_medidor_factura_anterior":   resultado_qa.get("serial_medidor_factura_anterior"),
+        "medidor_coincide_factura_anterior": resultado_qa.get("medidor_coincide_factura_anterior"),
         "tiene_alcance":             alcance_row is not None,
         "alcance_viable":            _av(alcance_row, "Viable Para Instalar") if alcance_row else None,
         "alcance_medida_instalar":   _av(alcance_row, "Tipo De Medida A Instalar") if alcance_row else None,
@@ -1832,7 +1937,7 @@ def actualizar_supabase_alcance(co_code, alcance_row):
 #  PROCESAR UNA ACTA
 # =============================================================
 
-def procesar_acta(acta, wms, alcances=None):
+def procesar_acta(acta, wms, alcances=None, facturas=None):
     ot_nombre         = acta.get("title", acta.get("id"))
     pdf_url           = acta.get("act_pdf_url", "")
     tipo              = acta.get("Tipo de servicio", "")
@@ -1932,6 +2037,30 @@ def procesar_acta(acta, wms, alcances=None):
     else:
         resultado_qa["wms_marca_coincide_alcance"] = None
 
+    # Factura anterior: extraer serial del comercializador previo y comparar con el del acta
+    serial_factura = None
+    factura_url    = (facturas or {}).get(internal_bia_code)
+    if factura_url:
+        cache = _cargar_facturas_extraidas()
+        if internal_bia_code in cache:
+            serial_factura = (cache[internal_bia_code] or {}).get("serial")
+        else:
+            print(f"     Extrayendo medidor de factura anterior para {internal_bia_code}...")
+            serial_factura, estado = extraer_serial_factura(factura_url)
+            _guardar_factura_extraida(internal_bia_code, {
+                "serial": serial_factura, "url": factura_url,
+                "estado": estado, "fecha": ahora(),
+            })
+            print(f"     Factura anterior: serial={serial_factura} ({estado})")
+    resultado_qa["serial_medidor_factura_anterior"] = serial_factura
+    serial_acta = ((resultado_qa.get("medidor_encontrado") or {}).get("serie") or "").strip()
+    if serial_factura and serial_acta:
+        resultado_qa["medidor_coincide_factura_anterior"] = (
+            _normalizar_serial(serial_factura) == _normalizar_serial(serial_acta)
+        )
+    else:
+        resultado_qa["medidor_coincide_factura_anterior"] = None
+
 
     print(f"     Resultado: {resultado_qa.get('estado_ot')} | Medida: {resultado_qa.get('tipo_medida')}")
     if resultado_qa.get("medidor_coincide_wms") is False:
@@ -2007,12 +2136,15 @@ def main():
     print("\n  Cargando alcances de ingenieria...")
     alcances = cargar_alcances()
 
+    print("\n  Cargando facturas anteriores (HubSpot vía Metabase)...")
+    facturas = cargar_facturas_anteriores()
+
     if config.MODO_PRUEBA:
         print("")
         actas = obtener_actas_nuevas()
         procesadas = 0
         for i, acta in enumerate(actas):
-            if procesar_acta(acta, wms, alcances):
+            if procesar_acta(acta, wms, alcances, facturas):
                 procesadas += 1
             if i < len(actas) - 1:
                 print("     Pausa " + str(config.PAUSA_GROQ_SEGUNDOS) + "s...")
@@ -2026,7 +2158,7 @@ def main():
         actas = obtener_actas_nuevas()
         if actas:
             for i, acta in enumerate(actas):
-                procesar_acta(acta, wms, alcances)
+                procesar_acta(acta, wms, alcances, facturas)
                 if i < len(actas) - 1:
                     time.sleep(config.PAUSA_GROQ_SEGUNDOS)
         else:
@@ -2041,10 +2173,11 @@ def main():
                 time.sleep(config.INTERVALO_SEGUNDOS)
                 wms      = cargar_inventario_wms()
                 alcances = cargar_alcances()
+                facturas = cargar_facturas_anteriores()
                 actas    = obtener_actas_nuevas()
                 if actas:
                     for i, acta in enumerate(actas):
-                        procesar_acta(acta, wms, alcances)
+                        procesar_acta(acta, wms, alcances, facturas)
                         if i < len(actas) - 1:
                             time.sleep(config.PAUSA_GROQ_SEGUNDOS)
                 else:

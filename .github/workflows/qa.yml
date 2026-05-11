@@ -37,6 +37,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          METABASE_API_KEY: ${{ secrets.METABASE_API_KEY }}
         run: python qa_bia.py
 
       - name: Guardar estado procesados
@@ -47,6 +48,7 @@ jobs:
           git add -f visitas_previas.json || true
           git add -f alcances_procesados.json || true
           git add -f groq_cooldown.json || true
+          git add -f facturas_extraidas.json || true
           git diff --staged --quiet || git commit -m "Actualizar estado procesados [skip ci]"
           git checkout -- . || true
           git clean -fd || true
