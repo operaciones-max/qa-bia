@@ -1775,7 +1775,7 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
 
     try:
         r = requests.post(
-            f"{url}/rest/v1/actas_qa",
+            f"{url}/rest/v1/actas_qa?on_conflict=ot_id",
             headers={
                 "apikey":        key,
                 "Authorization": f"Bearer {key}",
