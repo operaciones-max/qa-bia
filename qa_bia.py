@@ -178,12 +178,24 @@ def cargar_facturas_anteriores():
         print("  WARN: METABASE_API_KEY no configurada — sin validacion factura anterior")
         return {}
     url = f"{METABASE_BASE}/api/card/{METABASE_QUESTION_FACTURAS}/query/csv"
+    print(f"  Pidiendo {url} (key: {api_key[:6]}...{api_key[-4:] if len(api_key)>10 else ''})")
     try:
         r = requests.get(url, headers={"X-API-KEY": api_key}, timeout=60)
-        r.raise_for_status()
+        ct = r.headers.get("content-type", "")
+        print(f"  Status: {r.status_code} | Content-Type: {ct} | size: {len(r.content)} bytes")
+        if r.status_code != 200:
+            print(f"  Respuesta del servidor: {r.text[:300]}")
+            return {}
+        if "csv" not in ct and "text/plain" not in ct:
+            # Posible que devuelva HTML/JSON de error
+            print(f"  WARN: Content-Type inesperado. Primeros 200 chars: {r.text[:200]}")
         lector = csv.DictReader(io.StringIO(r.content.decode("utf-8")))
         result = {}
+        primera = None
         for fila in lector:
+            if primera is None:
+                primera = list(fila.keys())
+                print(f"  Columnas CSV: {primera}")
             co = (fila.get("internal_bia_code") or "").strip()
             inv = (fila.get("invoice_document_url") or "").strip()
             if co and inv:
@@ -210,8 +222,8 @@ def _guardar_factura_extraida(co_code, data):
         json.dump(cache, f, ensure_ascii=False, indent=2)
 
 def extraer_serial_factura(pdf_url):
-    """Descarga PDF de factura y extrae el numero de medidor via Gemini.
-    Devuelve (serial_o_None, estado)."""
+    """Descarga PDF de factura y extrae el numero de medidor + flag express via Gemini.
+    Devuelve (data_dict, estado) donde data_dict = {serial, express}."""
     try:
         r = requests.get(pdf_url, timeout=30)
         r.raise_for_status()
@@ -232,9 +244,12 @@ def extraer_serial_factura(pdf_url):
     if not texto.strip():
         return None, "pdf_vacio"
 
+    # Deteccion express ANTES de Gemini — basta con buscar la palabra
+    express = "express" in texto.lower()
+
     cd = _cargar_cooldown_llm()
     if cd:
-        return None, "cooldown"
+        return {"serial": None, "express": express}, "cooldown"
 
     prompt = (
         "Esta es una factura de servicio electrico colombiana del comercializador anterior. "
@@ -260,13 +275,13 @@ def extraer_serial_factura(pdf_url):
         texto_r = (respuesta.text or "").strip()
         data = json.loads(texto_r)
         serial = (data.get("serial") or "").strip() or None
-        return serial, "ok"
+        return {"serial": serial, "express": express}, "ok"
     except Exception as e:
         msg = str(e)
         if "429" in msg or "rate" in msg.lower() or "quota" in msg.lower():
             _activar_cooldown_llm(msg)
-            return None, "rate_limit"
-        return None, f"error_gemini: {msg[:120]}"
+            return {"serial": None, "express": express}, "rate_limit"
+        return {"serial": None, "express": express}, f"error_gemini: {msg[:120]}"
 
 def identificar_planner(or_norm):
     for or_key, planner in config.OR_PLANNERS.items():
@@ -1871,6 +1886,7 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "wms_marca_coincide_alcance": resultado_qa.get("wms_marca_coincide_alcance"),
         "serial_medidor_factura_anterior":   resultado_qa.get("serial_medidor_factura_anterior"),
         "medidor_coincide_factura_anterior": resultado_qa.get("medidor_coincide_factura_anterior"),
+        "factura_anterior_express":          resultado_qa.get("factura_anterior_express"),
         "tiene_alcance":             alcance_row is not None,
         "alcance_viable":            _av(alcance_row, "Viable Para Instalar") if alcance_row else None,
         "alcance_medida_instalar":   _av(alcance_row, "Tipo De Medida A Instalar") if alcance_row else None,
@@ -2037,22 +2053,32 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
     else:
         resultado_qa["wms_marca_coincide_alcance"] = None
 
-    # Factura anterior: extraer serial del comercializador previo y comparar con el del acta
-    serial_factura = None
-    factura_url    = (facturas or {}).get(internal_bia_code)
+    # Factura anterior: extraer serial + flag express del comercializador previo
+    serial_factura  = None
+    factura_express = None
+    factura_url     = (facturas or {}).get(internal_bia_code)
     if factura_url:
         cache = _cargar_facturas_extraidas()
         if internal_bia_code in cache:
-            serial_factura = (cache[internal_bia_code] or {}).get("serial")
+            entry = cache[internal_bia_code] or {}
+            serial_factura  = entry.get("serial")
+            factura_express = entry.get("express")
         else:
             print(f"     Extrayendo medidor de factura anterior para {internal_bia_code}...")
-            serial_factura, estado = extraer_serial_factura(factura_url)
+            data, estado = extraer_serial_factura(factura_url)
+            if data:
+                serial_factura  = data.get("serial")
+                factura_express = data.get("express")
             _guardar_factura_extraida(internal_bia_code, {
-                "serial": serial_factura, "url": factura_url,
-                "estado": estado, "fecha": ahora(),
+                "serial":  serial_factura,
+                "express": factura_express,
+                "url":     factura_url,
+                "estado":  estado,
+                "fecha":   ahora(),
             })
-            print(f"     Factura anterior: serial={serial_factura} ({estado})")
+            print(f"     Factura anterior: serial={serial_factura} express={factura_express} ({estado})")
     resultado_qa["serial_medidor_factura_anterior"] = serial_factura
+    resultado_qa["factura_anterior_express"]        = factura_express
     serial_acta = ((resultado_qa.get("medidor_encontrado") or {}).get("serie") or "").strip()
     if serial_factura and serial_acta:
         resultado_qa["medidor_coincide_factura_anterior"] = (
