@@ -178,9 +178,10 @@ def cargar_facturas_anteriores():
         print("  WARN: METABASE_API_KEY no configurada — sin validacion factura anterior")
         return {}
     url = f"{METABASE_BASE}/api/card/{METABASE_QUESTION_FACTURAS}/query/csv"
-    print(f"  Pidiendo {url} (key: {api_key[:6]}...{api_key[-4:] if len(api_key)>10 else ''})")
+    print(f"  POST {url} (key: {api_key[:6]}...{api_key[-4:] if len(api_key)>10 else ''})")
     try:
-        r = requests.get(url, headers={"X-API-KEY": api_key}, timeout=60)
+        # Metabase API requiere POST para query/csv, no GET
+        r = requests.post(url, headers={"X-API-KEY": api_key}, timeout=60)
         ct = r.headers.get("content-type", "")
         print(f"  Status: {r.status_code} | Content-Type: {ct} | size: {len(r.content)} bytes")
         if r.status_code != 200:
