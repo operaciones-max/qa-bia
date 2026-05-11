@@ -161,7 +161,7 @@
   },
   "CO0800006811": {
     "ot_nombre": "VIPE_44705_EE6088",
-    "fecha_procesada": "2026-05-08 18:58:02",
+    "fecha_procesada": "2026-05-11 15:18:13",
     "tipo_medida": "INDIRECTA",
     "factor_medida": "2200",
     "medidor_encontrado": {
@@ -193,7 +193,7 @@
   },
   "CO0800006772": {
     "ot_nombre": "VIPE_45006_66D2D3",
-    "fecha_procesada": "2026-05-08 17:54:23",
+    "fecha_procesada": "2026-05-11 15:18:46",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -225,7 +225,7 @@
   },
   "CO0800006813": {
     "ot_nombre": "VIPE_45241_EE0C41",
-    "fecha_procesada": "2026-05-08 18:58:28",
+    "fecha_procesada": "2026-05-11 15:19:25",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -257,7 +257,7 @@
   },
   "CO0800006805": {
     "ot_nombre": "VIPE_45174_28CE40",
-    "fecha_procesada": "2026-05-08 20:04:44",
+    "fecha_procesada": "2026-05-11 15:19:58",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -285,7 +285,7 @@
     "tecnico_nombre": "Jonathan Rudas",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para realizar visita previa a asados del oeste se encontró medidor de directa en Gabinete compartido con otras 2 cuentas con acometida #2 cu y parciales en #2\ncu , tiene un breaker de 80 amp , transformador de 75 KVA compartido , se alimenta gabinete con una acometida 1/0 aluminio que se distribuye para las 3 cuentas y un breaker\ntotalizador de 200amp."
+    "observacion_tecnico_verbatim": "Se llega al sitio para realizar visita previa a asados del oeste se encontró medidor de directa en Gabinete compartido con otras 2 cuentas con acometida #2 cu y parciales en #2\ncu , tiene un breaker de 80 amp , transformador de 75 KVA compartido , se alimenta gabinete con una acometida 1/0 aluminio que se distribuye para las 3 cuentas y un breaker\ntotalizador de 200amp.\nRequerimientos de instalacion\nRequerimientos de equipos y consumibles para\nDescripción de la maniobra de Instalacion\nInstalacion\nse requiere para instalar medida directa:\nse requiere para instalar medida directa:\nopción 1: validar placa de certificado si es\nopción 1: validar placa de certificado si es\nviable solo es reemplazar medida de aire\nviable solo es reemplazar medida de aire\ne instalar medidor de Bia sin caja\ne instalar medidor de Bia sin caja\npolicarbonato. Opción 2: si no cumple el\npolicarbonato. Opción 2: si no cumple el\ncertificado del gabinete se debe instalar\ncertificado del gabinete se debe instalar\nmedidor Bia en seria el de Aire , fuera del\nmedidor Bia en seria el de Aire , fuera del\ngabinete compartido ya que no hay\nespacio para instalar caja poli , para eso gabinete compartido ya que no hay ¿Necesita descargo del OR? ¿El descargo afecta a otros usuarios?\nespacio para instalar caja poli , para eso No No\nse requieren los siguientes materiales: 1\nse requieren los siguientes materiales: 1\ncaja policarbonato tipo 3-4 1 kit de\ncaja policarbonato tipo 3-4 1 kit de\ncomunicación con simcard\ncomunicación con simcard\nmultioperador 15 metros de cable #2\nmultioperador 15 metros de cable #2\ncobre 6 metros de coraza 1\" 4 conectores\ncobre 6 metros de coraza 1\" 4 conectores\nde coraza 1\" 6 conectores de perforación\nde coraza 1\" 6 conectores de perforación\n120-120. Consumibles. Se debe realizar\n120-120. Consumibles. Se debe realizar\nmaniobra a las 7:00 a para que no afecte\nmaniobra a las 7:00 a para que no afecte\nproducción del restaurante.\nproducción del restaurante.\nUbicación para Grupo de Medida ¿Necesita carro canasta o escalera?\nmedida directa Escalera 9 pasos\nSeccionamientos externos\n¿Existen seccionamientos externos en MT? ¿A cuantos usuarios afecta la maniobra?\nSi 15\nDescripción de usuarios que afecta\notros usuarios Conectados al trago de distribución\nIdentificación de seccionamiento\ntubos portafusibles del trafo"
   },
   "CO4700006745": {
     "ot_nombre": "VIPE_44639_507B86",
