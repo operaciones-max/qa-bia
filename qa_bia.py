@@ -815,8 +815,9 @@ def _limpiar_errores_fantasma(qa, tipo_servicio):
     qa["alertas_qa"] = alertas_l
 
 def _simplificar_fallida(qa):
-    """Cuando estado_ot=FALLIDA, vacia errores y deja solo alertas de firma OR/usuario.
-    La tipificacion ya explica todo lo demas — no es util listar 30 errores tecnicos."""
+    """Cuando estado_ot=FALLIDA, vacia errores, deja solo alertas de firma OR/usuario,
+    y elimina cinco_por_que de tipificacion (redundante con causa_raiz/detalle/mejora).
+    La tipificacion ya explica todo — no es util listar errores tecnicos ni 5 porques."""
     if qa.get("estado_ot") != "FALLIDA":
         return
     val = qa.get("validaciones") or {}
@@ -833,6 +834,9 @@ def _simplificar_fallida(qa):
         if not already:
             keep.append("El Operador de Red NO firmó el acta.")
     qa["alertas_qa"] = keep
+    falla = qa.get("tipificacion_falla") or {}
+    falla["cinco_por_que"] = []
+    qa["tipificacion_falla"] = falla
 
 def _override_fallida_si_incompleto(qa):
     """Si estado_ot=EXITOSA pero los datos critically incompletos, fuerza FALLIDA
@@ -882,13 +886,7 @@ def _override_fallida_si_incompleto(qa):
             "marca, referencia, lecturas, sellos, foto, diagrama unifilar) antes de permitir "
             "el cierre exitoso de la OT. Agregar revision de calidad de captura previa al cierre."
         ),
-        "cinco_por_que": [
-            "1. Por que se override a FALLIDA? Porque los campos criticos del medidor encontrado tienen valores invalidos o placeholder",
-            "2. Por que llegaron esos valores al acta? Porque el formulario actual permite captura con valores no validados",
-            "3. Por que el formulario lo permite? Porque no hay validacion estricta de tipos y formatos en los campos del acta",
-            "4. Por que esto afecta? Porque QA no puede determinar si la actividad fue ejecutada correctamente",
-            "5. Por que no se corrigio antes? Porque no existe un proceso de revision de calidad de captura del acta antes de cerrar la OT",
-        ],
+        "cinco_por_que": [],
     })
     qa["tipificacion_falla"] = falla
 
