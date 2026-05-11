@@ -65,7 +65,7 @@
   },
   "CO0500006734": {
     "ot_nombre": "VIPE_43827_95FE84",
-    "fecha_procesada": "2026-05-08 17:41:25",
+    "fecha_procesada": "2026-05-11 13:28:41",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": null,
     "medidor_encontrado": {
@@ -97,7 +97,7 @@
   },
   "CO1100006755": {
     "ot_nombre": "VIPE_44174_A6B16E",
-    "fecha_procesada": "2026-05-08 18:57:36",
+    "fecha_procesada": "2026-05-11 13:30:30",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": "60",
     "medidor_encontrado": {
