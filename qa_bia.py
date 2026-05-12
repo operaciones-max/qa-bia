@@ -165,6 +165,26 @@ def _alertar_slack_cooldown(data):
     except Exception as e:
         print(f"  ERROR alerta Slack cooldown: {e}")
 
+def _clasificar_qa_track(tipo_servicio):
+    """Clasifica el tipo de servicio en uno de los 3 tracks de QA."""
+    t = (tipo_servicio or "").lower()
+    # Energy Solutions: mantenimiento, bancos de condensadores, BIA Monitor
+    if any(k in t for k in ("mantenimiento", "condensador", "banco", "bia monitor", "monitor", "carro canasta")):
+        return "Energy Solutions"
+    # Activacion: visitas previas + instalaciones + alta ingenieria
+    if "previa" in t or "instala" in t or "alta ingenier" in t:
+        return "Activacion"
+    # Resto: Retencion
+    return "Retencion"
+
+def _requiere_wms_comparison(tipo_servicio, qa_track):
+    """True si el acta debe comparar contra WMS asignado."""
+    if qa_track == "Activacion":
+        return True
+    t = (tipo_servicio or "").lower()
+    # Normalizacion medida y Normalizacion Emergencias tambien tienen equipos asignados
+    return "normalizaci" in t and ("medida" in t or "emergencia" in t)
+
 ARCHIVO_FACTURAS_EXTRAIDAS = "facturas_extraidas.json"
 METABASE_BASE = "https://bia.metabaseapp.com"
 METABASE_QUESTION_FACTURAS = 69895
@@ -385,7 +405,8 @@ def obtener_actas_nuevas():
         fecha_str  = fila.get("start", "").strip()
         tiene_acta = fila.get("Tiene Acta", "").strip()
 
-        if tipo not in config.TIPOS_SERVICIO_VALIDOS:
+        # Aceptar TODOS los tipos de servicio — el track de QA decide la profundidad de analisis
+        if not tipo:
             om_tipo += 1; continue
         if estado not in config.ESTADOS_ANALIZAR:
             om_estado += 1; continue
@@ -472,6 +493,84 @@ def _renderizar_pdf_a_imagenes(pdf_bytes):
 # =============================================================
 #  ANALISIS CON GEMINI
 # =============================================================
+
+def analizar_acta_lite(texto_pdf, tipo_servicio, estado_electricista, internal_bia_code=""):
+    """QA lite para Retencion/Energy Solutions: solo exitosa/fallida + tipificacion si falla.
+    Prompt corto, ~70% menos tokens que el full QA."""
+    es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
+    prompt = f"""Eres auditor QA SENIOR de OTs de medicion electrica en Colombia para BIA Energy.
+TIPO DE SERVICIO: {tipo_servicio}
+RESULTADO EN APP: {"EXITOSA" if es_exitosa else "FALLIDA"}
+CODIGO INTERNO BIA: {internal_bia_code}
+
+INSTRUCCIONES:
+- Devuelve UNICAMENTE JSON valido sin texto adicional ni bloques de codigo.
+- Lee el acta y determina si la OT fue exitosa o fallida segun la realidad documentada en el acta. Considera el RESULTADO EN APP pero puedes diferir si la informacion del acta contradice.
+- Copia observacion_tecnico_verbatim LITERALMENTE del campo Observaciones del acta. NO resumas.
+- Determina or_firma: SI solo si el Operador de Red asistio y firmo con datos reales. NO en cualquier otro caso.
+- Si la OT es FALLIDA o sustancialmente incompleta, pobla tipificacion_falla con causa_raiz analitica (3-7 palabras), responsable (rol especifico), detalle (2-4 lineas con cifras concretas referencia codigo {internal_bia_code}), y mejora estructural.
+- alertas_qa: lista con observaciones criticas (max 5). Solo cosas realmente relevantes como "OR no asistio", "Datos sustancialmente incompletos", "Discrepancia con sistema".
+
+JSON ESPERADO:
+{{
+  "estado_ot": "EXITOSA | FALLIDA",
+  "observacion_tecnico_verbatim": "<texto literal del campo Observaciones del acta, null si no existe>",
+  "or_firma": "SI | NO",
+  "validaciones": {{
+    "coherencia": "COHERENTE | INCOHERENTE | INCOMPLETO",
+    "errores_encontrados": []
+  }},
+  "alertas_qa": [],
+  "tipificacion_falla": {{
+    "causa_raiz": "<o null>",
+    "responsable": "<o null>",
+    "detalle": "<o null>",
+    "mejora": "<o null>"
+  }}
+}}
+
+--- TEXTO DEL ACTA ---
+{texto_pdf[:15000]}
+"""
+    cd = _cargar_cooldown_llm()
+    if cd:
+        print(f"  Gemini en cooldown ({cd['razon']}) - se omite analisis lite.")
+        return None
+
+    modelos = getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL])
+    for idx, modelo in enumerate(modelos):
+        es_ultimo = (idx == len(modelos) - 1)
+        try:
+            respuesta = cliente_gemini.models.generate_content(
+                model=modelo,
+                contents=[prompt],
+                config=genai_types.GenerateContentConfig(
+                    temperature=0.1,
+                    max_output_tokens=2000,
+                    response_mime_type="application/json",
+                ),
+            )
+            texto_r = (respuesta.text or "").strip()
+            if "```json" in texto_r:
+                texto_r = texto_r.split("```json")[1].split("```")[0].strip()
+            inicio = texto_r.find("{"); fin = texto_r.rfind("}")
+            if inicio != -1 and fin != -1:
+                texto_r = texto_r[inicio:fin+1]
+            return json.loads(texto_r)
+        except json.JSONDecodeError:
+            print(f"  JSON invalido lite de {modelo}")
+        except Exception as e:
+            msg = str(e); msg_lower = msg.lower()
+            if "429" in msg or "rate" in msg_lower or "resource_exhausted" in msg_lower or "quota" in msg_lower:
+                _activar_cooldown_llm(msg)
+                return None
+            if "503" in msg or "unavailable" in msg_lower or "high demand" in msg_lower:
+                print(f"  {modelo} 503/transitorio (lite).")
+            else:
+                print(f"  ERROR lite {modelo}: {e}")
+        if not es_ultimo:
+            time.sleep(2)
+    return None
 
 def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
                   internal_bia_code="", serial_asignado_wms="", marca_asignada_wms="",
@@ -1888,6 +1987,8 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "serial_medidor_factura_anterior":   resultado_qa.get("serial_medidor_factura_anterior"),
         "medidor_coincide_factura_anterior": resultado_qa.get("medidor_coincide_factura_anterior"),
         "factura_anterior_express":          resultado_qa.get("factura_anterior_express"),
+        "qa_track":                          resultado_qa.get("qa_track"),
+        "estado_revision":                   resultado_qa.get("estado_revision") or "pendiente",
         "tiene_alcance":             alcance_row is not None,
         "alcance_viable":            _av(alcance_row, "Viable Para Instalar") if alcance_row else None,
         "alcance_medida_instalar":   _av(alcance_row, "Tipo De Medida A Instalar") if alcance_row else None,
@@ -1974,8 +2075,12 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
     es_visita  = "previa" in tipo.lower()
     debe_comparar_wms = es_exitosa and not es_visita and bool(serial_asignado)
 
+    qa_track    = _clasificar_qa_track(tipo)
+    requiere_wms_track = _requiere_wms_comparison(tipo, qa_track)
+    usa_full_qa = (qa_track == "Activacion") or requiere_wms_track
+
     print(f"\n  -> Procesando: {ot_nombre}")
-    print(f"     Tipo: {tipo} | Estado: {estado}")
+    print(f"     Tipo: {tipo} | Estado: {estado} | Track: {qa_track} | QA: {'full' if usa_full_qa else 'lite'}")
     print(f"     OR: {or_norm} | Planner: {planner}")
     if serial_asignado:
         print(f"     WMS: medidor={serial_asignado} | TCs={len(tcs_asignados)} | TPs={len(tps_asignados)} | Comparar={debe_comparar_wms}")
@@ -1987,18 +2092,26 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
         print("     No se pudo leer el PDF. Se omite.")
         return False
 
-    modelos_log = ", ".join(getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL]))
-    print(f"     Analizando con Gemini (chain: {modelos_log}) | imagenes: {len(imagenes_pdf)}")
-    resultado_qa = analizar_acta(
-        texto_pdf, tipo, estado, internal_bia_code,
-        serial_asignado if debe_comparar_wms else "",
-        marca_asignada if debe_comparar_wms else "",
-        tcs_asignados if debe_comparar_wms else [],
-        tps_asignados if debe_comparar_wms else [],
-        imagenes_pdf=imagenes_pdf,
-    )
+    if usa_full_qa:
+        modelos_log = ", ".join(getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL]))
+        print(f"     Analizando con Gemini full (chain: {modelos_log}) | imagenes: {len(imagenes_pdf)}")
+        resultado_qa = analizar_acta(
+            texto_pdf, tipo, estado, internal_bia_code,
+            serial_asignado if debe_comparar_wms else "",
+            marca_asignada if debe_comparar_wms else "",
+            tcs_asignados if debe_comparar_wms else [],
+            tps_asignados if debe_comparar_wms else [],
+            imagenes_pdf=imagenes_pdf,
+        )
+    else:
+        print(f"     Analizando con Gemini lite ({qa_track})")
+        resultado_qa = analizar_acta_lite(texto_pdf, tipo, estado, internal_bia_code)
+
     if not resultado_qa:
         return False
+
+    resultado_qa["qa_track"]        = qa_track
+    resultado_qa["estado_revision"] = "pendiente"
 
     # Post-validaciones defensivas
     _enforce_reglas_medida_servicio(resultado_qa, tipo)
