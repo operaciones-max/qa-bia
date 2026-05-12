@@ -35,7 +35,7 @@ if os.environ.get('GEMINI_API_KEY'):
         MODO_UNICO           = True
         MODO_BACKFILL        = True   # Silencia Slack/WhatsApp mientras se repuebla Supabase. Cambiar a False cuando termine.
         ACTAS_PRUEBA         = 2
-        FECHA_INICIO          = "2026-05-01"
+        FECHA_INICIO          = "2026-05-10"
         FECHA_INICIO_ALCANCES = "2026-04-30"
         PAUSA_GROQ_SEGUNDOS  = 30
         INTERVALO_SEGUNDOS   = 300
