@@ -481,7 +481,7 @@
   },
   "CO0100003812": {
     "ot_nombre": "PREC_24650_913FF6",
-    "fecha_procesada": "2026-05-12 14:47:41",
+    "fecha_procesada": "2026-05-12 16:42:01",
     "tipo_medida": null,
     "factor_medida": null,
     "medidor_encontrado": null,
@@ -492,5 +492,19 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "*Código interno de Bia:*CO100003812 *Tipo de servicio:*Previa Banco de Condensadores *Serial del medidor:*23121162 *IP del medidor:*10.87.23.180 *Modem Inst:*N/A *Marca modem:*N/A *Factor de medida:*1 *Transformador:*S/I kVA Compartido. *Con OR:*No *Observación:* 1). Visita inicial para validar condiciones de instalación de banco de condensadores. 2). Se llega al predio a las 07:00 am. 3). Se encuentra tablero general de distribución TGD trifásico de 24 circuitos con totalizador de 40A y parciales en calibre #4 AWG, ubicado al lado de la máquina dispensadora de gaseosa. 4). Se toman tensiones de fase con pinza voltiamperimetrica de: 122.5V, 122.2V y 122.3V Tensiones de línea de 211.8V, 212.9V y 211.3V y corrientes de 9.8A, 2.7A y 2.7A. 5). Trabajo sin tension bajando totalizador en tablero de circuitos ubicado al lado del dispensador de gaseosa, instalar aguas abajo del totalizador general cuadrante del totalizador llaves bristol o Allen. 6). Se válida con persona encargada del punto para la instalación del banco y se puede ubicar en la parte superior del TGD. *Banco de condensadores dependiendo la capacidad determinada por el área de ingeniería. *4 MTS de cable encauchetado 4x10 o 20 metros de cable #10 línea abierta. * 4 chazos con tornillo tipo caimán para dry wall. * Broca escalonada para perforar tapa de TGD y cofre. 7). Corte del servicio aproximadamente de 20 a 30 minutos cliente sugiere los días lunes, miércoles y jueves en la mañana preferiblemente a las 06:00 am, programar con una semana de anticipación para disponibilidad del personal para apertura del local. No programar los días martes ni viernes por días de mayor productividad. 8). Se toma registro fotográfico. 9). Se baja totalizador de la medida para verificar a qué tablero pertenece. 10). Todo queda en normal funcionamiento en el predio. 11). Se socializa las condiciones de instalación con el cliente."
+  },
+  "CO0100003813": {
+    "ot_nombre": "PREC_24649_B89D32",
+    "fecha_procesada": "2026-05-12 16:43:30",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Luis Bermudez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "*Código interno de Bia:*CO100003813\n*Tipo de servicio:*Previa Banco de\nCondensadores *Serial del\nmedidor:*23113090 *IP del\nmedidor:*10.87.208.229 *Modem Inst:*N/A\n*Marca modem:*N/A *Factor de\nmedida:*40 *Transformador:*150 kVA\nCompartido. *Con OR:*No *Observación:*\n1). Visita inicial para validar condiciones\nde instalación de banco de\ncondensadores. 2). Se llega al predio a las\n07:00 am. 3). Se encuentran tablero\ngeneral de distribución TGD trifásico de\n42 circuitos con totalizador de 100A y\nparciales en calibre #1/0 AWG, ubicado\nen el segundo piso. 4). Se toman\ntensiones de fase con pinza\nvoltiamperimetrica de: 124V, 122V y 121V\nTensiones de línea de 208.0V, 210.2V y\n212.7V y corrientes de 33A, 35A y 10A. 5).\nTrabajo sin tension bajando totalizador\nen tablero de circuitos ubicado en el\nsegundo piso del local, conexión del\nbanco de condensadores aguas abajo del\ntotalizador cuadrante con llaves bristol o\nAllen. 6). Se válida con persona\nencargada del punto para la instalación\ndel banco y se puede ubicar en la parte\nsuperior izquierda del TGD. *Banco de\ncondensadores dependiendo la\ncapacidad determinada por el área de\ningeniería. *4 MTS de cable\nencauchetado 4x10 o 20 metros de cable\n#10 línea abierta. * 4 chazos puntilla *\nBroca escalonada para perforar tapa de\nTGD y cofre. 7). Corte del servicio\naproximadamente de 20 a 30 minutos\ncliente sugiere los días jueves en la\nmañana preferiblemente a las 07:00 am,\nprogramar con una semana de\nanticipación para disponibilidad del\npersonal para apertura del local. 8). Se\ntoma registro fotográfico. 9). No se\nafecta el servicio durante la visita. 10).\nTodo queda en normal funcionamiento\nen el predio. 11). Se socializa las\ncondiciones de instalación con el cliente."
   }
 }
