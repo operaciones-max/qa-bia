@@ -167,6 +167,117 @@ def _alertar_slack_cooldown(data):
     except Exception as e:
         print(f"  ERROR alerta Slack cooldown: {e}")
 
+TIPIFICACIONES_CATALOGO = {
+    # Account executive
+    "Cliente abandona proceso": "Account executive",
+    "Cliente no conoce alcance de la actividad": "Account executive",
+    "Documentacion incompleta": "Account executive",
+    "OR no conoce requerimiento descargos": "Account executive",
+    "OR no tiene conocimiento de la actividad": "Account executive",
+    "Propietario no conoce alcance de la actividad": "Account executive",
+    "Datos de ubicación erroneo": "Account executive",
+    "Permisos de ingreso": "Account executive",
+    "Error en la creación de la OT": "Account executive",
+    "Falta activar frontera para realizar actividad": "Account executive",
+    "La OT ya fue realizada": "Account executive",
+    "OT Duplicada": "Account executive",
+    "OT Fuera de SLA": "Account executive",
+    "No se cancelo actividad apesar de solicitud del cliente": "Account executive",
+    # Operador de red
+    "Falla en la red, debe normalizar OR": "Operador de red",
+    "OR exige adecuaciones adicionales": "Operador de red",
+    "OR no asiste o llega tarde": "Operador de red",
+    "OR no cumple requerimientos de la actividad": "Operador de red",
+    "Permisos del municipio": "Operador de red",
+    # Safety
+    "Documentacion SST": "Safety Specialist",
+    # Coordinador
+    "Coordinador no confirma actividad": "Coordinador",
+    "Contratista/ Tecnico no llega a la hora programada": "Coordinador",
+    "Información faltante/ erronea en acta": "Coordinador",
+    # Technical expert
+    "Confirmacion de Alcance en actividad": "Technical expert",
+    "Error en alcance": "Technical expert",
+    # Contratista
+    "Fallas en el Alistamiento Operativo": "Contratista",
+    "Contratista no asiste o llega tarde": "Contratista",
+    "Configuracion del modem": "Contratista",
+    # Supply
+    "Certificados de equipo": "Supply",
+    "Equipos en sitio": "Supply",
+    "Averia de equipo pre instalacion": "Supply",
+    "Sim card": "Supply",
+    # Centro comercial
+    "Permisos propietario": "Centro comercial",
+    # Cliente
+    "Falla cliente-Gestion": "Cliente",
+    "Agendamiento cliente": "Cliente",
+    "Demora en el acceso": "Cliente",
+    "Acceso a gabinete": "Cliente",
+    "Cliente retira los equipos": "Cliente",
+    "Cliente en reclamación": "Cliente",
+    "Cliente realizo pago": "Cliente",
+    "Cliente suspendido": "Cliente",
+    "Cliente fuera del mercado BIA": "Cliente",
+    "Cliente en cobro juridico": "Cliente",
+    "Acuerdo de pago en punto": "Cliente",
+    # Factor externo
+    "Animales impiden acceso a la medida": "Factor externo",
+    "Riesgo electrico": "Factor externo",
+    "Codigo duplicado": "Factor externo",
+    "Lluvias": "Factor externo",
+    "Acceso a la medida": "Factor externo",
+    "Manifestaciones / bloqueos / carretera cerrada": "Factor externo",
+    "Cubertura en datos moviles": "Factor externo",
+    "Medidor averiado": "Factor externo",
+    "No hay registro del medidor bia encontrado": "Factor externo",
+    "No se encuentra medidor": "Factor externo",
+    "No se encuentra modem": "Factor externo",
+    "Modem averiado": "Factor externo",
+    "Telemedida conecta y normalizada antes de visita": "Factor externo",
+    "Equipos averiados": "Factor externo",
+    "Se requiere acompañamiento policial": "Factor externo",
+    "Sin acceso a la plataforma para pagar": "Factor externo",
+    "Medida es compartida": "Factor externo",
+    "Predio desocupado, imposibilidad de acceso a la medida": "Factor externo",
+}
+
+def _validar_tipificacion(qa):
+    """Asegura que causa_raiz este en el catalogo oficial y mapea responsable."""
+    if qa.get("estado_ot") != "FALLIDA":
+        return
+    falla = qa.get("tipificacion_falla") or {}
+    causa_orig = (falla.get("causa_raiz") or "").strip()
+
+    # Match exacto (case-insensitive)
+    causa_match = None
+    causa_lower = causa_orig.lower()
+    for k in TIPIFICACIONES_CATALOGO:
+        if k.lower() == causa_lower:
+            causa_match = k
+            break
+
+    # Fuzzy match: buscar la del catalogo con mas overlap de palabras
+    if not causa_match and causa_orig:
+        causa_words = set(re.findall(r"\w+", causa_lower))
+        mejor_score = 0
+        for k in TIPIFICACIONES_CATALOGO:
+            k_words = set(re.findall(r"\w+", k.lower()))
+            score = len(causa_words & k_words)
+            if score > mejor_score:
+                mejor_score = score
+                causa_match = k
+        # Si el mejor match es muy debil, mejor default
+        if mejor_score < 2:
+            causa_match = None
+
+    if not causa_match:
+        causa_match = "Información faltante/ erronea en acta"
+
+    falla["causa_raiz"]  = causa_match
+    falla["responsable"] = TIPIFICACIONES_CATALOGO[causa_match]
+    qa["tipificacion_falla"] = falla
+
 def _clasificar_qa_track(tipo_servicio):
     """Clasifica el tipo de servicio en uno de los 3 tracks de QA."""
     t = (tipo_servicio or "").lower()
@@ -498,6 +609,7 @@ def analizar_acta_lite(texto_pdf, tipo_servicio, estado_electricista, internal_b
     """QA lite para Retencion/Energy Solutions: solo exitosa/fallida + tipificacion si falla.
     Prompt corto, ~70% menos tokens que el full QA."""
     es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
+    tipificaciones_lista = "\n".join(f"  - {k}" for k in TIPIFICACIONES_CATALOGO.keys())
     prompt = f"""Eres auditor QA SENIOR de OTs de medicion electrica en Colombia para BIA Energy.
 TIPO DE SERVICIO: {tipo_servicio}
 RESULTADO EN APP: {"EXITOSA" if es_exitosa else "FALLIDA"}
@@ -505,11 +617,15 @@ CODIGO INTERNO BIA: {internal_bia_code}
 
 INSTRUCCIONES:
 - Devuelve UNICAMENTE JSON valido sin texto adicional ni bloques de codigo.
-- Lee el acta y determina si la OT fue exitosa o fallida segun la realidad documentada en el acta. Considera el RESULTADO EN APP pero puedes diferir si la informacion del acta contradice.
+- El estado_ot debe respetar el RESULTADO EN APP: si es EXITOSA, marca EXITOSA. Si es FALLIDA, marca FALLIDA.
 - Copia observacion_tecnico_verbatim LITERALMENTE del campo Observaciones del acta. NO resumas.
 - Determina or_firma: SI solo si el Operador de Red asistio y firmo con datos reales. NO en cualquier otro caso.
-- Si la OT es FALLIDA o sustancialmente incompleta, pobla tipificacion_falla con causa_raiz analitica (3-7 palabras), responsable (rol especifico), detalle (2-4 lineas con cifras concretas referencia codigo {internal_bia_code}), y mejora estructural.
+- Si la OT es FALLIDA, debes elegir causa_raiz EXACTAMENTE de esta lista (no inventes nuevas):
+{tipificaciones_lista}
+- detalle: 2-4 lineas con cifras concretas, referencia al codigo {internal_bia_code}, cita literal del acta cuando ayude.
+- mejora: accion ESTRUCTURAL de proceso (NO operativa). Cambios sistemicos.
 - alertas_qa: lista con observaciones criticas (max 5). Solo cosas realmente relevantes como "OR no asistio", "Datos sustancialmente incompletos", "Discrepancia con sistema".
+- Para tipos de servicio de RETENCION (Telemedidas, Desconexion, Lectura, Frontera, etc): NO compares medidor encontrado vs instalado, NO reportes errores de TCs/TPs/pruebas/diagrama unifilar — no aplican en estos servicios.
 
 JSON ESPERADO:
 {{
@@ -784,8 +900,8 @@ JSON ESPERADO:
   }},
 
   "tipificacion_falla": {{
-    "causa_raiz": "<TITULO ANALITICO de 3-7 palabras. NO descriptivo. Ejemplos validos: 'Condiciones tecnicas no viables', 'Falta de viabilidad operativa en visita previa', 'Inconsistencia con Operador de Red', 'Desconocimiento del alcance por el cliente'. EJEMPLOS MALOS (no usar): 'No se pudo instalar', 'Problema con cliente'>",
-    "responsable": "<rol especifico del area que debe gestionar. Puede ser combinado con / si dos areas son responsables. Opciones recomendadas: Technical Expert | Coordinador Operativo | Planeacion | Comercial | Operador de Red | Cliente | Contratista | BIA Operaciones | Externo>",
+    "causa_raiz": "<DEBE ser EXACTAMENTE una de las opciones del catalogo BIA listado abajo>",
+    "responsable": "<rol del area que gestiona — sera asignado automaticamente segun causa_raiz>",
     "detalle": "<2-4 lineas. INCLUYE: cifras concretas (medidas en cm, calibres, capacidades), referencia explicita al codigo BIA ({internal_bia_code}), si la condicion estaba detectada en visita previa menciona 'aunque esta condicion ya estaba identificada en la visita previa', cita literal del acta cuando ayude>",
     "mejora": "<accion ESTRUCTURAL de proceso, no operativa. NO escribas 'reprogramar la visita'. SI escribe cambios sistemicos. Ejemplo gold: 'Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseno, materiales y permisos) antes de agendar la OT.'>",
     "cinco_por_que": [
@@ -812,6 +928,9 @@ EJEMPLO GOLD DE TIPIFICACION (replica este nivel):
 REGLA OR_FIRMA:
 - SI solo si "El Operador de Red asistio" dice "Si" Y hay nombre, cedula y telefono reales (no guiones).
 - NO en cualquier otro caso.
+
+CATALOGO OFICIAL BIA de causa_raiz para tipificacion_falla (elegi UNA EXACTA):
+{chr(10).join('  - ' + k for k in TIPIFICACIONES_CATALOGO.keys())}
 
 --- TEXTO DEL ACTA ---
 {texto_pdf[:12000]}
@@ -2137,6 +2256,7 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
     # _override_fallida_si_incompleto: DESACTIVADO. Respetamos el estado del tecnico.
     # El reviewer humano puede marcar como FALLIDA desde Lovable si lo considera.
     _simplificar_fallida(resultado_qa)
+    _validar_tipificacion(resultado_qa)
 
     resultado_qa["planner"]              = planner
     resultado_qa["or_norm"]              = or_norm
