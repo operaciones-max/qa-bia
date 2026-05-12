@@ -181,9 +181,11 @@ def _requiere_wms_comparison(tipo_servicio, qa_track):
     """True si el acta debe comparar contra WMS asignado."""
     if qa_track == "Activacion":
         return True
-    t = (tipo_servicio or "").lower()
-    # Normalizacion medida y Normalizacion Emergencias tambien tienen equipos asignados
-    return "normalizaci" in t and ("medida" in t or "emergencia" in t)
+    t = (tipo_servicio or "").strip().lower()
+    # Normalizacion medida y Normalizacion Emergencias tienen equipos asignados.
+    # Match EXACTO para no confundir con 'Normalizacion Telemedidas' (contiene 'medida' como substring).
+    return t in ("normalizacion medida", "normalización medida",
+                 "normalizacion emergencias", "normalización emergencias")
 
 ARCHIVO_FACTURAS_EXTRAIDAS = "facturas_extraidas.json"
 METABASE_BASE = "https://bia.metabaseapp.com"
