@@ -129,7 +129,7 @@
   },
   "CO0800006812": {
     "ot_nombre": "VIPE_45175_EA7252",
-    "fecha_procesada": "2026-05-08 21:13:26",
+    "fecha_procesada": "2026-05-12 12:08:36",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -446,5 +446,37 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "Se llega a sitio para visita previa a cliente asadero cali sin acompañamiento del OR. Se encontró equipo de medida directa en gabinete compartido en sistema ami en poste cerca\nde la media tensión no se logra tomar datos de la medida ya que se requiere personal del OR con apoyo de carro canasta. Se toman evidencias fotográficas de dónde se\nencuentra la medida. Cliente cuenta con breaker totalizador de 125 amp no cuenta con paneles solares, tienen planta electrica,"
+  },
+  "CO0500006735": {
+    "ot_nombre": "VIPE_43833_875B70",
+    "fecha_procesada": "2026-05-12 12:09:32",
+    "tipo_medida": "SEMIDIRECTA",
+    "factor_medida": "50",
+    "medidor_encontrado": {
+      "serie": "53127512",
+      "marca": "ITRON",
+      "referencia": "SL7000",
+      "lectura_activa_kwh": "1",
+      "lectura_reactiva_kvarh": null,
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "53127512",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": "TCs de 250/5 - 10 va. Clase 0.5"
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "JONATAN PALACIO",
+    "tecnico_empresa": "CONTRATISTA",
+    "contratista_nombre": "ISELEC",
+    "observacion_tecnico_verbatim": "Código interno de Bia:* CO0500006735 tipo de servicio : visita previa sin epm *Serial del medidor : 53127512 *IP del medidor: 10.92.212.62 *Se instala módem : 1010R3202305251292\n*serie módem retirado : no aplica *modem marca : microstar *Factor de medida: 50 Transformador: no visible pero es multiusuarios uso compartido Con OR: NO Observación: 28\nde abril del 2026 a las 10:50 am se realiza visita previa en campo por personal de BIA ENERGY para proceso de cambio de comercializador usuario a razón social de ARCOS\nDORADOS COLOMBIA SAS ubicado en Medellín Antioquia cc santa fe en la visita se encontró lo siguiente: Tipo de medida semidirecta en tres elementos y nivel de tensión 1,\nfactor 50 TCs de 250/5 - 10 va. Clase 0.5 Medida ubicada en subestación interna del cc el Santa Fe subestación 4 - Gabiente actual si tiene placa del fabricante SDT - cumple -\n⁠Bornera no tiene marca del fabricante - no cumple - ⁠calibra de señales de tensión y corrientes en 12 awg - ⁠señales de corriente para burden en calibre 12 awg con\naproximadamente 3 metros x elemento desde el medidor hasta los TCs, 1.5metros de ida y 1.5 de regreso - No cumple burden. - ⁠el cliente no cuenta con sistema solar - ⁠el cliente\nno cuenta con planta de emergencia - ⁠El cliente no cuenta con banco de condensadores - ⁠para continuar con el proceso de cambio de comercializador se debe adecuar la\nfrontera y técnicamente sería necesario cambio de medidor, Bornera, cambio de TCs, cambio de módem de comunicación, cambio de señales para cumplir burden. Se requiere\nsuspensión desde totalizador principal que alimenta el gabinete, 3x2500A , una 1 hora para el cambio de equipos, dichas suspensión afecta a toda la subestación, No se requiere\napertura del transformador, NO requiere descargos con EPM, se debe coordinar con epm y la administración del cc el Santa Fe hora y fecha de suspensión. No se retiran sellos de\nla medida. Totalizador existente del cliente 3x400A amperios NO regulable Acometida en calibra 2-4/0 x fase todo queda operativo"
   }
 }
