@@ -2127,7 +2127,8 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
         debe_comparar_wms,
     )
     _limpiar_errores_fantasma(resultado_qa, tipo)
-    _override_fallida_si_incompleto(resultado_qa)
+    # _override_fallida_si_incompleto: DESACTIVADO. Respetamos el estado del tecnico.
+    # El reviewer humano puede marcar como FALLIDA desde Lovable si lo considera.
     _simplificar_fallida(resultado_qa)
 
     resultado_qa["planner"]              = planner
