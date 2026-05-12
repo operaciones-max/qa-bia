@@ -2112,6 +2112,15 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
     if not resultado_qa:
         return False
 
+    # FUENTE DE VERDAD del estado: electrician_status_id de Metabase, no la AI.
+    # Si el tecnico cerro CLOSURE_SUCCESSFUL/COMPLETED -> EXITOSA. Si CLOSURE_FAILED/ELECTRICIAN_FAILED_VISIT -> FALLIDA.
+    # La AI puede sugerir errores/alertas pero NO puede cambiar el estado_ot.
+    resultado_qa["estado_ot"] = "EXITOSA" if es_exitosa else "FALLIDA"
+
+    # Si el tecnico cerro EXITOSA, limpiamos tipificacion_falla porque no aplica.
+    if es_exitosa:
+        resultado_qa["tipificacion_falla"] = None
+
     resultado_qa["qa_track"]        = qa_track
     resultado_qa["estado_revision"] = "pendiente"
 
