@@ -1096,6 +1096,27 @@ def _limpiar_errores_fantasma(qa, tipo_servicio):
 
     def es_fantasma(item):
         s = " " + (item or "").lower() + " "
+        # Patterns que SIEMPRE filtramos (cualquier track) — son ruidosos y no aportan
+        for term in (
+            # AI se confunde con "encontrado vs foto" — el foto del medidor encontrado
+            # a veces muestra el medidor a instalar; este chequeo es flaky.
+            "no coincide con la serie visible en foto",
+            "no coincide con la foto",
+            "serie visible en foto",
+            # Errores de "no se reportan" suelen ser fields ausentes en el acta, no errores reales
+            "no se reportan sellos",
+            "no se reporta sello",
+            "no se reportan pruebas de funcionamiento",
+            "no se reporta pruebas de funcionamiento",
+            "no se realizaron pruebas",
+            "no se reporta diagrama unifilar",
+            "no se reporta equipo patron", "no se reporta equipo patrón",
+            "no se reportan fotos",
+            "no se reporta foto",
+            "no se encontraron fotos",
+        ):
+            if term in s:
+                return True
         if es_directa:
             for term in (" tc ", " tcs ", " tp ", " tps ", "bloque de pruebas",
                          "bloque pruebas", "cable de control", "cable control"):
