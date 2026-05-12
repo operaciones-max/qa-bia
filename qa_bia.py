@@ -25,7 +25,9 @@ if os.environ.get('GEMINI_API_KEY'):
         ALCANCES_CSV_URL     = "https://bia.metabaseapp.com/public/question/52353a69-6510-405b-9bbd-754d762a2597.csv"
         GEMINI_API_KEY       = os.environ['GEMINI_API_KEY']
         GEMINI_MODEL         = "gemini-2.5-flash-lite"
-        GEMINI_MODELS        = ["gemini-2.5-flash-lite", "gemini-2.0-flash"]
+        # Solo flash-lite: dropeamos fallback a 2.0-flash para no consumir su pool de 200 RPD.
+        # Si flash-lite 503ea, dejamos que la acta caiga en cooldown y se reintente despues.
+        GEMINI_MODELS        = ["gemini-2.5-flash-lite"]
         SLACK_WEBHOOK_URL    = os.environ.get('SLACK_WEBHOOK_URL', '')
         TWILIO_ACCOUNT_SID   = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         TWILIO_AUTH_TOKEN    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -275,13 +277,9 @@ def extraer_serial_factura(pdf_url):
         return {"serial": None, "express": express}, "cooldown"
 
     prompt = (
-        "Esta es una factura de servicio electrico colombiana del comercializador anterior. "
-        "Extrae UNICAMENTE el numero de serie del medidor electrico que aparece. "
-        "El campo puede llamarse: 'Numero', 'Medidor', 'Dispositivo', 'Serie', "
-        "'Numero del medidor', 'Serial del medidor', 'No. medidor', 'Medidor No', "
-        "'Equipo', 'Aparato'. NO inventes, si no aparece serial valido devuelve null. "
-        "Responde SOLO con JSON: {\"serial\": \"<numero>\" o null}\n\n"
-        "--- FACTURA ---\n" + texto[:6000]
+        "Factura electrica. Extrae serial del medidor (puede llamarse Numero/Medidor/"
+        "Dispositivo/Serie/Equipo). Si no aparece, null. JSON: {\"serial\": \"<num>\" o null}\n\n"
+        + texto[:3500]
     )
 
     modelo = (getattr(config, "GEMINI_MODELS", None) or [config.GEMINI_MODEL])[0]
@@ -291,7 +289,7 @@ def extraer_serial_factura(pdf_url):
             contents=prompt,
             config=genai_types.GenerateContentConfig(
                 temperature=0.1,
-                max_output_tokens=200,
+                max_output_tokens=80,
                 response_mime_type="application/json",
             ),
         )
@@ -532,7 +530,7 @@ JSON ESPERADO:
 }}
 
 --- TEXTO DEL ACTA ---
-{texto_pdf[:15000]}
+{texto_pdf[:8000]}
 """
     cd = _cargar_cooldown_llm()
     if cd:
@@ -548,7 +546,7 @@ JSON ESPERADO:
                 contents=[prompt],
                 config=genai_types.GenerateContentConfig(
                     temperature=0.1,
-                    max_output_tokens=2000,
+                    max_output_tokens=1500,
                     response_mime_type="application/json",
                 ),
             )
@@ -816,7 +814,7 @@ REGLA OR_FIRMA:
 - NO en cualquier otro caso.
 
 --- TEXTO DEL ACTA ---
-{texto_pdf[:20000]}
+{texto_pdf[:12000]}
 """
 
     cd = _cargar_cooldown_llm()
@@ -838,7 +836,7 @@ REGLA OR_FIRMA:
                 contents=contents,
                 config=genai_types.GenerateContentConfig(
                     temperature=0.1,
-                    max_output_tokens=8192,
+                    max_output_tokens=4096,
                     response_mime_type="application/json",
                 ),
             )
