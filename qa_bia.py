@@ -35,7 +35,7 @@ if os.environ.get('GEMINI_API_KEY'):
         TWILIO_TO_WHATSAPP   = "whatsapp:+57TUNUMERODECELULAR"
         MODO_PRUEBA          = False
         MODO_UNICO           = True
-        MODO_BACKFILL        = True   # Silencia Slack/WhatsApp mientras se repuebla Supabase. Cambiar a False cuando termine.
+        MODO_BACKFILL        = False  # False = notificaciones activas en Slack/WhatsApp/Cooldown
         ACTAS_PRUEBA         = 2
         FECHA_INICIO          = "2026-05-10"
         FECHA_INICIO_ALCANCES = "2026-04-30"
@@ -1096,24 +1096,20 @@ def _limpiar_errores_fantasma(qa, tipo_servicio):
 
     def es_fantasma(item):
         s = " " + (item or "").lower() + " "
-        # Patterns que SIEMPRE filtramos (cualquier track) — son ruidosos y no aportan
+        # REGLA UNIVERSAL: cualquier "no se reporta(n)" es un dump de fields vacios,
+        # no un error real. Si un campo falta y es realmente critico, el reviewer
+        # marca FALLIDA manual desde Lovable.
+        if " no se reporta " in s or " no se reportan " in s:
+            return True
+        if " no se encontraron " in s or " no se encontro " in s or " no se encontró " in s:
+            return True
+        # Patterns adicionales que tambien filtramos siempre
         for term in (
-            # AI se confunde con "encontrado vs foto" — el foto del medidor encontrado
-            # a veces muestra el medidor a instalar; este chequeo es flaky.
             "no coincide con la serie visible en foto",
             "no coincide con la foto",
             "serie visible en foto",
-            # Errores de "no se reportan" suelen ser fields ausentes en el acta, no errores reales
-            "no se reportan sellos",
-            "no se reporta sello",
-            "no se reportan pruebas de funcionamiento",
-            "no se reporta pruebas de funcionamiento",
             "no se realizaron pruebas",
-            "no se reporta diagrama unifilar",
-            "no se reporta equipo patron", "no se reporta equipo patrón",
-            "no se reportan fotos",
-            "no se reporta foto",
-            "no se encontraron fotos",
+            "el acta no reporta",
         ):
             if term in s:
                 return True
