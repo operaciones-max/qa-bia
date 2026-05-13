@@ -580,5 +580,33 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA RESTAURANTE MAX GORDOS DENTRO DE\nCENTRO COMERCIAL METRO CENTRO CON EQUIPO DE MEDIDA NIVEL 1 MEDIDA SEMI DIRECTA CONECTADO A BARRAJE PRINCIPAL EL CUAL SE ENERGIZA DE\nTRANSFORMADOR COMPARTIDO DE 800 KVA BARRAJE PRINCIPAL CUENTA CON BREAKER TOTALIZADOR DE 2000 AMP TRABAJOS DE CAMBIO DE COMERCIALIZADOR SE\nDEBEN REALIZAR EN HORAS DE LA NOCHE YA QUE AL ABRIR EL BREAKERS TOTALIZADOR DEL BARRAJE PRINCIPAL SE AFECTARA A MAS DE 10 USUARIOS QUE SE\nENCUENTRAN CONECTADOS A DICHO BARRAJE PARA ESTA MANIOBRA SE REQUIERE QUE ESTE PRESENTE PERSONAL DE MANTENIMIENTO DEL CC YA QUE SOLO ELLOS\nTIENEN AUTORIZADO MANIPULAR LOS BREAKERA DE LOS BARRAJES SEGUN INFORMAN *MATERIALES REQUERIDOS* 1 MEDIDOR ( MEDIDA SEMI DIRECTA ) 3 TCs 1 BLOQUE DE\nPRUEBAS 1 GABINETE METALICO ( PARA MEDIDOR Y BLOQUE DE PRUEBAS) 4 CONECTORES DE CORAZA 1 \" 4 CONECTORES DE PERFORACIÓN 1 CAJA DE PLC 3/4 5 MTS CABLE\n4×12 5 MTS CABLE 6×12 10 MTS CORAZA 1 MODEN 1 SIM CARD 1 ANTENA 2 CHAZOS EXPANSIVOS"
+  },
+  "CO0100003839": {
+    "ot_nombre": "PREC_24623_BFAF87",
+    "fecha_procesada": "2026-05-13 08:08:10",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Carlos Arturo Salas Herrera",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "*Código interno de Bia:* CO0100003839\n*Tipo de servicio:* Previa Banco de\nCondensadores *Serial del medidor:*\n23081043 *IP del medidor:* *Marca\nmodem:* Microestar *Factor de medida:*\nFX 1 *Transformador:* compartido. *Con\nOR:*No *Observación:* 1). Visita inicial\npara definir alcance de instalación de\nBanco de Condensadores. 2). Se llega al\npredio a las 01:05 PM. 3). Se válida con el\nusuario, la cuenta presta servicio a\nbodega procesos de alimentos El Corral\nGurmet. 4). Se encontró medidor marca\nMicrostar de capacidad 100A con módem\nEMSITECHS propiedad de Bia FX 1\nmedida directa, Totalizador del TABLERO\nPRINCIPAL de 125A marca LEGRAND 5).\nAcometida abierta calibre 3X2 AWG,\nParciales en calibre 3X2 AWG 6). Tableros\nde distribución en parte interna del\npredio 7). Se toman datos de medida\ntensión y corrientes 9). Se comparan\ntensiones y corrientes desde tablero de\ndistribución dentro del local VS el menú\nalterno del medidor 10). De acuerdo a la\nnaturaleza de las cargas, se requiere\nbanco de condensadores tipo\nautomático para la corrección del factor\nde potencia y así anular las\npenalizaciones por consumo de energías\nreactivas 11). Para conexión del banco de\ncondensadores se requieren 12 metros\nen total de cable, (calibre sugerido #10\nAWG) 3 metros por cada línea, Canaleta\nplástica tipo industrial de una medida de\n3 centímetros por 2 centimetros, 4\nterminales o bornas tipo pala, chazos de\n1/4 con tornillo para fijar banco de\ncondensadores y demás consumible\n(Chasos, amarres, cintas, terminales,\ntornillería). herramientas adecuadas\npara la actividad 12). Punto de ubicación\ndel banco en el mezanine junto al tablero\nde iluminación 13). Se debe realizar corte\ndesde el totalizador de la celda del\nmedidor para trabajo en frio sobre el\ntablero de distribución 14). Instalación\ncon corte de energía aproximadamente\nde 1 hora aproximada mente 15). El\ncliente queda con suministro de energía\nnormal 16). La persona que atiende firma\nacta a conformidad. 17). Persona que\natiende manifiesta que para instalación\nde banco de condensadores se puede\nhacer corte de energía de lunes a viernes\ndespués de la 7:00 am solicitando\npermisos ante el centro comercial"
+  },
+  "CO0100003806": {
+    "ot_nombre": "PREC_24656_4A9901",
+    "fecha_procesada": "2026-05-13 08:08:36",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Juan Jaramillo",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "1). Visita técnica previa para instalación de banco de condensadores 2). Se llega al sitio a las 08:25am 3). Se tramitan ingresos con el encargado del punto, estando OK. Ingreso 08:40am 4). No sé tiene ingreso donde se encuentra medidor de energía ya que donde se encuentra al momento no se tiene ingreso , pero se puede validar número de medidor por aplicativo MeterSight serie 23121104 5) Totalizador de TABLERO PRINCIPAL marca LEGRAND 100A 5). Acometida linea abierta 4x#2 parcial 4x#2 6). Tableros de distribución en parte interna del predio 7). Se toman datos de medida tension y corrientes de fase , de línea VR F-F = 209.5 VS F-F = 210.9 VT F-F = 212.9 VR F-N = 121.4 VS F-N = 120.6 VT F-N = 123.6 IR = 12.64 IS = 18.64 IT = 06.14 Al momento de la visita no está a full carga el predio ya que empiezan operación alas 11 o 12 del medio día 8). Medidor presta servicio a local de el CORRAL PLAZA IMPERIAL 9). Se validan tensiones y corrientes desde tablero de distribución dentro del local 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son , refrigeradores , extractores y iluminación 11). Para conexión del banco de condensadores se requieren 12 metros de cable para potencia #8 1 metro (canaleta plastica de 3cmt) con terminales de acople , 6 terminales de ojo para conductor al banco desde totalizador, chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad y escalera 12). Punto de ubicación del banco en parte superior del tablero de distribución 13). Se debe realizar corte desde el totalizador 14). Instalacion con corte de energía aproximadamente de 1 hora 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona quien atiende manifiesta que para instalacion de banco de condensadores se puede hacer corte de energia de lunes a viernes de 07:00 am a 08:00am 18). Se realiza prueba de telemedida medidante aplicativo la cual se encuentra ok"
   }
 }
