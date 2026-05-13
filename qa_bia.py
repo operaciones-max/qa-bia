@@ -243,11 +243,13 @@ TIPIFICACIONES_CATALOGO = {
 }
 
 def _validar_tipificacion(qa):
-    """Asegura que causa_raiz este en el catalogo oficial y mapea responsable."""
+    """Asegura que causa_raiz este en el catalogo oficial y mapea responsable.
+    Si la AI propuso un responsable combinado (con /), se respeta agregando el del catalogo."""
     if qa.get("estado_ot") != "FALLIDA":
         return
     falla = qa.get("tipificacion_falla") or {}
     causa_orig = (falla.get("causa_raiz") or "").strip()
+    responsable_orig = (falla.get("responsable") or "").strip()
 
     # Match exacto (case-insensitive)
     causa_match = None
@@ -272,10 +274,47 @@ def _validar_tipificacion(qa):
             causa_match = None
 
     if not causa_match:
+        # Si AI invento causa sin overlap, intenta inferir desde la observacion
+        observ = (qa.get("observacion_tecnico_verbatim") or "").lower()
+        for keyword, causa_inferred in (
+            ("reprogr", "Agendamiento cliente"),
+            ("no atiende", "Agendamiento cliente"),
+            ("no puede atender", "Agendamiento cliente"),
+            ("ausente", "Falla cliente-Gestion"),
+            ("no hay quien", "Falla cliente-Gestion"),
+            ("permiso", "Permisos de ingreso"),
+            ("ingreso", "Permisos de ingreso"),
+            ("acceso", "Acceso a la medida"),
+            ("lluvia", "Lluvias"),
+            ("riesgo electrico", "Riesgo electrico"),
+            ("manifestacion", "Manifestaciones / bloqueos / carretera cerrada"),
+            ("bloqueo", "Manifestaciones / bloqueos / carretera cerrada"),
+            ("medidor averiado", "Medidor averiado"),
+            ("modem averiado", "Modem averiado"),
+            ("no se encuentra medidor", "No se encuentra medidor"),
+            ("no se encuentra modem", "No se encuentra modem"),
+            ("or no asist", "OR no asiste o llega tarde"),
+            ("or no llego", "OR no asiste o llega tarde"),
+            ("operador de red no", "OR no asiste o llega tarde"),
+            ("contratista no asist", "Contratista no asiste o llega tarde"),
+        ):
+            if keyword in observ:
+                causa_match = causa_inferred
+                break
+
+    if not causa_match:
         causa_match = "Información faltante/ erronea en acta"
 
+    responsable_cat = TIPIFICACIONES_CATALOGO[causa_match]
+    # Si la AI propuso responsable combinado (con /) y al menos uno coincide
+    # con el del catalogo, respetar la combinacion. Si no, usar el del catalogo.
+    if "/" in responsable_orig and responsable_cat.lower() in responsable_orig.lower():
+        responsable_final = responsable_orig
+    else:
+        responsable_final = responsable_cat
+
     falla["causa_raiz"]  = causa_match
-    falla["responsable"] = TIPIFICACIONES_CATALOGO[causa_match]
+    falla["responsable"] = responsable_final
     qa["tipificacion_falla"] = falla
 
 def _clasificar_qa_track(tipo_servicio):
@@ -620,12 +659,29 @@ INSTRUCCIONES:
 - El estado_ot debe respetar el RESULTADO EN APP: si es EXITOSA, marca EXITOSA. Si es FALLIDA, marca FALLIDA.
 - Copia observacion_tecnico_verbatim LITERALMENTE del campo Observaciones del acta. NO resumas.
 - Determina or_firma: SI solo si el Operador de Red asistio y firmo con datos reales. NO en cualquier otro caso.
-- Si la OT es FALLIDA, debes elegir causa_raiz EXACTAMENTE de esta lista (no inventes nuevas):
+
+TIPIFICACION DE FALLIDA — LEE PRIMERO LA OBSERVACION DEL TECNICO ANTES DE CLASIFICAR:
+  La observacion verbatim del acta es la FUENTE PRINCIPAL para entender por que la OT fallo.
+  Lee atentamente y extrae:
+  - QUE paso (causa real del fallo)
+  - QUIEN intervino (nombre del tecnico, contacto del cliente, OR, administracion)
+  - DONDE (lugar especifico, codigo CO)
+  - CUANDO (fecha/hora si se menciona)
+  - QUE materiales/condiciones fallaron
+
+- causa_raiz: DEBE ser EXACTAMENTE una opcion del catalogo BIA. NO inventes. Elige la que mas se ajusta al motivo real explicado en la observacion:
 {tipificaciones_lista}
-- detalle: 2-4 lineas con cifras concretas, referencia al codigo {internal_bia_code}, cita literal del acta cuando ayude.
-- mejora: accion ESTRUCTURAL de proceso (NO operativa). Cambios sistemicos.
-- alertas_qa: lista con observaciones criticas (max 5). Solo cosas realmente relevantes como "OR no asistio", "Datos sustancialmente incompletos", "Discrepancia con sistema".
-- Para tipos de servicio de RETENCION (Telemedidas, Desconexion, Lectura, Frontera, etc): NO compares medidor encontrado vs instalado, NO reportes errores de TCs/TPs/pruebas/diagrama unifilar — no aplican en estos servicios.
+
+- responsable: el del catalogo (asignado automaticamente). Si la observacion sugiere que hubo MULTIPLE responsabilidad, puedes combinar con / (ej "Cliente / Account executive", "Operador de red / Coordinador"). Pero la causa_raiz debe ser UNA del catalogo.
+
+- detalle: 2-4 lineas que CITAN NOMBRES/LUGARES/DATOS REALES de la observacion. Ejemplo gold: "En la OT {internal_bia_code}, el director de mantenimiento informo que los lunes no atienden personal de servicios publicos. La atencion fue realizada por <Tecnico> y la actividad no pudo ejecutarse." NO escribas detalles generericos como "el acta esta incompleta" si la observacion explica el motivo real.
+
+- mejora: cambio ESTRUCTURAL/sistemico de proceso. NO acciones operativas tipo "reprogramar". SI acciones tipo "Implementar validacion previa con cliente sobre horarios habilitados antes de programar visita".
+
+- PROHIBIDO usar como causa_raiz "Información faltante/ erronea en acta" cuando la observacion del tecnico EXPLICA el motivo real del fallo. Solo usa esa causa cuando la observacion esta vacia o es ininteligible.
+
+- alertas_qa: lista con max 5 observaciones criticas REALES (no de campos vacios). Ejemplos: "OR no asistio", "Discrepancia con sistema", "Cliente reprogramo despues de salida del tecnico".
+- Para RETENCION (Telemedidas, Desconexion, Lectura, Frontera, etc): NO compares medidor encontrado vs instalado, NO reportes errores de TCs/TPs/pruebas/diagrama — no aplican.
 
 JSON ESPERADO:
 {{
@@ -900,9 +956,9 @@ JSON ESPERADO:
   }},
 
   "tipificacion_falla": {{
-    "causa_raiz": "<DEBE ser EXACTAMENTE una de las opciones del catalogo BIA listado abajo>",
-    "responsable": "<rol del area que gestiona — sera asignado automaticamente segun causa_raiz>",
-    "detalle": "<2-4 lineas. INCLUYE: cifras concretas (medidas en cm, calibres, capacidades), referencia explicita al codigo BIA ({internal_bia_code}), si la condicion estaba detectada en visita previa menciona 'aunque esta condicion ya estaba identificada en la visita previa', cita literal del acta cuando ayude>",
+    "causa_raiz": "<DEBE ser EXACTAMENTE una opcion del catalogo BIA listado abajo. Elige la que mejor describa el motivo REAL expresado en la observacion del tecnico. NO uses 'Información faltante/ erronea en acta' si la observacion explica claramente el motivo real del fallo.>",
+    "responsable": "<asignado automaticamente desde el catalogo. Puedes combinar con / si hay multiple responsabilidad (ej 'Cliente / Account executive')>",
+    "detalle": "<2-4 lineas EXTRAYENDO datos especificos de la observacion del tecnico: NOMBRES (tecnico, contacto, administrador), LUGARES (centro comercial, predio), HORARIOS, cifras concretas (cm, calibres, kVA, capacidades). Referencia el codigo BIA ({internal_bia_code}). Si la condicion estaba en visita previa: 'aunque esta condicion ya estaba identificada en la visita previa'. Cita literal del acta cuando ayude. PROHIBIDO escribir generalidades tipo 'el acta esta incompleta' si la observacion explica el motivo real.>",
     "mejora": "<accion ESTRUCTURAL de proceso, no operativa. NO escribas 'reprogramar la visita'. SI escribe cambios sistemicos. Ejemplo gold: 'Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseno, materiales y permisos) antes de agendar la OT.'>",
     "cinco_por_que": [
       "1. Por que la OT fue fallida? Porque [razon concreta]",
