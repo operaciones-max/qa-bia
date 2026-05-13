@@ -700,5 +700,83 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "*Codigo interno BIA* PREC_CO0100004142 *Tipo de servicio* Visita previa instalación de banco de condensadores *Serial del medidor:* 23102151 *IP:* 10.196.7.171 *Modem Inst:* N75242306066 *FX de medida:* 1 *Transformador:* S/I KVA de uso compartido *Con OR:* No *Observaciones:* 1). Visita técnica previa para instalación de banco de condensadores 2). Se llega al sitio a las 11:05 am 3). Se tramitan ingresos con el encargado del punto, estando OK. 4). Se encontró medidor marca Microstar de capacidad 160A de Bia energy, FX 1 5). Totalizador de TABLERO PRINCIPAL de 150A MARCA SCHNEIDER 6). Tableros de distribución en parte interna del predio 7). Se toman datos de medida tension y corrientes de fase , de línea obteniendo los siguientes datos VR F-F = 206.7 VS F-F = 206.7 VT F-F = 206.1 VR F-N = 117.4 VS F-N = 117.3 VT F-N = 120.1 IR = 45.61 IS = 64.6 IT = 32.62 FP = 0.88 Al momento de la visita no está a full carga el predio ya que empiezan operación a las 12 del medio día 8). Medidor presta servicio a planta EL CORRAL y PAPA JHONS 9). Se validan tensiones y corrientes desde tablero de distribución dentro del local 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son iluminacio, refrigeradores y extractores 11). Para conexión del banco de condensadores se requieren 20 metros de cable para potencia, (espiral para cubrir cable) chazos metalicos expansible de 3/8\" para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad, tigera para lamina, brocas, copasierra de 2\" 12). Punto de ubicación del banco pasillo donde se encuentra medidor y tgd 13). Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución 14). Instalacion con corte de energía aproximadamente de 3 horas 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona que atiende manifiesta que para instalacion de banco de condensadores se puede hacer corte de energia de lunes a jueves a las 5 am 18). Se realiza prueba de telemedida medidante aplicativo la cual se encuentra ok 19). Cliente ya cuenta con banco de condensadores automatico en en predio el cual se encontro apagado, validar con usuario si banco funcio a para realizar unicamente mantenimiento, capacidad del banco encontrado 33.43 KVAR"
+  },
+  "CO0100004130": {
+    "ot_nombre": "PREC_26250_01C754",
+    "fecha_procesada": "2026-05-13 12:30:55",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Juan Jaramillo",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "1). Visita técnica previa para instalación de banco de condensadores 2). Se llega al sitio a las 11:00am 3). Se tramitan ingresos con el encargado del punto, estando OK. Ingreso 11:10am 4). No sé tiene ingreso donde se encuentra medidor de energía ya que donde se encuentra al momento no se tiene ingreso , pero se puede validar número de medidor por aplicativo MeterSight serie 23121217 5) Totalizador de TABLERO PRINCIPAL marca SCHNEIDER 150A 5). Acometida linea abierta 4x#8 parcial 4x#8 6). Tableros de distribución en parte interna del predio según piso 7). Se toman datos de medida tension y corrientes de fase , de línea VR F-F = 207.2 VS F-F = 207.0 VT F-F = 208.2 VR F-N = 118.0 VS F-N = 120.2 VT F-N = 121.2 IR = 04.71 IS = 06.23 IT = 05.93 Al momento de la visita no está a full carga el predio ya que empiezan operación alas 11 o 12 del medio día 8). Medidor presta servicio a local de el PAPA JOHNS 9). Se validan tensiones y corrientes desde tablero de distribución dentro del local 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son , refrigeradores , extractores y iluminación 11). Para conexión del banco de condensadores se requieren 12 metros de cable para potencia #8 1 metro (canaleta plastica de 3cmt) con terminales de acople , 6 terminales de ojo para conductor al banco desde totalizador, chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad y escalera 12). Punto de ubicación del banco en parte superior del tablero de distribución 13). Se debe realizar corte desde el totalizador 14). Instalacion con corte de energía aproximadamente de 1 hora 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona quien atiende manifiesta que para instalacion de banco de condensadores se puede hacer corte de energia de lunes a viernes de 10:00 am a 11:00am 18). Se realiza prueba de telemedida medidante aplicativo la cual se encuentra ok"
+  },
+  "CO0800006822": {
+    "ot_nombre": "VIPE_45830_8F1C63",
+    "fecha_procesada": "2026-05-13 12:31:27",
+    "tipo_medida": "DIRECTA",
+    "factor_medida": "1",
+    "medidor_encontrado": {
+      "serie": null,
+      "marca": null,
+      "referencia": null,
+      "lectura_activa_kwh": null,
+      "lectura_reactiva_kvarh": null,
+      "serie_coincide_foto": false,
+      "observacion_serie_foto": "No se encontro seccion de registro fotografico para medidor encontrado."
+    },
+    "medidor_enc_serie": null,
+    "tcs_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Jose Arevalo",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Se llega al sitio director de mantenimiento del centro comercial carnaval, informa por tema logístico los día lunes no hay atención a personal de servicio públicos y de igual manera no han recibido por parte del cliente notificación de la visita . Atendió Alejandro coba."
+  },
+  "CO4700006835": {
+    "ot_nombre": "VIPE_45510_4DEB74",
+    "fecha_procesada": "2026-05-13 12:32:26",
+    "tipo_medida": "SEMIDIRECTA",
+    "factor_medida": "80",
+    "medidor_encontrado": {
+      "serie": "84258045",
+      "marca": "ITRON",
+      "referencia": "ACE 6000",
+      "lectura_activa_kwh": "0.0",
+      "lectura_reactiva_kvarh": "0.0",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "84258045",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Duvan Cervera",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, se encuentra medida semiindirecta en poste factor 80 (según factura), transformador de 112.5 KVA, breaker\np/al de ** A. Usuario cuenta con planta eléctrica, más no con paneles solares. Señor usuario recomienda que la próxima visita de instalación sea programada para los días martes\no miercoles en horas de la mañana, y ser notificado con antelación. Para preparar la planta electrica. Para cambio de Comercializador se requiere pasar a medida indirecta nivel\n2, Para ello se requiere : Descargo (sin perdida de mercado). Apoyo de carrocanasta. 3 tp's (tipo exterior). 3 tc's (tipo exterior). 1 crucetas. 3 dps. Conectores ampas 4/0 a 1/0. 30\nConectores #2 ponchables 24 platinas para equipos. 30 m de cable cobre #2 desnudo. 24 m de coraza industrial de 1\". 13 m de cable señal 4*12. 13 m de cable señal 6*12. 1\ngabinete metálico 1 medidor semi-indirecta. 1 bloque de prueba. 14 conectores de coraza de 1\". 2 m de cable blanco #12. Cinta de colores y demas consumibles. Se da por\nfinalizada la actividad"
   }
 }
