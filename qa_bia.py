@@ -14,7 +14,6 @@ import requests
 import pdfplumber
 from anthropic import Anthropic
 from datetime import datetime, date, timedelta
-from twilio.rest import Client as TwilioClient
 
 # GitHub Actions: leer de variables de entorno
 if os.environ.get('ANTHROPIC_API_KEY'):
