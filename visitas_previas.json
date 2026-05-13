@@ -520,5 +520,65 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "1). Visita inicial para validar condiciones de instalación de banco de condensadores. 2). Se llega al predio a las 07:00 am. 3). Se encuentra tablero general de distribución TGD trifásico con totalizador de 125A y parciales en calibre 3x1/0 AWG, ubicado en cocina. 4). Se toman tensiones de fase con pinza voltiamperimetrica de: 120.7V, 121.4V y 122.9V Tensiones de línea de 211.3V, 209.8V y 210.6V y corrientes de 23.9A, 29.2A y 10.9A. 5). Trabajo sin tension bajando totalizador en tablero de circuitos ubicado en la cocina, hay disponibilidad para instalar totalizador en el TGD y no afectar el servicio, se puede instalar aguas abajo del totalizador general cuadrante del totalizador llaves bristol o Allen. 6). Se válida con persona encargada del punto para la instalación del banco y se puede ubicar en la parte superior del TGD. *Banco de condensadores dependiendo la capacidad determinada por el área de ingeniería. *4 MTS de cable encauchetado 4x10 o 20 metros de cable #10 línea abierta. * 4 chazos con tornillo tipo caimán para dry wall. * Broca escalonada para perforar tapa de TGD y cofre. 7). Corte del servicio aproximadamente de 20 a 30 minutos cliente sugiere los días lunes, miércoles y jueves en la mañana preferiblemente a las 06:00 am, programar con una semana de anticipación para disponibilidad del personal para apertura del local. No programar los días martes ni viernes por días de mayor productividad. 8). Se toma registro fotográfico. 9). Se baja totalizador de la medida para verificar a qué tablero pertenece. 10). Todo queda en normal funcionamiento en el predio. 11). Se socializa las condiciones de instalación con el cliente."
+  },
+  "CO0100003819": {
+    "ot_nombre": "PREM_24643_2235DA",
+    "fecha_procesada": "2026-05-13 05:06:42",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Carlos Arturo Salas Herrera",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": null
+  },
+  "CO0100003838": {
+    "ot_nombre": "PREC_24624_C24B9B",
+    "fecha_procesada": "2026-05-13 05:07:06",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Wilson Fernandez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "1). Visita inicial para definir alcance de instalación de Banco de Condensadores. 2). Se llega al predio a las 07:30 AM. 3). Se válida con el usuario, la cuenta presta servicio a bodega procesos de alimentos El Corral Gurmet. 4). Se encontró medidor marca Microstar de capacidad 100A con módem EMSITECHS propiedad de Bia FX 1 medida directa, Totalizador de 150 A, Totalizador del TABLERO PRINCIPAL de 160 A marca ABB 5). Acometida abierta calibre 3X2 AWG, Parciales en calibre 3X2 AWG 6). Tableros de distribución en parte interna del predio 7). Se toman datos de medida tensión y corrientes en menú alterno del medidor: Tensiones de fase R123V S123V T123V Corrientes fase R 20A S 25A T 44A 9). Se comparan tensiones y corrientes desde tablero de distribución dentro del local VS el menú alterno del medidor 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores tipo automático para la corrección del factor de potencia y así anular las penalizaciones por consumo de energías reactivas 11). Para conexión del banco de condensadores se requieren 28 metros en total de cable, (calibre sugerido #10 AWG) 7 metros por cada línea, Canaleta plástica tipo industrial de una medida de 3 centímetros por 2 centimetros, 4 terminales o bornas tipo pala, chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). herramientas adecuadas para la actividad 12). Punto de ubicación del banco en el mezanine junto al tablero de iluminación 13). Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución 14). Instalación con corte de energía aproximadamente de 1 hora aproximada mente 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona que atiende manifiesta que para instalación de banco de condensadores se puede hacer corte de energía de lunes a viernes después de la 7:00 am solicitando permisos ante el centro comercial"
+  },
+  "CO0800006825": {
+    "ot_nombre": "VIPE_45833_FEED13",
+    "fecha_procesada": "2026-05-13 05:07:40",
+    "tipo_medida": "SEMIDIRECTA",
+    "factor_medida": "60",
+    "medidor_encontrado": {
+      "serie": "50000214",
+      "marca": "NANSEN",
+      "referencia": "NSX324i",
+      "lectura_activa_kwh": "001728.46",
+      "lectura_reactiva_kvarh": "000644.35",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "50000214",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Jorge Gelvez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA RESTAURANTE MAX GORDOS DENTRO DE\nCENTRO COMERCIAL METRO CENTRO CON EQUIPO DE MEDIDA NIVEL 1 MEDIDA SEMI DIRECTA CONECTADO A BARRAJE PRINCIPAL EL CUAL SE ENERGIZA DE\nTRANSFORMADOR COMPARTIDO DE 800 KVA BARRAJE PRINCIPAL CUENTA CON BREAKER TOTALIZADOR DE 2000 AMP TRABAJOS DE CAMBIO DE COMERCIALIZADOR SE\nDEBEN REALIZAR EN HORAS DE LA NOCHE YA QUE AL ABRIR EL BREAKERS TOTALIZADOR DEL BARRAJE PRINCIPAL SE AFECTARA A MAS DE 10 USUARIOS QUE SE\nENCUENTRAN CONECTADOS A DICHO BARRAJE PARA ESTA MANIOBRA SE REQUIERE QUE ESTE PRESENTE PERSONAL DE MANTENIMIENTO DEL CC YA QUE SOLO ELLOS\nTIENEN AUTORIZADO MANIPULAR LOS BREAKERA DE LOS BARRAJES SEGUN INFORMAN *MATERIALES REQUERIDOS* 1 MEDIDOR ( MEDIDA SEMI DIRECTA ) 3 TCs 1 BLOQUE DE\nPRUEBAS 1 GABINETE METALICO ( PARA MEDIDOR Y BLOQUE DE PRUEBAS) 4 CONECTORES DE CORAZA 1 \" 4 CONECTORES DE PERFORACIÓN 1 CAJA DE PLC 3/4 5 MTS CABLE\n4×12 5 MTS CABLE 6×12 10 MTS CORAZA 1 MODEN 1 SIM CARD 1 ANTENA 2 CHAZOS EXPANSIVOS"
   }
 }
