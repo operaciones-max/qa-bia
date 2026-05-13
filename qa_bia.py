@@ -1,7 +1,7 @@
 # =============================================================
 #  qa_bia.py  —  SISTEMA QA AUTOMATIZADO DE ACTAS BIA ENERGY
-#  Motor de IA: Google Gemini
-#  Version: 4.0 — Alcances ingenieria + tecnico + comparacion VP
+#  Motor de IA: Anthropic Claude
+#  Version: 5.0 — Migrado a Claude + sin notificaciones Slack/WhatsApp
 # =============================================================
 
 import os
@@ -12,23 +12,20 @@ import io
 import re
 import requests
 import pdfplumber
-from google import genai
-from google.genai import types as genai_types
+from anthropic import Anthropic
 from datetime import datetime, date, timedelta
 from twilio.rest import Client as TwilioClient
 
 # GitHub Actions: leer de variables de entorno
-if os.environ.get('GEMINI_API_KEY'):
+if os.environ.get('ANTHROPIC_API_KEY'):
     class config:
         METABASE_CSV_URL     = "https://bia.metabaseapp.com/public/question/5ec265f5-182d-409d-bfbd-45303880da2d.csv"
         WMS_CSV_URL          = "https://bia.metabaseapp.com/public/question/67f6d437-6326-415a-a799-1ee34b9648b0.csv"
         ALCANCES_CSV_URL     = "https://bia.metabaseapp.com/public/question/52353a69-6510-405b-9bbd-754d762a2597.csv"
-        GEMINI_API_KEY       = os.environ['GEMINI_API_KEY']
-        GEMINI_MODEL         = "gemini-2.5-flash-lite"
-        # Solo flash-lite: dropeamos fallback a 2.0-flash para no consumir su pool de 200 RPD.
-        # Si flash-lite 503ea, dejamos que la acta caiga en cooldown y se reintente despues.
-        GEMINI_MODELS        = ["gemini-2.5-flash-lite"]
-        SLACK_WEBHOOK_URL    = os.environ.get('SLACK_WEBHOOK_URL', '')
+        ANTHROPIC_API_KEY    = os.environ['ANTHROPIC_API_KEY']
+        # claude-haiku-4-5 = cheap+fast; claude-sonnet-4-6 = balanced; claude-opus-4-7 = most capable
+        CLAUDE_MODEL         = "claude-haiku-4-5-20251001"
+        SLACK_WEBHOOK_URL    = ""  # Sin Slack — solo Supabase
         TWILIO_ACCOUNT_SID   = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         TWILIO_AUTH_TOKEN    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         TWILIO_FROM_WHATSAPP = "whatsapp:+14155238886"
@@ -65,7 +62,7 @@ if os.environ.get('GEMINI_API_KEY'):
 else:
     import config
 
-cliente_gemini = genai.Client(api_key=config.GEMINI_API_KEY)
+cliente_claude = Anthropic(api_key=config.ANTHROPIC_API_KEY)
 
 # =============================================================
 #  UTILIDADES
@@ -150,7 +147,7 @@ def _activar_cooldown_llm(msg_error):
     }
     with open(ARCHIVO_COOLDOWN_LLM, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    _alertar_slack_cooldown(data)
+    # Slack cooldown alert deshabilitado — solo loguea en consola
     return data
 
 def _alertar_slack_cooldown(data):
@@ -432,27 +429,31 @@ def extraer_serial_factura(pdf_url):
         + texto[:3500]
     )
 
-    modelo = (getattr(config, "GEMINI_MODELS", None) or [config.GEMINI_MODEL])[0]
     try:
-        respuesta = cliente_gemini.models.generate_content(
-            model=modelo,
-            contents=prompt,
-            config=genai_types.GenerateContentConfig(
-                temperature=0.1,
-                max_output_tokens=80,
-                response_mime_type="application/json",
-            ),
+        respuesta = cliente_claude.messages.create(
+            model=config.CLAUDE_MODEL,
+            max_tokens=80,
+            temperature=0.1,
+            messages=[{"role": "user", "content": prompt}],
         )
-        texto_r = (respuesta.text or "").strip()
+        texto_r = "".join(b.text for b in respuesta.content if hasattr(b, "text")).strip()
+        # Limpiar markdown si Claude lo envuelve
+        if "```json" in texto_r:
+            texto_r = texto_r.split("```json")[1].split("```")[0].strip()
+        elif "```" in texto_r:
+            texto_r = texto_r.split("```")[1].split("```")[0].strip()
+        inicio = texto_r.find("{"); fin = texto_r.rfind("}")
+        if inicio != -1 and fin != -1:
+            texto_r = texto_r[inicio:fin+1]
         data = json.loads(texto_r)
         serial = (data.get("serial") or "").strip() or None
         return {"serial": serial, "express": express}, "ok"
     except Exception as e:
         msg = str(e)
-        if "429" in msg or "rate" in msg.lower() or "quota" in msg.lower():
+        if "429" in msg or "rate" in msg.lower() or "overloaded" in msg.lower():
             _activar_cooldown_llm(msg)
             return {"serial": None, "express": express}, "rate_limit"
-        return {"serial": None, "express": express}, f"error_gemini: {msg[:120]}"
+        return {"serial": None, "express": express}, f"error_claude: {msg[:120]}"
 
 def identificar_planner(or_norm):
     for or_key, planner in config.OR_PLANNERS.items():
@@ -706,43 +707,35 @@ JSON ESPERADO:
 """
     cd = _cargar_cooldown_llm()
     if cd:
-        print(f"  Gemini en cooldown ({cd['razon']}) - se omite analisis lite.")
+        print(f"  Claude en cooldown ({cd['razon']}) - se omite analisis lite.")
         return None
 
-    modelos = getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL])
-    for idx, modelo in enumerate(modelos):
-        es_ultimo = (idx == len(modelos) - 1)
-        try:
-            respuesta = cliente_gemini.models.generate_content(
-                model=modelo,
-                contents=[prompt],
-                config=genai_types.GenerateContentConfig(
-                    temperature=0.1,
-                    max_output_tokens=1500,
-                    response_mime_type="application/json",
-                ),
-            )
-            texto_r = (respuesta.text or "").strip()
-            if "```json" in texto_r:
-                texto_r = texto_r.split("```json")[1].split("```")[0].strip()
-            inicio = texto_r.find("{"); fin = texto_r.rfind("}")
-            if inicio != -1 and fin != -1:
-                texto_r = texto_r[inicio:fin+1]
-            return json.loads(texto_r)
-        except json.JSONDecodeError:
-            print(f"  JSON invalido lite de {modelo}")
-        except Exception as e:
-            msg = str(e); msg_lower = msg.lower()
-            if "429" in msg or "rate" in msg_lower or "resource_exhausted" in msg_lower or "quota" in msg_lower:
-                _activar_cooldown_llm(msg)
-                return None
-            if "503" in msg or "unavailable" in msg_lower or "high demand" in msg_lower:
-                print(f"  {modelo} 503/transitorio (lite).")
-            else:
-                print(f"  ERROR lite {modelo}: {e}")
-        if not es_ultimo:
-            time.sleep(2)
-    return None
+    try:
+        respuesta = cliente_claude.messages.create(
+            model=config.CLAUDE_MODEL,
+            max_tokens=1500,
+            temperature=0.1,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        texto_r = "".join(b.text for b in respuesta.content if hasattr(b, "text")).strip()
+        if "```json" in texto_r:
+            texto_r = texto_r.split("```json")[1].split("```")[0].strip()
+        elif "```" in texto_r:
+            texto_r = texto_r.split("```")[1].split("```")[0].strip()
+        inicio = texto_r.find("{"); fin = texto_r.rfind("}")
+        if inicio != -1 and fin != -1:
+            texto_r = texto_r[inicio:fin+1]
+        return json.loads(texto_r)
+    except json.JSONDecodeError:
+        print(f"  JSON invalido lite de {config.CLAUDE_MODEL}")
+        return None
+    except Exception as e:
+        msg = str(e); msg_lower = msg.lower()
+        if "429" in msg or "rate" in msg_lower or "rate_limit" in msg_lower or "overloaded" in msg_lower:
+            _activar_cooldown_llm(msg)
+            return None
+        print(f"  ERROR Claude lite: {e}")
+        return None
 
 def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
                   internal_bia_code="", serial_asignado_wms="", marca_asignada_wms="",
@@ -997,59 +990,40 @@ CATALOGO OFICIAL BIA de causa_raiz para tipificacion_falla (elegi UNA EXACTA):
         print(f"  Gemini en cooldown ({cd['razon']}) hasta {cd['until']} - se omite analisis.")
         return None
 
-    contents = [prompt]
-    for img_bytes in (imagenes_pdf or []):
-        contents.append(genai_types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
-
-    modelos = getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL])
+    # Claude soporta vision pero por simplicidad enviamos solo texto.
+    # Si querés vision, se agrega como image blocks en messages content.
     texto = ""
-    for idx, modelo in enumerate(modelos):
-        es_ultimo = (idx == len(modelos) - 1)
-        try:
-            respuesta = cliente_gemini.models.generate_content(
-                model=modelo,
-                contents=contents,
-                config=genai_types.GenerateContentConfig(
-                    temperature=0.1,
-                    max_output_tokens=4096,
-                    response_mime_type="application/json",
-                ),
-            )
-            texto = (respuesta.text or "").strip()
-            if "```json" in texto:
-                texto = texto.split("```json")[1].split("```")[0].strip()
-            elif "```" in texto:
-                texto = texto.split("```")[1].split("```")[0].strip()
-            inicio = texto.find("{")
-            fin    = texto.rfind("}")
-            if inicio != -1 and fin != -1:
-                texto = texto[inicio:fin+1]
-            resultado = json.loads(texto)
-            if idx > 0:
-                print(f"  Modelo usado: {modelo} (fallback)")
-            return resultado
-        except json.JSONDecodeError:
-            print(f"  JSON invalido de {modelo}: {texto[:150]}")
-        except Exception as e:
-            msg = str(e)
-            msg_lower = msg.lower()
-            es_rate_limit = ("429" in msg or "rate_limit" in msg_lower or "rate limit" in msg_lower
-                             or "resource_exhausted" in msg_lower or "resource exhausted" in msg_lower
-                             or "quota" in msg_lower)
-            if es_rate_limit:
-                cd = _activar_cooldown_llm(msg)
-                print(f"  Limite Gemini detectado ({cd['razon']}). Cooldown hasta {cd['until']}. Se aborta.")
-                return None
-            es_transitorio = "503" in msg or "unavailable" in msg_lower or "high demand" in msg_lower
-            if es_transitorio:
-                print(f"  {modelo} 503/transitorio.")
-            else:
-                print(f"  ERROR {modelo}: {e}")
-        if not es_ultimo:
-            print(f"  Probando siguiente modelo: {modelos[idx + 1]}...")
-            time.sleep(2)
-    print(f"  Todos los modelos Gemini ({len(modelos)}) fallaron.")
-    return None
+    try:
+        respuesta = cliente_claude.messages.create(
+            model=config.CLAUDE_MODEL,
+            max_tokens=4096,
+            temperature=0.1,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        texto = "".join(b.text for b in respuesta.content if hasattr(b, "text")).strip()
+        if "```json" in texto:
+            texto = texto.split("```json")[1].split("```")[0].strip()
+        elif "```" in texto:
+            texto = texto.split("```")[1].split("```")[0].strip()
+        inicio = texto.find("{")
+        fin    = texto.rfind("}")
+        if inicio != -1 and fin != -1:
+            texto = texto[inicio:fin+1]
+        return json.loads(texto)
+    except json.JSONDecodeError:
+        print(f"  JSON invalido de Claude: {texto[:150]}")
+        return None
+    except Exception as e:
+        msg = str(e)
+        msg_lower = msg.lower()
+        es_rate_limit = ("429" in msg or "rate_limit" in msg_lower or "rate limit" in msg_lower
+                         or "overloaded" in msg_lower or "quota" in msg_lower)
+        if es_rate_limit:
+            cd = _activar_cooldown_llm(msg)
+            print(f"  Limite Claude detectado ({cd['razon']}). Cooldown hasta {cd['until']}. Se aborta.")
+            return None
+        print(f"  ERROR Claude: {e}")
+        return None
 
 # =============================================================
 #  POST-VALIDACIONES (defensivas)
@@ -2069,8 +2043,7 @@ def verificar_nuevos_alcances(alcances, visitas_previas_dict):
 
         visita_data = visitas_previas_dict.get(co_code)
         print(f"\n  -> Nuevo alcance: {co_code} (VP almacenada: {'Si' if visita_data else 'No'})")
-        if not getattr(config, "MODO_BACKFILL", False):
-            enviar_slack_alcance(co_code, alcance_row, visita_data)
+        # Slack deshabilitado — solo Supabase
         actualizar_supabase_alcance(co_code, alcance_row)
         guardar_alcance_procesado(alcance_id)
         nuevos += 1
@@ -2285,8 +2258,7 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
         return False
 
     if usa_full_qa:
-        modelos_log = ", ".join(getattr(config, "GEMINI_MODELS", [config.GEMINI_MODEL]))
-        print(f"     Analizando con Gemini full (chain: {modelos_log}) | imagenes: {len(imagenes_pdf)}")
+        print(f"     Analizando con Claude full ({config.CLAUDE_MODEL}) | imagenes: {len(imagenes_pdf)}")
         resultado_qa = analizar_acta(
             texto_pdf, tipo, estado, internal_bia_code,
             serial_asignado if debe_comparar_wms else "",
@@ -2441,18 +2413,13 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
                 alcance_id = alcance_row.get("ID", "").strip()
                 procesados_alc = cargar_alcances_procesados()
                 if alcance_id and alcance_id not in procesados_alc:
-                    print(f"     Alcance encontrado para {internal_bia_code} — enviando al Slack...")
-                    if not getattr(config, "MODO_BACKFILL", False):
-                        enviar_slack_alcance(internal_bia_code, alcance_row, vp_data)
+                    print(f"     Alcance encontrado para {internal_bia_code} — registrado en Supabase.")
+                    # Slack deshabilitado — solo Supabase
                     guardar_alcance_procesado(alcance_id)
 
-    backfill = getattr(config, "MODO_BACKFILL", False)
     guardar_reporte(acta, resultado_qa)
-    if not backfill:
-        enviar_slack(acta, resultado_qa, serial_asignado if debe_comparar_wms else "")
+    # Slack y WhatsApp deshabilitados — solo escritura a Supabase.
     enviar_supabase(acta, resultado_qa, alcances.get(internal_bia_code) if alcances else None)
-    if not backfill:
-        enviar_whatsapp(acta, resultado_qa)
     guardar_procesado(acta.get("id"))
     print(f"     OK: {ot_nombre} auditada.")
     return True
@@ -2464,7 +2431,7 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
 def main():
     modo = "PRUEBA" if config.MODO_PRUEBA else "AUTOMATICO"
     print("=" * 58)
-    print("   SISTEMA QA BIA ENERGY  -  Motor: Google Gemini")
+    print("   SISTEMA QA BIA ENERGY  -  Motor: Anthropic Claude")
     print("   Modo: " + modo)
     print("=" * 58)
     print("   Fecha inicio : " + config.FECHA_INICIO)
