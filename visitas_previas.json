@@ -810,5 +810,19 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA EMPRESA LITOGRAFICA CON EQUIPO DE MEDIDA NIVEL 1 EN POSTE MEDIDA SEMI DIRECTA CONECTADO A TRANSFORMADOR DE 112.5 KVA COMPARTIDO, A DICHO TRANSFORMADOR SE ENCUENTRA CONECTADO LOCAL COMERCIAL CON MEDIDOR # 34022521 ESTE LOCAL TAMBIEN PERTENECE A FOTOLITO CLIENTE NO CUENTA CON PLANTA ELÉCTRICA DE RESPALDO YA QUE TIENE INSTALADO SISTEMA DE PANELES SOLARES NO FUE POSIBLE VALIDAR NUMERO DE MEDIDOR ATENDIO VISITA EL SEÑOR DAVID VITOLA DUEÑO DE LA EMPRESA QUIEN DIO INDICACIONES DE SU EQUIPO DE MEDIDA ACTUAL EN LE CUAL SE EVIDENCIA NUMERO DE MEDIDOR ESCRITO EN LA TAPA DEL GABINETE"
+  },
+  "CO0100003834": {
+    "ot_nombre": "PREC_24628_517AB9",
+    "fecha_procesada": "2026-05-14 20:12:36",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Wilson Capador",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "cerca del tablero no es posible instalar banco de condensadores ya que no existe espacio cliente cuenta con un banco de condensadores tipo fijo en celda metálica con totalizador Marca ABB de 25A, totalizador se encuentra disparado, condensador marca LIFASA 8.2Kvar"
   }
 }
