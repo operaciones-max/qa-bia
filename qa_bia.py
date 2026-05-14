@@ -37,7 +37,7 @@ if os.environ.get('ANTHROPIC_API_KEY'):
         FECHA_INICIO_ALCANCES = "2026-04-30"
         PAUSA_GROQ_SEGUNDOS  = 20
         INTERVALO_SEGUNDOS   = 300
-        MAX_ACTAS_POR_RUN    = 4
+        MAX_ACTAS_POR_RUN    = 30
         ARCHIVO_PROCESADOS          = "actas_procesadas.json"
         ARCHIVO_VISITAS_PREVIAS     = "visitas_previas.json"
         ARCHIVO_ALCANCES_PROCESADOS = "alcances_procesados.json"
