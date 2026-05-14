@@ -2151,6 +2151,7 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "serial_medidor_factura_anterior":   resultado_qa.get("serial_medidor_factura_anterior"),
         "medidor_coincide_factura_anterior": resultado_qa.get("medidor_coincide_factura_anterior"),
         "factura_anterior_express":          resultado_qa.get("factura_anterior_express"),
+        "factura_anterior_estado":           resultado_qa.get("factura_anterior_estado"),
         "qa_track":                          resultado_qa.get("qa_track"),
         "estado_revision":                   resultado_qa.get("estado_revision") or "pendiente",
         "tiene_alcance":             alcance_row is not None,
@@ -2344,13 +2345,22 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
     # Factura anterior: extraer serial + flag express del comercializador previo
     serial_factura  = None
     factura_express = None
+    factura_estado  = "no_disponible"  # default: CO no tiene factura URL en hubspot
     factura_url     = (facturas or {}).get(internal_bia_code)
     if factura_url:
+        factura_estado = "borrosa"  # default si llegamos aca pero falla extraccion
         cache = _cargar_facturas_extraidas()
         if internal_bia_code in cache:
             entry = cache[internal_bia_code] or {}
             serial_factura  = entry.get("serial")
             factura_express = entry.get("express")
+            estado_cache    = entry.get("estado", "")
+            if serial_factura:
+                factura_estado = "ok"
+            elif estado_cache == "ok":
+                factura_estado = "ok_sin_serial"  # extrajo pero serial no aparecio en PDF
+            else:
+                factura_estado = "borrosa"
         else:
             print(f"     Extrayendo medidor de factura anterior para {internal_bia_code}...")
             data, estado = extraer_serial_factura(factura_url)
@@ -2364,9 +2374,16 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
                 "estado":  estado,
                 "fecha":   ahora(),
             })
+            if serial_factura:
+                factura_estado = "ok"
+            elif estado == "ok":
+                factura_estado = "ok_sin_serial"
+            else:
+                factura_estado = "borrosa"
             print(f"     Factura anterior: serial={serial_factura} express={factura_express} ({estado})")
     resultado_qa["serial_medidor_factura_anterior"] = serial_factura
     resultado_qa["factura_anterior_express"]        = factura_express
+    resultado_qa["factura_anterior_estado"]         = factura_estado
     serial_acta = ((resultado_qa.get("medidor_encontrado") or {}).get("serie") or "").strip()
     if serial_factura and serial_acta:
         resultado_qa["medidor_coincide_factura_anterior"] = (
