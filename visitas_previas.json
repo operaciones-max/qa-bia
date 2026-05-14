@@ -838,5 +838,65 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "se ubica banco de condensadores en parte interna del predio en frente a congeladores parte superior de tablero de distribución"
+  },
+  "CO0100003835": {
+    "ot_nombre": "PREC_24627_4BCD78",
+    "fecha_procesada": "2026-05-14 21:23:08",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Juan Jaramillo",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "1). Visita técnica previa para instalación de banco de condensadores 2). Se llega al sitio a las 08:05am 3). Se tramitan ingresos con el encargado del punto, estando OK. Ingreso 08:20am 4). No sé tiene ingreso donde se encuentra medidor de energía ya que donde se encuentra al momento no se tiene ingreso , pero se puede validar número de medidor por aplicativo MeterSight serie 23101450 5) Totalizador de TABLERO PRINCIPAL marca LEGRAND 80A 5). Acometida linea abierta 4x#2 parcial 4x#2 6). Tableros de distribución en parte interna del predio 7). Se toman datos de medida tension y corrientes de fase , de línea VR F-F = 207.2 VS F-F = 207.0 VT F-F = 208.2 VR F-N = 118.0 VS F-N = 120.2 VT F-N = 121.2 IR = 10.20 IS = 09.90 IT = 06.65 Al momento de la visita no está a full carga el predio ya que empiezan operación alas 11 o 12 del medio día 8). Medidor presta servicio a local de el CORRAL UNICENTRO 9). Se validan tensiones y corrientes desde tablero de distribución dentro del local 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son , refrigeradores , extractores y iluminación 11). Para conexión del banco de condensadores se requieren 12 metros de cable para potencia #8 1 metro (canaleta plastica de 3cmt) con terminales de acople , 6 terminales de ojo para conductor al banco desde totalizador, chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad y escalera 12). Punto de ubicación del banco en parte superior del tablero de distribución 13). Se debe realizar corte desde el totalizador 14). Instalacion con corte de energía aproximadamente de 1 hora 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona quien atiende manifiesta que para instalacion de banco de condensadores se puede hacer corte de energia de lunes a viernes de 08:00 am a 09:00am"
+  },
+  "CO0100003773": {
+    "ot_nombre": "PREC_24559_6BD8AC",
+    "fecha_procesada": "2026-05-14 21:23:41",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Carlos Arturo Salas Herrera",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Visita técnica previa para instalación de banco de condensadores. Se llega al sitio a las 09:23 am. Se tramitan ingresos con el encargado del punto, estando OK. Se encontró medidor marca Microstar de capacidad 10A de Bia energy, FX 30. Totalizador de TABLERO PRINCIPAL de 125A MARCA LEGRAND. Tableros de distribución en parte interna del predio, en cocina. Se toman datos de medida tension y corrientes de fase, de línea obteniendo los siguientes datos VR F-F = 211.1 VS F-F = 210.3 VT F-F = 210.6 VR F-N = 121.2 VS F-N = 120.9 VT F-N = 121.5 IR = 36.51 IS = 24.62 IT = 51.27. Al momento de la visita no está a full carga el predio ya que empiezan operación a las 12 del medio día. Medidor presta servicio a local LEÑOS Y CARBON en centro comercial MALL PLAZA. Se validan tensiones y corrientes desde tablero de distribución dentro del local. De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son iluminacio, refrigeradores y extractores. Para conexión del banco de condensadores se requieren 16 metros de cable para potencia, (espiral para cubrir cable) chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad, tigera para lamina, brocas. Punto de ubicación del banco parte superior del tablero de distribución dentro del local en cocina. Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución. Instalacion con corte de energía aproximadamente de 1 hora. El cliente queda con suministro de energía normal. La persona que atiende firma acta a conformidad. Persona que atiende manifiesta que para instalacion de banco de condensadores se puede hacer corte de energia de lunes a jueves a las 8 am."
+  },
+  "CO1100006831": {
+    "ot_nombre": "VIPE_45408_30918B",
+    "fecha_procesada": "2026-05-14 21:24:33",
+    "tipo_medida": "DIRECTA",
+    "factor_medida": "1",
+    "medidor_encontrado": {
+      "serie": "44746909",
+      "marca": "ISKRA",
+      "referencia": "T37C2",
+      "lectura_activa_kwh": "79032.9",
+      "lectura_reactiva_kvarh": null,
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "44746909",
+    "tcs_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Juan Gabriel Reyes Mirke",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "*Código interno Bia* CO1100006831 *Tipo de servicio:* visita previa *Medidor encontrado:* Iskra 44746909 *IP encontrada:* N/A *Modem encontrado:* N/A *Factor de medida:* 1\n*Transformador:* CD2581 TR1 de 300kva en subestación servicio compartido *Con OR:* NO *Observación:* 1) visita para verificar punto de medida previo a cambio de equipos 2) La dirección relacionada en la factura no corresponde, el local de cliente se encuentra dentro de corabastos en Bodega 55 local 50 3) se encuentra armario para medidores externo al respaldo del local tipo AE308 marca INELMEC con 8 cuentas en total sin sellos en puerta del armario 4) se encuentra medidor de conexion directa fx1con sellos del OR en caja de conexiones marca Iskra serie 44746909 con capacidad de 160A a 208V que presta servicio a la marca Comexfrut 5) medidor no tiene sistema de telemedida instalado 6) acometida y parcial en calibre 3x1/0AWG 7) totalizador marca MAC de150A 8) al momento de la visita se toman cargas y tensiones con pinza de BT y se encuentra que el cliente tiene una potencia instantánea de 26.96KVA 9) cliente no cuenta con planta de respaldo ni con banco de condensadores 10) el cliente realiza procesamiento de frutas en pulpa y jugos y cuenta con 4 cuartos frios de enfriamiento 11)persona que atiende indica que el cambio de medidor se puede realizar cualquier día entre semana después de las 14:00 ya que a esa hora ya a terminado de procesar la fruta 11) para realizar el cambio de medidor se requiere medidor de 160amp y sistema de TM 12) se toma registro fotográfico en general 13) se debe coordinar cambio de medidor con el cliente, señor Felipe Becerra tell 3123599316 correo comexfrutsas@gmail.com para que el cliente coordine personal de seguridad de corabastos 14) durante la visita no se interrumpe el suministro de energía 15) se toman fotos en general"
   }
 }
