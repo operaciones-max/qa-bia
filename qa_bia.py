@@ -390,6 +390,9 @@ def cargar_facturas_anteriores():
                 continue
             inv = (fila.get(col_url) or "").strip() if col_url else ""
             cid = (fila.get(col_contract) or "").strip() if col_contract else ""
+            # Metabase exporta numeros como "17657.0" -> limpiar a "17657"
+            if cid.endswith(".0"):
+                cid = cid[:-2]
             if co not in result:
                 result[co] = {"url": None, "contract_id": None}
             if inv and not result[co]["url"]:
@@ -704,6 +707,19 @@ alertas_qa: max 5 observaciones criticas REALES (no de campos vacios).
 
 Para RETENCION: NO compares medidor encontrado vs instalado, NO reportes errores de
 TCs/TPs/pruebas/diagrama unifilar — no aplican.
+
+PARA PQRs Y EMERGENCIAS (caso especial):
+En la primera pagina del PDF aparece un bloque llamado "Registro Fotográfico Acta"
+con fotos del acta manuscrita. Si el campo "Observaciones" principal del acta digital
+esta vacio o incompleto, busca el texto extraido (titulos, captions, OCR parcial)
+dentro de ese bloque "Registro Fotográfico Acta". Alli el tecnico suele escribir a
+mano:
+- Las observaciones detalladas del trabajo
+- El numero de medidor encontrado / instalado
+
+Si en el texto del PDF aparecen referencias a "Registro Fotográfico Acta" seguidas
+de descripciones o numeros de serie, USALOS como observacion_tecnico_verbatim y
+extrae el numero de medidor de alli si aplica.
 
 JSON ESPERADO:
 {{
@@ -2200,6 +2216,7 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "factura_anterior_express":          resultado_qa.get("factura_anterior_express"),
         "factura_anterior_estado":           resultado_qa.get("factura_anterior_estado"),
         "qa_track":                          resultado_qa.get("qa_track"),
+        "estado_app_ops":                    resultado_qa.get("estado_app_ops"),
         "estado_revision":                   resultado_qa.get("estado_revision") or "pendiente",
         "tiene_alcance":             alcance_row is not None,
         "alcance_viable":            _av(alcance_row, "Viable Para Instalar") if alcance_row else None,
@@ -2331,7 +2348,19 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
         resultado_qa["tipificacion_falla"] = None
 
     resultado_qa["qa_track"]        = qa_track
-    resultado_qa["estado_revision"] = "pendiente"
+    # Auto-cierre de gestion: si la OT esta cerrada en App Ops (exitosa o fallida),
+    # estado_revision = 'cerrada'. Si esta en otro estado (pendiente, en proceso), 'pendiente'.
+    if estado in config.ESTADOS_EXITOSOS or estado in config.ESTADOS_FALLIDOS:
+        resultado_qa["estado_revision"] = "cerrada"
+    else:
+        resultado_qa["estado_revision"] = "pendiente"
+    # estado_app_ops: Exitosa | Fallida segun electrician_status_id (separado de estado_ot)
+    if estado in config.ESTADOS_EXITOSOS:
+        resultado_qa["estado_app_ops"] = "Exitosa"
+    elif estado in config.ESTADOS_FALLIDOS:
+        resultado_qa["estado_app_ops"] = "Fallida"
+    else:
+        resultado_qa["estado_app_ops"] = None
 
     # Post-validaciones defensivas
     _enforce_reglas_medida_servicio(resultado_qa, tipo)
