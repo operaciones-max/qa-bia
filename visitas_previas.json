@@ -583,7 +583,7 @@
   },
   "CO0100003839": {
     "ot_nombre": "PREC_24623_BFAF87",
-    "fecha_procesada": "2026-05-13 08:08:10",
+    "fecha_procesada": "2026-05-14 13:10:16",
     "tipo_medida": null,
     "factor_medida": null,
     "medidor_encontrado": null,
@@ -593,11 +593,11 @@
     "tecnico_nombre": "Carlos Arturo Salas Herrera",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "*Código interno de Bia:* CO0100003839\n*Tipo de servicio:* Previa Banco de\nCondensadores *Serial del medidor:*\n23081043 *IP del medidor:* *Marca\nmodem:* Microestar *Factor de medida:*\nFX 1 *Transformador:* compartido. *Con\nOR:*No *Observación:* 1). Visita inicial\npara definir alcance de instalación de\nBanco de Condensadores. 2). Se llega al\npredio a las 01:05 PM. 3). Se válida con el\nusuario, la cuenta presta servicio a\nbodega procesos de alimentos El Corral\nGurmet. 4). Se encontró medidor marca\nMicrostar de capacidad 100A con módem\nEMSITECHS propiedad de Bia FX 1\nmedida directa, Totalizador del TABLERO\nPRINCIPAL de 125A marca LEGRAND 5).\nAcometida abierta calibre 3X2 AWG,\nParciales en calibre 3X2 AWG 6). Tableros\nde distribución en parte interna del\npredio 7). Se toman datos de medida\ntensión y corrientes 9). Se comparan\ntensiones y corrientes desde tablero de\ndistribución dentro del local VS el menú\nalterno del medidor 10). De acuerdo a la\nnaturaleza de las cargas, se requiere\nbanco de condensadores tipo\nautomático para la corrección del factor\nde potencia y así anular las\npenalizaciones por consumo de energías\nreactivas 11). Para conexión del banco de\ncondensadores se requieren 12 metros\nen total de cable, (calibre sugerido #10\nAWG) 3 metros por cada línea, Canaleta\nplástica tipo industrial de una medida de\n3 centímetros por 2 centimetros, 4\nterminales o bornas tipo pala, chazos de\n1/4 con tornillo para fijar banco de\ncondensadores y demás consumible\n(Chasos, amarres, cintas, terminales,\ntornillería). herramientas adecuadas\npara la actividad 12). Punto de ubicación\ndel banco en el mezanine junto al tablero\nde iluminación 13). Se debe realizar corte\ndesde el totalizador de la celda del\nmedidor para trabajo en frio sobre el\ntablero de distribución 14). Instalación\ncon corte de energía aproximadamente\nde 1 hora aproximada mente 15). El\ncliente queda con suministro de energía\nnormal 16). La persona que atiende firma\nacta a conformidad. 17). Persona que\natiende manifiesta que para instalación\nde banco de condensadores se puede\nhacer corte de energía de lunes a viernes\ndespués de la 7:00 am solicitando\npermisos ante el centro comercial"
+    "observacion_tecnico_verbatim": "*Código interno de Bia:* CO0100003839 *Tipo de servicio:* Previa Banco de Condensadores *Serial del medidor:* 23081043 *IP del medidor:* *Marca modem:* Microestar *Factor de medida:* FX 1 *Transformador:* compartido. *Con OR:*No *Observación:* 1). Visita inicial para definir alcance de instalación de Banco de Condensadores. 2). Se llega al predio a las 01:05 PM. 3). Se válida con el usuario, la cuenta presta servicio a bodega procesos de alimentos El Corral Gurmet. 4). Se encontró medidor marca Microstar de capacidad 100A con módem EMSITECHS propiedad de Bia FX 1 medida directa, Totalizador del TABLERO PRINCIPAL de 125A marca LEGRAND 5). Acometida abierta calibre 3X2 AWG, Parciales en calibre 3X2 AWG 6). Tableros de distribución en parte interna del predio 7). Se toman datos de medida tensión y corrientes 9). Se comparan tensiones y corrientes desde tablero de distribución dentro del local VS el menú alterno del medidor 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores tipo automático para la corrección del factor de potencia y así anular las penalizaciones por consumo de energías reactivas 11). Para conexión del banco de condensadores se requieren 12 metros en total de cable, (calibre sugerido #10 AWG) 3 metros por cada línea, Canaleta plástica tipo industrial de una medida de 3 centímetros por 2 centimetros, 4 terminales o bornas tipo pala, chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). herramientas adecuadas para la actividad 12). Punto de ubicación del banco en el mezanine junto al tablero de iluminación 13). Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución 14). Instalación con corte de energía aproximadamente de 1 hora aproximada mente 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona que atiende manifiesta que para instalación de banco de condensadores se puede hacer corte de energía de lunes a viernes después de la 7:00 am solicitando permisos ante el centro comercial"
   },
   "CO0100003806": {
     "ot_nombre": "PREC_24656_4A9901",
-    "fecha_procesada": "2026-05-13 08:08:36",
+    "fecha_procesada": "2026-05-14 13:10:50",
     "tipo_medida": null,
     "factor_medida": null,
     "medidor_encontrado": null,
@@ -643,7 +643,7 @@
   },
   "CO0800006770": {
     "ot_nombre": "VIPE_45340_D643CD",
-    "fecha_procesada": "2026-05-13 10:41:01",
+    "fecha_procesada": "2026-05-14 13:12:10",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -671,7 +671,7 @@
     "tecnico_nombre": "Jose Arevalo",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa cambio de comercializador. En el predio funciona carnicería DISTRICARNES LK. actividad comercial con varios locales alquilados y equipo de\nmedidas, persona que atiende manifiesta que medida de la visita es de los cuartos frío medida que más consumo. Medida directa ubicada en la fachada interna del predio\nterraza enrrejada. Tranformador de distribución del sector 75 kva compartido. Con conexión acometida y cable parcial #4, breaker totalizador 160 amp, Cliente con generador 45\nkva. Para instalación de equipo de medida nivel 1 medida directa en poste Se observa que poste adyacente para ubicación de la medida en caja de policarbonato. Poste en\nregular estado con base quebrada e inclinado. Para su instalación se requiere Materiales. Caja de policarbonato 3-4 Cinta bandit Hebillas Cable #4. 75 mts cobre. Conectores de\nperforación 6 und. Cinta de colores Medidor de directa Modem de comunicación Simd card multi operador. Prensa cable 2 und. Tensores de acometida 4 und Amarras platicas\nConector de ojo. Cargas tomadas I1. 60.5 amp, I2. 63.5. Amp. Tensiones L1. 115.9 v. L2.114.6 v, LL 230.7 v Cliente solicita instalación en horas de la tarde 1 pm para no interferir con\nactividades."
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa cambio de comercializador. En el predio funciona carnicería DISTRICARNES LK. actividad comercial con varios locales alquilados y equipo de medidas, persona que atiende manifiesta que medida de la visita es de los cuartos frío medida que más consumo. Medida directa ubicada en la fachada interna del predio terraza enrrejada. Tranformador de distribución del sector 75 kva compartido. Con conexión acometida y cable parcial #4, breaker totalizador 160 amp, Cliente con generador 45 kva. Para instalación de equipo de medida nivel 1 medida directa en poste Se observa que poste adyacente para ubicación de la medida en caja de policarbonato. Poste en regular estado con base quebrada e inclinado. Para su instalación se requiere Materiales. Caja de policarbonato 3-4 Cinta bandit Hebillas Cable #4. 75 mts cobre. Conectores de perforación 6 und. Cinta de colores Medidor de directa Modem de comunicación Simd card multi operador. Prensa cable 2 und. Tensores de acometida 4 und Amarras platicas Conector de ojo. Cargas tomadas I1. 60.5 amp, I2. 63.5. Amp. Tensiones L1. 115.9 v. L2.114.6 v, LL 230.7 v Cliente solicita instalación en horas de la tarde 1 pm para no interferir con actividades."
   },
   "CO0100003842": {
     "ot_nombre": "PREC_24620_EE8066",
