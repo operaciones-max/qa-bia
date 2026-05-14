@@ -337,11 +337,19 @@ def _requiere_wms_comparison(tipo_servicio, qa_track):
 
 ARCHIVO_FACTURAS_EXTRAIDAS = "facturas_extraidas.json"
 METABASE_BASE = "https://bia.metabaseapp.com"
-METABASE_QUESTION_FACTURAS = 69895
+METABASE_QUESTION_FACTURAS = 71842  # hubspot-general: trae URL factura + contract_id
+
+def _detectar_columna(columnas, candidatos):
+    """Devuelve la primera columna cuyo nombre normalizado matchea algun candidato."""
+    norm = {c.lower().strip().replace(" ", "_"): c for c in columnas}
+    for cand in candidatos:
+        if cand in norm:
+            return norm[cand]
+    return None
 
 def cargar_facturas_anteriores():
-    """Carga del Metabase question 69895 las URLs de facturas anteriores por CO.
-    Devuelve dict {internal_bia_code: invoice_document_url}.
+    """Carga del Metabase question 71842 (hubspot-general) las URLs de facturas anteriores
+    + contract_id por CO. Devuelve dict {internal_bia_code: {"url": str|None, "contract_id": str|None}}.
     Requiere METABASE_API_KEY env var."""
     api_key = os.environ.get("METABASE_API_KEY", "").strip()
     if not api_key:
@@ -350,7 +358,6 @@ def cargar_facturas_anteriores():
     url = f"{METABASE_BASE}/api/card/{METABASE_QUESTION_FACTURAS}/query/csv"
     print(f"  POST {url} (key: {api_key[:6]}...{api_key[-4:] if len(api_key)>10 else ''})")
     try:
-        # Metabase API requiere POST para query/csv, no GET
         r = requests.post(url, headers={"X-API-KEY": api_key}, timeout=60)
         ct = r.headers.get("content-type", "")
         print(f"  Status: {r.status_code} | Content-Type: {ct} | size: {len(r.content)} bytes")
@@ -358,20 +365,41 @@ def cargar_facturas_anteriores():
             print(f"  Respuesta del servidor: {r.text[:300]}")
             return {}
         if "csv" not in ct and "text/plain" not in ct:
-            # Posible que devuelva HTML/JSON de error
             print(f"  WARN: Content-Type inesperado. Primeros 200 chars: {r.text[:200]}")
         lector = csv.DictReader(io.StringIO(r.content.decode("utf-8")))
         result = {}
-        primera = None
+        col_code = None
+        col_url = None
+        col_contract = None
+        filas_total = 0
         for fila in lector:
-            if primera is None:
-                primera = list(fila.keys())
-                print(f"  Columnas CSV: {primera}")
-            co = (fila.get("internal_bia_code") or "").strip()
-            inv = (fila.get("invoice_document_url") or "").strip()
-            if co and inv:
-                result[co] = inv
-        print(f"  Facturas anteriores cargadas: {len(result)} CO con URL de factura.")
+            if col_code is None:
+                cols = list(fila.keys())
+                print(f"  Columnas CSV: {cols}")
+                col_code = _detectar_columna(cols, ["internal_bia_code", "codigo_bia", "bia_code"])
+                col_url = _detectar_columna(cols, ["factura_anterior", "invoice_document_url",
+                                                    "factura_url", "url_factura", "invoice_url"])
+                col_contract = _detectar_columna(cols, ["contract_id", "contractid", "id_contrato"])
+                print(f"  Columnas detectadas: code='{col_code}' url='{col_url}' contract_id='{col_contract}'")
+                if not col_code:
+                    print("  ERROR: no se detecto columna de codigo_bia/internal_bia_code")
+                    return {}
+            filas_total += 1
+            co = (fila.get(col_code) or "").strip()
+            if not co:
+                continue
+            inv = (fila.get(col_url) or "").strip() if col_url else ""
+            cid = (fila.get(col_contract) or "").strip() if col_contract else ""
+            if co not in result:
+                result[co] = {"url": None, "contract_id": None}
+            if inv and not result[co]["url"]:
+                result[co]["url"] = inv
+            if cid and not result[co]["contract_id"]:
+                result[co]["contract_id"] = cid
+        con_url = sum(1 for v in result.values() if v["url"])
+        con_contract = sum(1 for v in result.values() if v["contract_id"])
+        print(f"  Hubspot-general: {filas_total} filas | {len(result)} CO unicos | "
+              f"{con_url} con URL factura | {con_contract} con contract_id.")
         return result
     except Exception as e:
         print(f"  ERROR cargando facturas anteriores: {e}")
@@ -2131,6 +2159,7 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "estado_ot":                 resultado_qa.get("estado_ot"),
         "fecha_ejecucion":           acta.get("start"),
         "internal_bia_code":         acta.get("internal_bia_code"),
+        "contract_id":               resultado_qa.get("contract_id"),
         "or_norm":                   acta.get("OR_NORM"),
         "planner":                   resultado_qa.get("planner"),
         "empresa":                   acta.get("company_name"),
@@ -2364,12 +2393,18 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
     serial_factura  = None
     factura_express = None
     factura_estado  = "no_disponible"  # default: CO no tiene factura URL en hubspot
-    factura_url     = (facturas or {}).get(internal_bia_code)
+    factura_entry   = (facturas or {}).get(internal_bia_code) or {}
+    factura_url     = factura_entry.get("url") if isinstance(factura_entry, dict) else factura_entry
+    contract_id     = factura_entry.get("contract_id") if isinstance(factura_entry, dict) else None
+    resultado_qa["contract_id"] = contract_id
     if factura_url:
         factura_estado = "borrosa"  # default si llegamos aca pero falla extraccion
         cache = _cargar_facturas_extraidas()
-        if internal_bia_code in cache:
-            entry = cache[internal_bia_code] or {}
+        cache_entry = cache.get(internal_bia_code) or {}
+        # Invalidar cache si la URL cambio (ej. switch de pregunta 69895 -> 71842)
+        cache_url_distinta = cache_entry and cache_entry.get("url") and cache_entry.get("url") != factura_url
+        if internal_bia_code in cache and not cache_url_distinta:
+            entry = cache_entry
             serial_factura  = entry.get("serial")
             factura_express = entry.get("express")
             estado_cache    = entry.get("estado", "")
