@@ -625,7 +625,7 @@ def _renderizar_pdf_a_imagenes(pdf_bytes):
     try:
         import fitz  # PyMuPDF
     except ImportError:
-        print("  WARN: PyMuPDF no instalado, sin vision (solo texto)")
+        # Vision no disponible — Claude analiza solo texto del PDF
         return []
     imagenes = []
     try:
@@ -2267,7 +2267,7 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
             imagenes_pdf=imagenes_pdf,
         )
     else:
-        print(f"     Analizando con Gemini lite ({qa_track})")
+        print(f"     Analizando con Claude lite ({config.CLAUDE_MODEL}) — track {qa_track}")
         resultado_qa = analizar_acta_lite(texto_pdf, tipo, estado, internal_bia_code)
 
     if not resultado_qa:
