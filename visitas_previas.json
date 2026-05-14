@@ -940,5 +940,19 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "Visita técnica previa para instalación de banco de condensadores. Se llega al sitio a las 11:06 am. Se tramitan ingresos con el encargado del punto, estando OK. Se encontró medidor marca Microstar de capacidad 100A de Bia energy, FX 1. Totalizador de TABLERO PRINCIPAL de 80A MARCA SCHNEIDER. Tableros de distribución en parte interna del predio, en cocina. Se toman datos de medida tension y corrientes de fase, de línea obteniendo los siguientes datos VR F-F = 208 VS F-F = 209.2 VT F-F = 209.2 VR F-N = 121.3 VS F-N = 121.6 VT F-N = 121.5 IR = 22.31 IS = 25.24 IT = 20.29. Al momento de la visita no está a full carga el predio, ya que empiezan operación a las 12 del medio día. Medidor presta servicio a local L3-070 EL CORRAL en centro comercial EL EDEN. Se validan tensiones y corrientes desde tablero de distribución dentro del local. De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son iluminacio, refrigeradores y extractores. Para conexión del banco de condensadores se requieren 16 metros de cable para potencia, (espiral para cubrir cable) chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad, tigera para lamina, brocas. Punto de ubicación del banco parte superior del tablero de distribución dentro del local en cocina. Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución. Instalacion con corte de energía aproximadamente de 1 hora. El cliente queda con suministro de energía normal. La persona que atiende firma acta a conformidad. Persona que atiende manifiesta que para instalacion de banco de condensadores se puede hacer corte de energia de lunes a jueves a las 7 am."
+  },
+  "CO0100003785": {
+    "ot_nombre": "PREC_24677_41D81D",
+    "fecha_procesada": "2026-05-14 22:13:47",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Juan Gabriel Reyes Mirke",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Visita previa a la instalación de banco de condensadores. Se llega al centro comercial diverplaza al local 170 ubicado en parte exterior del centro comercial, cliente beer station. No se tiene acceso al medidor ni al sistema de telemedida. Se encuentran dos tableros de circuitos en oficina del local, se identifica que el tablero principal es el que está marcado como tablero normal (el tablero grande). Se retira tapa del tablero y se encuentra cable de alimentación en calibre #1/0AWG y totalizador marca Merlín Gerin de 125A. Se toman tensiones promedio de 124.6V se toman cargas de: R17.40A, S45.79A, T11.70A, durante la visita las cargas están desbalanceadas. Para la instalación del banco de condensadores se requieren 8 metros de cable para alimentación del banco, chazos plásticos y cintas. Se le informa a persona que atiende el procedimiento para la instalación del banco y esta informa que se debe programar la visita de instalación con el señor Juan Rico al teléfono 3214871068. Se toman fotos en general. Cliente firma acta a conformidad."
   }
 }
