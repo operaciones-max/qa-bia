@@ -749,7 +749,7 @@
   },
   "CO4700006835": {
     "ot_nombre": "VIPE_45510_4DEB74",
-    "fecha_procesada": "2026-05-13 12:32:26",
+    "fecha_procesada": "2026-05-14 15:59:06",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": "80",
     "medidor_encontrado": {
@@ -777,6 +777,38 @@
     "tecnico_nombre": "Duvan Cervera",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, se encuentra medida semiindirecta en poste factor 80 (según factura), transformador de 112.5 KVA, breaker\np/al de ** A. Usuario cuenta con planta eléctrica, más no con paneles solares. Señor usuario recomienda que la próxima visita de instalación sea programada para los días martes\no miercoles en horas de la mañana, y ser notificado con antelación. Para preparar la planta electrica. Para cambio de Comercializador se requiere pasar a medida indirecta nivel\n2, Para ello se requiere : Descargo (sin perdida de mercado). Apoyo de carrocanasta. 3 tp's (tipo exterior). 3 tc's (tipo exterior). 1 crucetas. 3 dps. Conectores ampas 4/0 a 1/0. 30\nConectores #2 ponchables 24 platinas para equipos. 30 m de cable cobre #2 desnudo. 24 m de coraza industrial de 1\". 13 m de cable señal 4*12. 13 m de cable señal 6*12. 1\ngabinete metálico 1 medidor semi-indirecta. 1 bloque de prueba. 14 conectores de coraza de 1\". 2 m de cable blanco #12. Cinta de colores y demas consumibles. Se da por\nfinalizada la actividad"
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, se encuentra medida semiindirecta en poste factor 80 (según factura), transformador de 112.5 KVA, breaker p/al de ** A. Usuario cuenta con planta eléctrica, más no con paneles solares. Señor usuario recomienda que la próxima visita de instalación sea programada para los días martes o miercoles en horas de la mañana, y ser notificado con antelación. Para preparar la planta electrica. Para cambio de Comercializador se requiere pasar a medida indirecta nivel 2, Para ello se requiere : Descargo (sin perdida de mercado). Apoyo de carrocanasta. 3 tp's (tipo exterior). 3 tc's (tipo exterior). 1 crucetas. 3 dps. Conectores ampas 4/0 a 1/0. 30 Conectores #2 ponchables 24 platinas para equipos. 30 m de cable cobre #2 desnudo. 24 m de coraza industrial de 1\". 13 m de cable señal 4*12. 13 m de cable señal 6*12. 1 gabinete metálico 1 medidor semi-indirecta. 1 bloque de prueba. 14 conectores de coraza de 1\". 2 m de cable blanco #12. Cinta de colores y demas consumibles. Se da por finalizada la actividad"
+  },
+  "CO0800006828": {
+    "ot_nombre": "VIPE_45632_354ED0",
+    "fecha_procesada": "2026-05-14 15:59:58",
+    "tipo_medida": "SEMIDIRECTA",
+    "factor_medida": "80",
+    "medidor_encontrado": {
+      "serie": "02910744",
+      "marca": "ELSTER",
+      "referencia": null,
+      "lectura_activa_kwh": "0.0",
+      "lectura_reactiva_kvarh": "0.0",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "02910744",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Jorge Gelvez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA EMPRESA LITOGRAFICA CON EQUIPO DE MEDIDA NIVEL 1 EN POSTE MEDIDA SEMI DIRECTA CONECTADO A TRANSFORMADOR DE 112.5 KVA COMPARTIDO, A DICHO TRANSFORMADOR SE ENCUENTRA CONECTADO LOCAL COMERCIAL CON MEDIDOR # 34022521 ESTE LOCAL TAMBIEN PERTENECE A FOTOLITO CLIENTE NO CUENTA CON PLANTA ELÉCTRICA DE RESPALDO YA QUE TIENE INSTALADO SISTEMA DE PANELES SOLARES NO FUE POSIBLE VALIDAR NUMERO DE MEDIDOR ATENDIO VISITA EL SEÑOR DAVID VITOLA DUEÑO DE LA EMPRESA QUIEN DIO INDICACIONES DE SU EQUIPO DE MEDIDA ACTUAL EN LE CUAL SE EVIDENCIA NUMERO DE MEDIDOR ESCRITO EN LA TAPA DEL GABINETE"
   }
 }
