@@ -644,66 +644,59 @@ def _renderizar_pdf_a_imagenes(pdf_bytes):
 #  ANALISIS CON GEMINI
 # =============================================================
 
-def analizar_acta_lite(texto_pdf, tipo_servicio, estado_electricista, internal_bia_code=""):
-    """QA lite para Retencion/Energy Solutions: solo exitosa/fallida + tipificacion si falla.
-    Prompt corto, ~70% menos tokens que el full QA."""
-    es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
+def _system_prompt_lite():
+    """Parte estatica del prompt lite — se cachea via Anthropic prompt caching."""
     tipificaciones_lista = "\n".join(f"  - {k}" for k in TIPIFICACIONES_CATALOGO.keys())
-    prompt = f"""Eres auditor QA SENIOR de OTs de medicion electrica en Colombia para BIA Energy.
-TIPO DE SERVICIO: {tipo_servicio}
-RESULTADO EN APP: {"EXITOSA" if es_exitosa else "FALLIDA"}
-CODIGO INTERNO BIA: {internal_bia_code}
+    return f"""Eres auditor QA SENIOR de OTs de medicion electrica en Colombia para BIA Energy.
 
 INSTRUCCIONES:
 - Devuelve UNICAMENTE JSON valido sin texto adicional ni bloques de codigo.
-- El estado_ot debe respetar el RESULTADO EN APP: si es EXITOSA, marca EXITOSA. Si es FALLIDA, marca FALLIDA.
-- Copia observacion_tecnico_verbatim LITERALMENTE del campo Observaciones del acta. NO resumas.
-- Determina or_firma: SI solo si el Operador de Red asistio y firmo con datos reales. NO en cualquier otro caso.
+- estado_ot debe respetar el RESULTADO EN APP (EXITOSA o FALLIDA).
+- Copia observacion_tecnico_verbatim LITERALMENTE del campo Observaciones. NO resumas.
+- or_firma: SI solo si Operador de Red asistio y firmo con datos reales.
 
-TIPIFICACION DE FALLIDA — LEE PRIMERO LA OBSERVACION DEL TECNICO ANTES DE CLASIFICAR:
-  La observacion verbatim del acta es la FUENTE PRINCIPAL para entender por que la OT fallo.
-  Lee atentamente y extrae:
-  - QUE paso (causa real del fallo)
-  - QUIEN intervino (nombre del tecnico, contacto del cliente, OR, administracion)
-  - DONDE (lugar especifico, codigo CO)
-  - CUANDO (fecha/hora si se menciona)
-  - QUE materiales/condiciones fallaron
+TIPIFICACION DE FALLIDA — LEE PRIMERO LA OBSERVACION ANTES DE CLASIFICAR:
+La observacion verbatim es la FUENTE PRINCIPAL. Extrae: QUE paso, QUIEN intervino,
+DONDE, CUANDO, condiciones/materiales fallidos.
 
-- causa_raiz: DEBE ser EXACTAMENTE una opcion del catalogo BIA. NO inventes. Elige la que mas se ajusta al motivo real explicado en la observacion:
+causa_raiz: EXACTAMENTE una opcion del catalogo BIA. NO inventes:
 {tipificaciones_lista}
 
-- responsable: el del catalogo (asignado automaticamente). Si la observacion sugiere que hubo MULTIPLE responsabilidad, puedes combinar con / (ej "Cliente / Account executive", "Operador de red / Coordinador"). Pero la causa_raiz debe ser UNA del catalogo.
+responsable: del catalogo. Puede combinarse con / si hay multiple responsabilidad.
 
-- detalle: 2-4 lineas que CITAN NOMBRES/LUGARES/DATOS REALES de la observacion. Ejemplo gold: "En la OT {internal_bia_code}, el director de mantenimiento informo que los lunes no atienden personal de servicios publicos. La atencion fue realizada por <Tecnico> y la actividad no pudo ejecutarse." NO escribas detalles generericos como "el acta esta incompleta" si la observacion explica el motivo real.
+detalle: 2-4 lineas que CITAN NOMBRES/LUGARES/DATOS REALES de la observacion.
+Gold: "En la OT CO..., el director de mantenimiento informo que los lunes no atienden..."
+NO uses generalidades como "el acta esta incompleta" si la observacion explica.
 
-- mejora: cambio ESTRUCTURAL/sistemico de proceso. NO acciones operativas tipo "reprogramar". SI acciones tipo "Implementar validacion previa con cliente sobre horarios habilitados antes de programar visita".
+mejora: cambio ESTRUCTURAL/sistemico (NO operativo).
 
-- PROHIBIDO usar como causa_raiz "Información faltante/ erronea en acta" cuando la observacion del tecnico EXPLICA el motivo real del fallo. Solo usa esa causa cuando la observacion esta vacia o es ininteligible.
+PROHIBIDO: usar 'Información faltante/ erronea en acta' cuando la observacion explica el motivo.
 
-- alertas_qa: lista con max 5 observaciones criticas REALES (no de campos vacios). Ejemplos: "OR no asistio", "Discrepancia con sistema", "Cliente reprogramo despues de salida del tecnico".
-- Para RETENCION (Telemedidas, Desconexion, Lectura, Frontera, etc): NO compares medidor encontrado vs instalado, NO reportes errores de TCs/TPs/pruebas/diagrama — no aplican.
+alertas_qa: max 5 observaciones criticas REALES (no de campos vacios).
+
+Para RETENCION: NO compares medidor encontrado vs instalado, NO reportes errores de
+TCs/TPs/pruebas/diagrama unifilar — no aplican.
 
 JSON ESPERADO:
 {{
   "estado_ot": "EXITOSA | FALLIDA",
-  "observacion_tecnico_verbatim": "<texto literal del campo Observaciones del acta, null si no existe>",
+  "observacion_tecnico_verbatim": "<texto literal del acta>",
   "or_firma": "SI | NO",
-  "validaciones": {{
-    "coherencia": "COHERENTE | INCOHERENTE | INCOMPLETO",
-    "errores_encontrados": []
-  }},
+  "validaciones": {{ "coherencia": "COHERENTE | INCOHERENTE | INCOMPLETO", "errores_encontrados": [] }},
   "alertas_qa": [],
-  "tipificacion_falla": {{
-    "causa_raiz": "<o null>",
-    "responsable": "<o null>",
-    "detalle": "<o null>",
-    "mejora": "<o null>"
-  }}
-}}
+  "tipificacion_falla": {{ "causa_raiz": "<o null>", "responsable": "<o null>", "detalle": "<o null>", "mejora": "<o null>" }}
+}}"""
 
---- TEXTO DEL ACTA ---
-{texto_pdf[:8000]}
-"""
+def analizar_acta_lite(texto_pdf, tipo_servicio, estado_electricista, internal_bia_code=""):
+    """QA lite para Retencion/Energy Solutions. Usa prompt caching de Anthropic."""
+    es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
+    sistema = _system_prompt_lite()
+    user_msg = (
+        f"TIPO DE SERVICIO: {tipo_servicio}\n"
+        f"RESULTADO EN APP: {'EXITOSA' if es_exitosa else 'FALLIDA'}\n"
+        f"CODIGO INTERNO BIA: {internal_bia_code}\n\n"
+        f"--- TEXTO DEL ACTA ---\n{texto_pdf[:8000]}"
+    )
     cd = _cargar_cooldown_llm()
     if cd:
         print(f"  Claude en cooldown ({cd['razon']}) - se omite analisis lite.")
@@ -714,8 +707,20 @@ JSON ESPERADO:
             model=config.CLAUDE_MODEL,
             max_tokens=1500,
             temperature=0.1,
-            messages=[{"role": "user", "content": prompt}],
+            system=[{
+                "type": "text",
+                "text": sistema,
+                "cache_control": {"type": "ephemeral"},
+            }],
+            messages=[{"role": "user", "content": user_msg}],
         )
+        try:
+            u = respuesta.usage
+            cw = getattr(u, "cache_creation_input_tokens", 0) or 0
+            cr = getattr(u, "cache_read_input_tokens", 0) or 0
+            print(f"  Claude lite tokens: in={u.input_tokens} out={u.output_tokens} cache_w={cw} cache_r={cr}")
+        except Exception:
+            pass
         texto_r = "".join(b.text for b in respuesta.content if hasattr(b, "text")).strip()
         if "```json" in texto_r:
             texto_r = texto_r.split("```json")[1].split("```")[0].strip()
@@ -736,30 +741,11 @@ JSON ESPERADO:
         print(f"  ERROR Claude lite: {e}")
         return None
 
-def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
-                  internal_bia_code="", serial_asignado_wms="", marca_asignada_wms="",
-                  tcs_asignados_wms=None, tps_asignados_wms=None, imagenes_pdf=None):
-    tipo_label = "INSTALACION" if "nstala" in tipo_servicio else "VISITA PREVIA"
-    es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
-    es_visita  = "previa" in tipo_servicio.lower()
-    debe_comparar_wms = es_exitosa and not es_visita and bool(serial_asignado_wms)
-    wms_info = serial_asignado_wms if debe_comparar_wms else "No aplica"
-    marca_wms = marca_asignada_wms if debe_comparar_wms else ""
-    tcs_asignados_wms = tcs_asignados_wms or []
-    tps_asignados_wms = tps_asignados_wms or []
-    tcs_wms_info = ", ".join(tcs_asignados_wms) if (debe_comparar_wms and tcs_asignados_wms) else "No aplica"
-    tps_wms_info = ", ".join(tps_asignados_wms) if (debe_comparar_wms and tps_asignados_wms) else "No aplica"
-
-    prompt = f"""
-Eres un auditor QA SENIOR de ordenes de trabajo de medicion electrica en Colombia para BIA Energy.
+def _system_prompt_full():
+    """Parte estatica del prompt full QA — se cachea via Anthropic prompt caching."""
+    catalogo = chr(10).join('  - ' + k for k in TIPIFICACIONES_CATALOGO.keys())
+    return f"""Eres un auditor QA SENIOR de ordenes de trabajo de medicion electrica en Colombia para BIA Energy.
 Tu redaccion debe ser tecnica, profesional y estructural, NO descriptiva basica.
-
-TIPO DE SERVICIO: {tipo_label}
-RESULTADO EN APP: {"EXITOSA" if es_exitosa else "FALLIDA"}
-CODIGO INTERNO BIA: {internal_bia_code}
-MEDIDOR ASIGNADO EN SISTEMA WMS: {wms_info} {("(" + marca_wms + ")") if marca_wms else ""}
-TCs ASIGNADOS EN WMS (semidirecta/indirecta): {tcs_wms_info}
-TPs ASIGNADOS EN WMS (solo indirecta): {tps_wms_info}
 
 INSTRUCCIONES CRITICAS:
 - Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
@@ -950,7 +936,7 @@ JSON ESPERADO:
   "tipificacion_falla": {{
     "causa_raiz": "<DEBE ser EXACTAMENTE una opcion del catalogo BIA listado abajo. Elige la que mejor describa el motivo REAL expresado en la observacion del tecnico. NO uses 'Información faltante/ erronea en acta' si la observacion explica claramente el motivo real del fallo.>",
     "responsable": "<asignado automaticamente desde el catalogo. Puedes combinar con / si hay multiple responsabilidad (ej 'Cliente / Account executive')>",
-    "detalle": "<2-4 lineas EXTRAYENDO datos especificos de la observacion del tecnico: NOMBRES (tecnico, contacto, administrador), LUGARES (centro comercial, predio), HORARIOS, cifras concretas (cm, calibres, kVA, capacidades). Referencia el codigo BIA ({internal_bia_code}). Si la condicion estaba en visita previa: 'aunque esta condicion ya estaba identificada en la visita previa'. Cita literal del acta cuando ayude. PROHIBIDO escribir generalidades tipo 'el acta esta incompleta' si la observacion explica el motivo real.>",
+    "detalle": "<2-4 lineas EXTRAYENDO datos especificos de la observacion del tecnico: NOMBRES (tecnico, contacto, administrador), LUGARES (centro comercial, predio), HORARIOS, cifras concretas (cm, calibres, kVA, capacidades). Referencia el codigo BIA recibido en el bloque dinamico. Si la condicion estaba en visita previa: 'aunque esta condicion ya estaba identificada en la visita previa'. Cita literal del acta cuando ayude. PROHIBIDO escribir generalidades tipo 'el acta esta incompleta' si la observacion explica el motivo real.>",
     "mejora": "<accion ESTRUCTURAL de proceso, no operativa. NO escribas 'reprogramar la visita'. SI escribe cambios sistemicos. Ejemplo gold: 'Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseno, materiales y permisos) antes de agendar la OT.'>",
     "cinco_por_que": [
       "1. Por que la OT fue fallida? Porque [razon concreta]",
@@ -978,27 +964,59 @@ REGLA OR_FIRMA:
 - NO en cualquier otro caso.
 
 CATALOGO OFICIAL BIA de causa_raiz para tipificacion_falla (elegi UNA EXACTA):
-{chr(10).join('  - ' + k for k in TIPIFICACIONES_CATALOGO.keys())}
-
---- TEXTO DEL ACTA ---
-{texto_pdf[:12000]}
+{catalogo}
 """
+
+def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
+                  internal_bia_code="", serial_asignado_wms="", marca_asignada_wms="",
+                  tcs_asignados_wms=None, tps_asignados_wms=None, imagenes_pdf=None):
+    tipo_label = "INSTALACION" if "nstala" in tipo_servicio else "VISITA PREVIA"
+    es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
+    es_visita  = "previa" in tipo_servicio.lower()
+    debe_comparar_wms = es_exitosa and not es_visita and bool(serial_asignado_wms)
+    wms_info = serial_asignado_wms if debe_comparar_wms else "No aplica"
+    marca_wms = marca_asignada_wms if debe_comparar_wms else ""
+    tcs_asignados_wms = tcs_asignados_wms or []
+    tps_asignados_wms = tps_asignados_wms or []
+    tcs_wms_info = ", ".join(tcs_asignados_wms) if (debe_comparar_wms and tcs_asignados_wms) else "No aplica"
+    tps_wms_info = ", ".join(tps_asignados_wms) if (debe_comparar_wms and tps_asignados_wms) else "No aplica"
+
+    sistema = _system_prompt_full()
+    user_msg = (
+        f"TIPO DE SERVICIO: {tipo_label}\n"
+        f"RESULTADO EN APP: {'EXITOSA' if es_exitosa else 'FALLIDA'}\n"
+        f"CODIGO INTERNO BIA: {internal_bia_code}\n"
+        f"MEDIDOR ASIGNADO EN SISTEMA WMS: {wms_info} {('(' + marca_wms + ')') if marca_wms else ''}\n"
+        f"TCs ASIGNADOS EN WMS (semidirecta/indirecta): {tcs_wms_info}\n"
+        f"TPs ASIGNADOS EN WMS (solo indirecta): {tps_wms_info}\n\n"
+        f"--- TEXTO DEL ACTA ---\n{texto_pdf[:12000]}"
+    )
 
     cd = _cargar_cooldown_llm()
     if cd:
-        print(f"  Gemini en cooldown ({cd['razon']}) hasta {cd['until']} - se omite analisis.")
+        print(f"  Claude en cooldown ({cd['razon']}) hasta {cd['until']} - se omite analisis.")
         return None
 
-    # Claude soporta vision pero por simplicidad enviamos solo texto.
-    # Si querés vision, se agrega como image blocks en messages content.
     texto = ""
     try:
         respuesta = cliente_claude.messages.create(
             model=config.CLAUDE_MODEL,
             max_tokens=4096,
             temperature=0.1,
-            messages=[{"role": "user", "content": prompt}],
+            system=[{
+                "type": "text",
+                "text": sistema,
+                "cache_control": {"type": "ephemeral"},
+            }],
+            messages=[{"role": "user", "content": user_msg}],
         )
+        try:
+            u = respuesta.usage
+            cw = getattr(u, "cache_creation_input_tokens", 0) or 0
+            cr = getattr(u, "cache_read_input_tokens", 0) or 0
+            print(f"  Claude full tokens: in={u.input_tokens} out={u.output_tokens} cache_w={cw} cache_r={cr}")
+        except Exception:
+            pass
         texto = "".join(b.text for b in respuesta.content if hasattr(b, "text")).strip()
         if "```json" in texto:
             texto = texto.split("```json")[1].split("```")[0].strip()
