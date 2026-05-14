@@ -824,5 +824,19 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "cerca del tablero no es posible instalar banco de condensadores ya que no existe espacio cliente cuenta con un banco de condensadores tipo fijo en celda metálica con totalizador Marca ABB de 25A, totalizador se encuentra disparado, condensador marca LIFASA 8.2Kvar"
+  },
+  "CO0100003802": {
+    "ot_nombre": "PREC_24660_0B4CFB",
+    "fecha_procesada": "2026-05-14 20:43:24",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Wilson Capador",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "se ubica banco de condensadores en parte interna del predio en frente a congeladores parte superior de tablero de distribución"
   }
 }
