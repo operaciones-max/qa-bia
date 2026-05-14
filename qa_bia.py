@@ -21,7 +21,7 @@ if os.environ.get('ANTHROPIC_API_KEY'):
         METABASE_CSV_URL     = "https://bia.metabaseapp.com/public/question/5ec265f5-182d-409d-bfbd-45303880da2d.csv"
         WMS_CSV_URL          = "https://bia.metabaseapp.com/public/question/67f6d437-6326-415a-a799-1ee34b9648b0.csv"
         ALCANCES_CSV_URL     = "https://bia.metabaseapp.com/public/question/52353a69-6510-405b-9bbd-754d762a2597.csv"
-        ANTHROPIC_API_KEY    = os.environ['ANTHROPIC_API_KEY']
+        ANTHROPIC_API_KEY    = os.environ['ANTHROPIC_API_KEY'].strip()
         # claude-haiku-4-5 = cheap+fast; claude-sonnet-4-6 = balanced; claude-opus-4-7 = most capable
         CLAUDE_MODEL         = "claude-haiku-4-5-20251001"
         SLACK_WEBHOOK_URL    = ""  # Sin Slack — solo Supabase
