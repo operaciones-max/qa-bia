@@ -320,20 +320,20 @@
     "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de Comercializador, se encuentra medida directa en poste, transformador de 30 KVA compartido, breaker p/al de 125 A, acometida\ny parciales en #2 cobre. realizándole seguimiento a la acometida del usuario confirmamos que esta sea su medida eléctrica, pero no no es posible llegar hasta el medidor, debido\na la altura a la que está instalado, imposibilidad técnica debido a que se encuentra cercano a la red de media tensión. Usuario no cuenta ni con planta electrica ni con paneles\nsolares. Se requiere para cambio de Comercializador: Apoyo de carrocanasta Descargo 50 de cable #2 en cobre Amarras plásticas medianas, Cinta de colores 2 tensores de\nacometida tipo poste 1 caja Poly tipo 3-4 2 m de cinta bandit 1 medidor de directa 1 kit de telemedida 8 conectores de perforación 120/120 Se da por finalizada la actividad."
   },
   "CO0800006847": {
-    "ot_nombre": "VIPE_45839_3BEC9C",
-    "fecha_procesada": "2026-05-08 22:11:43",
+    "ot_nombre": "VIPE_45839_67419C",
+    "fecha_procesada": "2026-05-14 22:31:14",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
-      "serie": null,
-      "marca": null,
-      "referencia": null,
-      "lectura_activa_kwh": null,
-      "lectura_reactiva_kvarh": null,
-      "serie_coincide_foto": false,
-      "observacion_serie_foto": "No hay registro fotografico del medidor encontrado."
+      "serie": "41152232",
+      "marca": "CDM",
+      "referencia": "N23U03",
+      "lectura_activa_kwh": "002618.79",
+      "lectura_reactiva_kvarh": "00.0",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
     },
-    "medidor_enc_serie": null,
+    "medidor_enc_serie": "41152232",
     "tcs_encontrados": {
       "aplica": false,
       "tiene": false,
@@ -346,26 +346,26 @@
       "seriales": [],
       "detalles": null
     },
-    "tecnico_nombre": "Jonathan Rudas",
+    "tecnico_nombre": "Jose Arevalo",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "cliente informa que reprogramo la visita la cual no nos podía atender del día de hoy"
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de comercializador En el sitio funciona corporación educativa Dr. Amin Ariza. Se encontró equipo de medida nivel 1 medida directa en gabinete de caja de policarbonato en poste. Con conexión a tranformador de distribución de 75 kva compartido. Cable tranzada de sector acometida concentrica 6*6+6 cable de carga #2, breker totalizador de protección de 315 amp. Cargas tomadas I1. 29.9 amp. I2. 12.3 amp. Tensiones L1. 118.9v. L2. 114.2 v LL. 232.5v. Persona que atendió sr. Ivan Cervantes informa que la corporación labora desde 7 am 9 pm de lunes a viernes y sábado 7am 5 pm. Si es posible desenergizar e instalación medida los domingos para no interrumpir actividades. Materiales requeridos Medidor de directa Caja de policarbonato Prensa cable 2 und Cinta bandit Hebillas Cinta de colores Sellos."
   },
   "CO0800006848": {
-    "ot_nombre": "VIPE_45840_4770CD",
-    "fecha_procesada": "2026-05-08 22:12:02",
+    "ot_nombre": "VIPE_45840_AE9060",
+    "fecha_procesada": "2026-05-14 22:32:07",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
-      "serie": null,
-      "marca": null,
-      "referencia": null,
-      "lectura_activa_kwh": null,
-      "lectura_reactiva_kvarh": null,
-      "serie_coincide_foto": false,
-      "observacion_serie_foto": "No se encontro seccion de registro fotografico para medidor encontrado."
+      "serie": "23184809",
+      "marca": "CDM",
+      "referencia": "N23U03",
+      "lectura_activa_kwh": "027438.33",
+      "lectura_reactiva_kvarh": "001419.92",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
     },
-    "medidor_enc_serie": null,
+    "medidor_enc_serie": "23184809",
     "tcs_encontrados": {
       "aplica": false,
       "tiene": false,
@@ -378,10 +378,10 @@
       "seriales": [],
       "detalles": null
     },
-    "tecnico_nombre": "Jonathan Rudas",
+    "tecnico_nombre": "Jose Arevalo",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "cliente reprogramo las visitas la cual no nos puede atender el día de hoy"
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de comercializador En el sitio funciona corporación educativa Dr. Amin Ariza. Se encontró equipo de medida nivel 1 medida directa en gabinete de caja de policarbonato en fachada. Con conexión a tranformador de distribución de 75 kva compartido. Cable tranzada de sector acometida cable de carga #2, breker totalizador de protección de 315 amp. Cargas tomadas I1. 150.2 amp. I2. 156.6 amp. Tensiones L1. 1113.9v. L2. 111.6v LL. 231.9v Persona que atendió sr. Ivan Cervantes informa que la corporación labora desde 7 am 9 pm de lunes a viernes y sábado 7am 5 pm. Si es posible desenergizar e instalación medida los domingos para no interrumpir actividades. Materiales requeridos Medidor de directa Caja de policarbonato Prensa cable 2 und Cinta de colores Sellos."
   },
   "CO0800006824": {
     "ot_nombre": "VIPE_45832_936B1B",
@@ -954,5 +954,107 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "Visita previa a la instalación de banco de condensadores. Se llega al centro comercial diverplaza al local 170 ubicado en parte exterior del centro comercial, cliente beer station. No se tiene acceso al medidor ni al sistema de telemedida. Se encuentran dos tableros de circuitos en oficina del local, se identifica que el tablero principal es el que está marcado como tablero normal (el tablero grande). Se retira tapa del tablero y se encuentra cable de alimentación en calibre #1/0AWG y totalizador marca Merlín Gerin de 125A. Se toman tensiones promedio de 124.6V se toman cargas de: R17.40A, S45.79A, T11.70A, durante la visita las cargas están desbalanceadas. Para la instalación del banco de condensadores se requieren 8 metros de cable para alimentación del banco, chazos plásticos y cintas. Se le informa a persona que atiende el procedimiento para la instalación del banco y esta informa que se debe programar la visita de instalación con el señor Juan Rico al teléfono 3214871068. Se toman fotos en general. Cliente firma acta a conformidad."
+  },
+  "CO0100003784": {
+    "ot_nombre": "PREC_24678_BA575D",
+    "fecha_procesada": "2026-05-14 22:23:08",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Juan Gabriel Reyes Mirke",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Visita previa a la instalación de banco de condensadores. Se llega al centro comercial diverplaza piso 3 local 365, se encuentra cliente el corral. No se tiene acceso al medidor ni al sistema de telemedida. Se encuentran dos tableros de circuitos en la cocina del local, se identifica que el tablero principal es el que está marcado como tablero de circuitos 2 (el de la derecha). Se retira tapa del tablero y se encuentra cable de alimentación en calibre #1/0AWG y totalizador marca Schneider de 40A. Se toman tensiones promedio de 124.36V no se pueden tomar cargas por condiciones de riesgo eléctrico: el reducido espacio y la tensión mecánica de los conductores impiden el uso seguro de la pinza voltiamperimétrica sin riesgo de desconexión accidental o cortocircuito. Para la instalación del banco de condensadores se requieren 12 metros de cable para alimentación del banco, chazos plásticos y cintas y 2 metros de coraza ya que el banco de condensadores debe instalarse a dos metros de distancia del tablero de distribución por cableado y por apertura de puerta. Como adicional para la instalación de los bancos de condensadores para el cliente el corral se requiere que la tapa del tablero de circuitos quede perfectamente cerrada por protocolos de control de plagas para lo cual se recomienda traer silicona fría y aplicador para poder cerrar bien la tapa y no entorpecer las acciones tomadas por el cliente en su control de plagas. Se toman fotos en general. Cliente firma acta a conformidad."
+  },
+  "CO0100003805": {
+    "ot_nombre": "PREC_24657_3B9AE6",
+    "fecha_procesada": "2026-05-14 22:23:36",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Edicson Lopez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Visita inicial para validar condiciones de instalación de banco de condensadores. Se llega al centro comercial Salitre Plaza a las 08:00 am presta servicio al local 355 El Corral Gourmet. Se encuentran 3 tableros el en local con las tapas pegadas con silicona o Sikaflex por control de plagas, administradora del punto manifiesta de manera telefónica a la persona que atiende que por norma no se puede despegar la tapa del tablero ni dejar sin silicona. No es posible el acceso a la parte interna del tablero para toma de corrientes y Tensiones. Se debe de reprogramar la visita con 2 personas para dejar las tapas de los tableros pegadas nuevamente. Se declara la visita como fallida se debe traer Sikaflex o silicona para despegar y pegar las tapas de los tableros nuevamente. No se afecta el servicio de energía durante la visita. De toma registro fotográfico. Cliente atiende de manera telefónica."
+  },
+  "CO0100003804": {
+    "ot_nombre": "PREC_24658_234AD6",
+    "fecha_procesada": "2026-05-14 22:24:41",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Edicson Lopez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Visita inicial para validar condiciones de instalación de banco de condensadores. Se llega al centro comercial Salitre Plaza a las 08:00 am presta servicio al local 371 El Corral Tradicional. Se encuentran 2 tableros generales de distribución TGD trifásicos uno de 36 Circuitos y otro de 12 circuitos con totalizador de 40A y parciales en calibre #4 AWG, ubicado al fondo del local a la derecha, al tablero de 12 circuitos solo llegan las 3 fases al totalizador no llega neutro mientras que al tablero de 36 llegan las 3 fases neutro y tierra. No se puede acceder al medidor de energía de requiere permisos por parte del centro comercial para la apertura de los cuartos técnicos, sin embargo se válidan actas de visitas anteriores y solo se menciona un medidor para el local 371. Se válida con la jefe del punto ya que los tableros se encuentran pegados con silicona o Sikaflex blanco para despegar la tapa y acceder al tablero la cual autoriza cortar la silicona con el bisturí y dejarla lo más pegada posible. Se toman tensiones de fase con pinza voltiamperimetrica de: 124.1V, 124.6V y 124.7V Tensiones de línea de 215.3V, 215.7V y 215.5V y corrientes de 13.0A, 11.7A y 1.4A. Trabajo sin tension bajando totalizador en el tablero, instalar aguas abajo del totalizador general. Se válida con persona encargada del punto para la instalación del banco y se puede ubicar en la parte superior del TGD de 12 circuitos. Banco de condensadores dependiendo la capacidad determinada por el área de ingeniería. 4 MTS de cable encauchetado 4x10 o 20 metros de cable #10 línea abierta. 4 chazos con tornillo tipo caimán para dry wall. Broca escalonada para perforar tapa de TGD y cofre. Sikaflex o silicona para tapar tableros y cualquier agujero o hueco que se deje ya que por normativa y control de plagas de debe de sellar todo. Corte del servicio aproximadamente de 20 a 30 minutos cliente sugiere de lunes a jueves en la mañana preferiblemente a las 07:00 am, programar con una semana de anticipación para disponibilidad del personal para apertura del local y tramitar los permisos de ingreso con el centro comercial la notificación de la fecha y personal que realizara las actividades debe de ser enviada al correo bta.salitre@elcorral.com. Se toma registro fotográfico. No se afecta el servicio de energía durante la visita. Todo queda en normal funcionamiento en el predio. Se socializa las condiciones de instalación con el cliente."
+  },
+  "CO0100003781": {
+    "ot_nombre": "PREC_24681_9BD43B",
+    "fecha_procesada": "2026-05-14 22:26:37",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Edicson Lopez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "1). Visita inicial para validar condiciones de instalación de banco de condensadores. 2). Se llega al centro comercial Plaza Central a las 11:30 am presta servicio al local 3-52 El Corral Tradicional. 3). Se encuentran tablero general de distribución TGD trifásico de 36 circuitos sin totalizador, totalizador ubicado en caja al lado del tablero de 125A y parciales en calibre 1/0 AWG, ubicado al fondo del local frente a la mesa de corte de verduras y vegetales. 4). Se toman tensiones de fase con pinza voltiamperimetrica de: 121.6V, 121.3V y 121.7V Tensiones de línea de 210.7V, 210.1V y 210.5V y corrientes de 20.5A, 20.4A y 18.52A. 5). Trabajo sin tension bajando totalizador ubicado al lado derecho del tablero, instalar en la entrada de las fases al tablero tornillos con cuadrante bristol o Allen. 6). Se válida con persona encargada del punto para la instalación del banco y se puede ubicar en la parte superior del TGD. 7). Corte del servicio aproximadamente de 20 a 30 minutos cliente sugiere los días lunes o martes en la mañana preferiblemente a las 07:00 am, programar con una semana de anticipación para disponibilidad del personal para apertura del local y tramitar los permisos de ingreso con el centro comercial la notificación de la fecha y personal que realizara las actividades debe de ser enviada al correo bta.plazacentral@elcorral.com. 8). Se toma registro fotográfico. 9). No se afecta el servicio de energía durante la visita. 10). Todo queda en normal funcionamiento en el predio. 11). Se socializa las condiciones de instalación con el cliente."
+  },
+  "CO0100003789": {
+    "ot_nombre": "PREC_24673_8412EE",
+    "fecha_procesada": "2026-05-14 22:28:01",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Juan Gabriel Reyes Mirke",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Visita previa a la instalación de banco de condensadores. Se llega al centro comercial portal 80 piso 3 local 019, se encuentra cliente el corral. No se tiene acceso al medidor ni al sistema de telemedida. Se encuentran dos tableros de circuitos en la cocina del local, se identifica que el tablero principal el que está marcado como tablero de circuitos 2 (el más grande). Se retira tapa del tablero y se encuentra cable de alimentación en calibre #4AWG y totalizador marca Legrand de 100A. Se toman tensiones promedio de 121.56V y corrientes de: R9.58A, S17.99A, T9.19A, en el momento de la visita las cargas están desbalanceadas. Para la instalación del banco de condensadores se requieren 8 metros de cable para alimentación del banco, chazos plásticos y cintas. Como adicional para la instalación de los bancos de condensadores para el cliente el corral se requiere que la tapa del tablero de circuitos quede perfectamente cerrada por protocolos de control de plagas para lo cual se recomienda traer silicona fría y aplicador para poder cerrar bien la tapa y no entorpecer las acciones tomadas por el cliente en su control de plagas. Se toman fotos en general. Cliente firma acta a conformidad."
+  },
+  "CO0800006843": {
+    "ot_nombre": "VIPE_45665_5AEEF7",
+    "fecha_procesada": "2026-05-14 22:34:02",
+    "tipo_medida": "INDIRECTA",
+    "factor_medida": "2200",
+    "medidor_encontrado": {
+      "serie": "82465258",
+      "marca": "LANDIS GYR",
+      "referencia": "ZMY405",
+      "lectura_activa_kwh": "0.0",
+      "lectura_reactiva_kvarh": "0.0",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "82465258",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": "Se reporta presencia de TCs pero sin seriales especificados en acta."
+    },
+    "tps_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": "Se reporta presencia de TPs pero sin seriales especificados en acta."
+    },
+    "tecnico_nombre": "Jorge Gelvez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "SE LLEGA LA SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA OFICINA PRINCIPAL DEL BANCO BOGOTA CON EQUIPO DE MEDIDA NIVEL 2 EN POSTE A 3 ELEMENTOS CON TRANSFORMADOR DE 1000 KVA EXCLUSIVO CLIENTE CUENTA CON SISTEMA DE PANELES SOLARES INSTALADOS Y A SU VEZ TIENE PLANTA ELÉCTRICA DE RESPALDO LA CUAL TIENE UNA CAPACIDAD DE 3200 AMP EN GENERACION CON UNA AUTONOMIA EN TIEMPO DE USO DE 48 HORAS EN CASO DE FALLA DE LA RED PARA EL CAMBIO DE COMERCIALIZADOR SE REQUIERE DESCARGO CON PERDIDA DE MERCADO YA QUE ES NECESARIO DESENERGIZAR TRANSFORMADOR DE 50 KVA CON SERIE 014902 Y MT-CT A29680 QUE PERTENECE A CENTRO MEDICO CARMEN GUERRA QUE ESTA EN FRENTE DEL BANCO PERSONAL DE MANTENIMIENTO INFORMA QUE ACTIVIDAD ES RECOMENDABLE REALIZARLA UN DIA SABADO *MATERIALES REQUERIDOS* 3 TCS 3 TTS 2 MEDIDOR ( MEDIDA INDIRECTA ) 1 GABINETE METALICO 2 BLOQUE DE PRUEBAS 14 CONECTORES DE CORAZA 1 \" 25 MTS CORAZA 15 MTS CABLE 4×12 15 MTS CABLE 6×12 24 PLATINAS 24 TORNILLOS DE 1/4 × 2\" PARA PLATINA CON DOBLE ARANDELA 35 PONCHABLES # 2 30 PONCHABLES #12 30 MTS CABLE DESNUDO #2 4 CONECTORES AMPA 2A2 3 CONECTORES AMPA 4/0-1/0 1 SPT 15 MTS CABLE VERDE #12 2 MTS CABLE BLANCO #12 3 DPS 3 CAJAS CORTA CIRCUITOS 3 FUSIBLES"
   }
 }
