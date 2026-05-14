@@ -412,9 +412,10 @@ METABASE_QUESTION_APP_OPS = 15673  # BD Analisis App Ops: estado de cierre real
 
 def cargar_estado_app_ops():
     """Lee Metabase question 15673 y devuelve dos maps:
-      by_id:    {ot_id: electrician_status_id}    <- preferido, unico por acta
-      by_co:    {codigo_bia: electrician_status_id} <- fallback, ultimo gana
-    Usado para reconciliar estado_app_ops en Supabase contra el estado real."""
+      by_id:    {ot_id: electrician_status_id}        <- 1ra opcion, unico por acta
+      by_title: {ot_nombre: electrician_status_id}    <- 2da opcion, unico por acta
+    NO se usa fallback por internal_bia_code porque mezcla estados de actas
+    distintas con mismo CO (varias OTs en una misma cuenta)."""
     api_key = os.environ.get("METABASE_API_KEY", "").strip()
     if not api_key:
         return {}, {}
@@ -427,9 +428,9 @@ def cargar_estado_app_ops():
             return {}, {}
         lector = csv.DictReader(io.StringIO(r.content.decode("utf-8")))
         by_id = {}
-        by_co = {}
+        by_title = {}
         col_id = None
-        col_code = None
+        col_title = None
         col_status = None
         first = True
         for fila in lector:
@@ -437,10 +438,10 @@ def cargar_estado_app_ops():
                 cols = list(fila.keys())
                 print(f"  Columnas App Ops (15673): {cols}")
                 col_id = _detectar_columna(cols, ["id", "ot_id"])
-                col_code = _detectar_columna(cols, ["internal_bia_code", "codigo_bia", "bia_code"])
+                col_title = _detectar_columna(cols, ["title", "ot_nombre"])
                 col_status = _detectar_columna(cols, ["electrician_status_id", "electrician_status",
                                                        "estado_electricista", "status_id"])
-                print(f"  Columnas detectadas: id='{col_id}' code='{col_code}' status='{col_status}'")
+                print(f"  Columnas detectadas: id='{col_id}' title='{col_title}' status='{col_status}'")
                 first = False
                 if not col_status:
                     print("  ERROR: no se detecto columna de status en 15673")
@@ -452,27 +453,27 @@ def cargar_estado_app_ops():
                 uid = (fila.get(col_id) or "").strip()
                 if uid:
                     by_id[uid] = status
-            if col_code:
-                co = (fila.get(col_code) or "").strip()
-                if co:
-                    by_co[co] = status
-        print(f"  App Ops cargado: {len(by_id)} OTs unicas | {len(by_co)} codigos.")
-        return by_id, by_co
+            if col_title:
+                t = (fila.get(col_title) or "").strip()
+                if t:
+                    by_title[t] = status
+        print(f"  App Ops cargado: {len(by_id)} OTs por ID | {len(by_title)} OTs por Title.")
+        return by_id, by_title
     except Exception as e:
         print(f"  ERROR cargando estado app ops: {e}")
         return {}, {}
 
-def reconciliar_estado_app_ops(by_id, by_co):
+def reconciliar_estado_app_ops(by_id, by_title):
     """Para cada acta en Supabase, recalcula estado_app_ops y estado_revision segun
     el estado actual de App Ops en question 15673. Match preferido por ot_id,
-    fallback por internal_bia_code.
+    fallback por ot_nombre/Title. NO se usa CO porque mezcla actas distintas.
 
     Reglas:
       CLOSURE_SUCCESSFUL → estado_app_ops='Exitosa', estado_revision='cerrada'
       CLOSURE_FAILED     → estado_app_ops='Fallida', estado_revision='cerrada'
       COMPLETED/otros    → estado_app_ops=null,     estado_revision='pendiente'
     """
-    if not by_id and not by_co:
+    if not by_id and not by_title:
         print("  Reconciliacion: no hay estados de App Ops cargados, se omite.")
         return
     url_base = _supabase_base_url()
@@ -484,7 +485,7 @@ def reconciliar_estado_app_ops(by_id, by_co):
 
     try:
         r = requests.get(
-            f"{url_base}/rest/v1/actas_qa?select=ot_id,internal_bia_code,estado_app_ops,estado_revision",
+            f"{url_base}/rest/v1/actas_qa?select=ot_id,ot_nombre,internal_bia_code,estado_app_ops,estado_revision",
             headers={"apikey": key, "Authorization": f"Bearer {key}"},
             timeout=30,
         )
@@ -498,8 +499,8 @@ def reconciliar_estado_app_ops(by_id, by_co):
 
     cambios = 0
     matched_by_id = 0
-    matched_by_co = 0
-    sin_match = 0
+    matched_by_title = 0
+    sin_match_list = []
     headers_patch = {
         "apikey":        key,
         "Authorization": f"Bearer {key}",
@@ -508,22 +509,21 @@ def reconciliar_estado_app_ops(by_id, by_co):
     }
     for acta in actas:
         ot_id = acta.get("ot_id")
-        co = acta.get("internal_bia_code")
+        ot_nombre = acta.get("ot_nombre")
         if not ot_id:
             continue
-        # Match preferido por ot_id (unico por acta), fallback por internal_bia_code
         estado_real = by_id.get(ot_id)
         if estado_real:
             matched_by_id += 1
-        elif co:
-            estado_real = by_co.get(co)
+        elif ot_nombre:
+            estado_real = by_title.get(ot_nombre)
             if estado_real:
-                matched_by_co += 1
+                matched_by_title += 1
             else:
-                sin_match += 1
+                sin_match_list.append(ot_nombre)
                 continue
         else:
-            sin_match += 1
+            sin_match_list.append(ot_id)
             continue
         if estado_real == "CLOSURE_SUCCESSFUL":
             nueva_app, nueva_rev = "Exitosa", "cerrada"
@@ -544,7 +544,11 @@ def reconciliar_estado_app_ops(by_id, by_co):
         except Exception:
             pass
     print(f"  Reconciliacion App Ops: {cambios}/{len(actas)} actualizadas. "
-          f"Match por ot_id={matched_by_id}, por CO={matched_by_co}, sin match={sin_match}.")
+          f"Match por ot_id={matched_by_id}, por Title={matched_by_title}, "
+          f"sin match={len(sin_match_list)}.")
+    if sin_match_list:
+        muestra = sin_match_list[:5]
+        print(f"  Sin match (primeras 5): {muestra}")
 
 def _cargar_facturas_extraidas():
     if not os.path.exists(ARCHIVO_FACTURAS_EXTRAIDAS):
@@ -2687,8 +2691,8 @@ def main():
     facturas = cargar_facturas_anteriores()
 
     print("\n  Reconciliando estado_app_ops desde Metabase (question 15673)...")
-    estados_by_id, estados_by_co = cargar_estado_app_ops()
-    reconciliar_estado_app_ops(estados_by_id, estados_by_co)
+    estados_by_id, estados_by_title = cargar_estado_app_ops()
+    reconciliar_estado_app_ops(estados_by_id, estados_by_title)
 
     if config.MODO_PRUEBA:
         print("")
