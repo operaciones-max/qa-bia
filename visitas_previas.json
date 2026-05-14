@@ -675,7 +675,7 @@
   },
   "CO0100003842": {
     "ot_nombre": "PREC_24620_EE8066",
-    "fecha_procesada": "2026-05-13 10:41:26",
+    "fecha_procesada": "2026-05-14 13:14:29",
     "tipo_medida": null,
     "factor_medida": null,
     "medidor_encontrado": null,
@@ -685,11 +685,11 @@
     "tecnico_nombre": "Wilson Fernandez",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "1). Visita inicial para definir alcance de instalación de Banco de Condensadores. 2). Se llega al predio a las 10:30 AM. 3). Se válida con el usuario, la cuenta presta servicio a restaurante El Corral . 4). Se encontró medidor marca Microstar de capacidad 100A con módem EMSITECHS propiedad de Bia FX 1 medida directa, Totalizador de 100 A, Totalizador del TABLERO PRINCIPAL de 50 A marca LMG 5). Acometida abierta calibre 3X2 AWG, Parciales en calibre 3X2 AWG 6). Tableros de distribución en parte interna del predio 7). Se toman datos de medida tensión y corrientes en menú alterno del medidor: Tensiones de fase R122V S121V T122V Corrientes fase R 10A S 13A T 29A 9). Se comparan tensiones y corrientes desde tablero de distribución dentro del local VS el menú alterno del medidor 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores tipo automático para la corrección del factor de potencia y así anular las penalizaciones por consumo de energías reactivas 11). Para conexión del banco de condensadores se requieren 24 metros en total de cable, (calibre sugerido #10 AWG) 6 metros por cada línea, Canaleta plástica tipo industrial de una medida de 3 centímetros por 2 centimetros, 4 terminales o bornas tipo pala, chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). herramientas adecuadas para la actividad 12). Punto de ubicación del banco junto al letrero de aceite vegental 13). Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución 14). Instalación con corte de energía aproximadamente de 1 hora aproximada mente 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona que atiende manifiesta que para instalación de banco de condensadores se puede hacer corte de energía de lunes a viernes después de la 7:00 am solicitando permisos ante el centro comercial"
+    "observacion_tecnico_verbatim": "*Código interno de Bia:* CO0100003842 *Tipo de servicio:* Previa Banco de Condensadores *Serial del medidor:* 23041156 *IP del medidor:* 10.196.7.5 *Marca modem:* Microestar *Factor de medida:* FX 1 *Transformador:* compartido. *Con OR:*No *Observación:* 1). Visita inicial para definir alcance de instalación de Banco de Condensadores. 2). Se llega al predio a las 10:30 AM. 3). Se válida con el usuario, la cuenta presta servicio a restaurante El Corral . 4). Se encontró medidor marca Microstar de capacidad 100A con módem EMSITECHS propiedad de Bia FX 1 medida directa, Totalizador de 100 A, Totalizador del TABLERO PRINCIPAL de 50 A marca LMG 5). Acometida abierta calibre 3X2 AWG, Parciales en calibre 3X2 AWG 6). Tableros de distribución en parte interna del predio 7). Se toman datos de medida tensión y corrientes en menú alterno del medidor: Tensiones de fase R122V S121V T122V Corrientes fase R 10A S 13A T 29A 9). Se comparan tensiones y corrientes desde tablero de distribución dentro del local VS el menú alterno del medidor 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores tipo automático para la corrección del factor de potencia y así anular las penalizaciones por consumo de energías reactivas 11). Para conexión del banco de condensadores se requieren 24 metros en total de cable, (calibre sugerido #10 AWG) 6 metros por cada línea, Canaleta plástica tipo industrial de una medida de 3 centímetros por 2 centimetros, 4 terminales o bornas tipo pala, chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). herramientas adecuadas para la actividad 12). Punto de ubicación del banco junto al letrero de aceite vegental 13). Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución 14). Instalación con corte de energía aproximadamente de 1 hora aproximada mente 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona que atiende manifiesta que para instalación de banco de condensadores se puede hacer corte de energía de lunes a viernes después de la 7:00 am solicitando permisos ante el centro comercial"
   },
   "CO0100004142": {
     "ot_nombre": "PREC_26262_2C0942",
-    "fecha_procesada": "2026-05-13 10:41:53",
+    "fecha_procesada": "2026-05-14 13:15:02",
     "tipo_medida": null,
     "factor_medida": null,
     "medidor_encontrado": null,
@@ -699,11 +699,11 @@
     "tecnico_nombre": "Carlos Arturo Salas Herrera",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "*Codigo interno BIA* PREC_CO0100004142 *Tipo de servicio* Visita previa instalación de banco de condensadores *Serial del medidor:* 23102151 *IP:* 10.196.7.171 *Modem Inst:* N75242306066 *FX de medida:* 1 *Transformador:* S/I KVA de uso compartido *Con OR:* No *Observaciones:* 1). Visita técnica previa para instalación de banco de condensadores 2). Se llega al sitio a las 11:05 am 3). Se tramitan ingresos con el encargado del punto, estando OK. 4). Se encontró medidor marca Microstar de capacidad 160A de Bia energy, FX 1 5). Totalizador de TABLERO PRINCIPAL de 150A MARCA SCHNEIDER 6). Tableros de distribución en parte interna del predio 7). Se toman datos de medida tension y corrientes de fase , de línea obteniendo los siguientes datos VR F-F = 206.7 VS F-F = 206.7 VT F-F = 206.1 VR F-N = 117.4 VS F-N = 117.3 VT F-N = 120.1 IR = 45.61 IS = 64.6 IT = 32.62 FP = 0.88 Al momento de la visita no está a full carga el predio ya que empiezan operación a las 12 del medio día 8). Medidor presta servicio a planta EL CORRAL y PAPA JHONS 9). Se validan tensiones y corrientes desde tablero de distribución dentro del local 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son iluminacio, refrigeradores y extractores 11). Para conexión del banco de condensadores se requieren 20 metros de cable para potencia, (espiral para cubrir cable) chazos metalicos expansible de 3/8\" para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad, tigera para lamina, brocas, copasierra de 2\" 12). Punto de ubicación del banco pasillo donde se encuentra medidor y tgd 13). Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución 14). Instalacion con corte de energía aproximadamente de 3 horas 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona que atiende manifiesta que para instalacion de banco de condensadores se puede hacer corte de energia de lunes a jueves a las 5 am 18). Se realiza prueba de telemedida medidante aplicativo la cual se encuentra ok 19). Cliente ya cuenta con banco de condensadores automatico en en predio el cual se encontro apagado, validar con usuario si banco funcio a para realizar unicamente mantenimiento, capacidad del banco encontrado 33.43 KVAR"
+    "observacion_tecnico_verbatim": "1). Visita técnica previa para instalación de banco de condensadores 2). Se llega al sitio a las 11:05 am 3). Se tramitan ingresos con el encargado del punto, estando OK. 4). Se encontró medidor marca Microstar de capacidad 160A de Bia energy, FX 1 5). Totalizador de TABLERO PRINCIPAL de 150A MARCA SCHNEIDER 6). Tableros de distribución en parte interna del predio 7). Se toman datos de medida tension y corrientes de fase , de línea obteniendo los siguientes datos VR F-F = 206.7 VS F-F = 206.7 VT F-F = 206.1 VR F-N = 117.4 VS F-N = 117.3 VT F-N = 120.1 IR = 45.61 IS = 64.6 IT = 32.62 FP = 0.88 Al momento de la visita no está a full carga el predio ya que empiezan operación a las 12 del medio día 8). Medidor presta servicio a planta EL CORRAL y PAPA JHONS 9). Se validan tensiones y corrientes desde tablero de distribución dentro del local 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son iluminacio, refrigeradores y extractores 11). Para conexión del banco de condensadores se requieren 20 metros de cable para potencia, (espiral para cubrir cable) chazos metalicos expansible de 3/8\" para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad, tigera para lamina, brocas, copasierra de 2\" 12). Punto de ubicación del banco pasillo donde se encuentra medidor y tgd 13). Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución 14). Instalacion con corte de energía aproximadamente de 3 horas 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona que atiende manifiesta que para instalacion de banco de condensadores se puede hacer corte de energia de lunes a jueves a las 5 am 18). Se realiza prueba de telemedida medidante aplicativo la cual se encuentra ok 19). Cliente ya cuenta con banco de condensadores automatico en en predio el cual se encontro apagado, validar con usuario si banco funcio a para realizar unicamente mantenimiento, capacidad del banco encontrado 33.43 KVAR"
   },
   "CO0100004130": {
     "ot_nombre": "PREC_26250_01C754",
-    "fecha_procesada": "2026-05-13 12:30:55",
+    "fecha_procesada": "2026-05-14 13:15:37",
     "tipo_medida": null,
     "factor_medida": null,
     "medidor_encontrado": null,
@@ -717,7 +717,7 @@
   },
   "CO0800006822": {
     "ot_nombre": "VIPE_45830_8F1C63",
-    "fecha_procesada": "2026-05-13 12:31:27",
+    "fecha_procesada": "2026-05-14 13:16:19",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -727,7 +727,7 @@
       "lectura_activa_kwh": null,
       "lectura_reactiva_kvarh": null,
       "serie_coincide_foto": false,
-      "observacion_serie_foto": "No se encontro seccion de registro fotografico para medidor encontrado."
+      "observacion_serie_foto": "No se reporta serie del medidor encontrado en el acta; no hay registro fotografico del medidor."
     },
     "medidor_enc_serie": null,
     "tcs_encontrados": {
