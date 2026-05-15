@@ -578,16 +578,44 @@ SERIAL_PATTERNS = [
     (r'\bMedidor\s*:\s*([0-9A-Z][0-9A-Z\-]{3,19})', 'EPM/generico'),
 ]
 
+def _extraer_serial_contextual(texto, ancla_regex, serial_regex, ventana=800):
+    """Busca un ancla en el texto (ej. 'Datos de la Factura') y luego busca
+    el serial dentro de los siguientes 'ventana' caracteres. Devuelve serial o None."""
+    m = re.search(ancla_regex, texto, re.IGNORECASE)
+    if not m:
+        return None
+    seccion = texto[m.end():m.end() + ventana]
+    m2 = re.search(serial_regex, seccion, re.IGNORECASE)
+    if m2:
+        s = m2.group(1).strip().upper()
+        if s and any(c.isdigit() for c in s):
+            return s
+    return None
+
 def extraer_serial_por_patron(texto):
-    """Intenta extraer el serial del medidor con regex segun patrones por OR.
+    """Intenta extraer el serial del medidor con patrones segun OR/comercializador.
+    1ro intenta patrones CONTEXTUALES (ancla + serial cerca).
+    Luego cae a patrones LINEALES (regex en todo el texto).
     Devuelve (serial, patron_usado) o (None, None)."""
     if not texto:
         return None, None
+
+    # Patrones contextuales (anchor-based) — ganan sobre los lineales
+    # AFINIA: el serial esta dentro del recuadro 'Datos de la Factura'
+    afinia_serial = _extraer_serial_contextual(
+        texto,
+        ancla_regex=r'Datos\s+de\s+la\s+Factura',
+        serial_regex=r'Medidor\s*[:\n]?\s*([0-9][0-9A-Z\-]{3,19})',
+        ventana=800,
+    )
+    if afinia_serial:
+        return afinia_serial, 'AFINIA (Datos de la Factura)'
+
+    # Patrones lineales por comercializador
     for pattern, nombre_or in SERIAL_PATTERNS:
         m = re.search(pattern, texto, re.IGNORECASE)
         if m:
             serial = m.group(1).strip().upper()
-            # Filtrar matches que parecen palabras y no seriales (ej: "ACTIVA")
             if serial and any(c.isdigit() for c in serial):
                 return serial, nombre_or
     return None, None
