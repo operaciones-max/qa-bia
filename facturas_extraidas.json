@@ -20,25 +20,11 @@
     "estado": "ok",
     "fecha": "2026-05-14 22:32:07"
   },
-  "CO0800006843": {
-    "serial": "8111759626",
-    "express": false,
-    "url": "https://www.bia.app/upload-olibia/2-49569053_51269258097_invoice_document_url_2026-04-28_15-59-28.pdf",
-    "estado": "ok",
-    "fecha": "2026-05-14 22:34:02"
-  },
   "CO0800006556": {
     "serial": "14024756",
     "express": false,
     "url": "https://www.bia.app/upload-olibia/2-49569053_46671778677_invoice_document_url_2026-01-28_23-14-59.pdf",
     "estado": "ok",
     "fecha": "2026-05-14 22:35:32"
-  },
-  "CO0000006794": {
-    "serial": "7727246",
-    "express": false,
-    "url": "https://www.bia.app/upload-olibia/2-49569053_42158805531_invoice_document_url_2026-01-09_00-16-19.pdf",
-    "estado": "ok",
-    "fecha": "2026-05-15 04:01:35"
   }
 }
