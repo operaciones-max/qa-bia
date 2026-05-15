@@ -32,45 +32,30 @@ def main():
         print("ERROR: SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY requeridos")
         sys.exit(1)
 
-    print("Buscando actas con problema de factura anterior...")
+    print("Buscando todas las VIPE (visita previa) para reprocesar con nuevos patrones de factura...")
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
 
-    # Caso A: extraccion fallo (estado=borrosa o ok_sin_serial)
-    filtro_a = "factura_anterior_estado=in.(borrosa,ok_sin_serial)"
-    r_a = requests.get(
-        f"{url_base}/rest/v1/actas_qa?select=ot_id,ot_nombre,internal_bia_code,factura_anterior_estado,medidor_coincide_factura_anterior&{filtro_a}",
+    # Todas las visitas previas — las que comparan medidor vs factura anterior
+    # Filtro: tipo_servicio ilike visita previa O ot_nombre comienza con VIPE_
+    filtro = "or=(tipo_servicio.ilike.*visita%20previa*,ot_nombre.ilike.VIPE_*)"
+    r = requests.get(
+        f"{url_base}/rest/v1/actas_qa?select=ot_id,ot_nombre,internal_bia_code,tipo_servicio,factura_anterior_estado,medidor_coincide_factura_anterior&{filtro}",
         headers=headers,
         timeout=60,
     )
-    if r_a.status_code != 200:
-        print(f"ERROR consulta A: {r_a.status_code} {r_a.text[:200]}")
+    if r.status_code != 200:
+        print(f"ERROR consulta: {r.status_code} {r.text[:200]}")
         sys.exit(1)
-    actas_a = r_a.json()
+    actas_problematicas = r.json()
+    print(f"Total VIPE encontradas: {len(actas_problematicas)}")
 
-    # Caso B: extraccion OK pero medidor NO coincide (probable mal-extraccion como AFINIA 7727246)
-    filtro_b = "factura_anterior_estado=eq.ok&medidor_coincide_factura_anterior=eq.false"
-    r_b = requests.get(
-        f"{url_base}/rest/v1/actas_qa?select=ot_id,ot_nombre,internal_bia_code,factura_anterior_estado,medidor_coincide_factura_anterior&{filtro_b}",
-        headers=headers,
-        timeout=60,
-    )
-    if r_b.status_code != 200:
-        print(f"ERROR consulta B: {r_b.status_code} {r_b.text[:200]}")
-        sys.exit(1)
-    actas_b = r_b.json()
-
-    # Unir sin duplicar
-    vistos = set()
-    actas_problematicas = []
-    for a in actas_a + actas_b:
-        oid = a.get("ot_id")
-        if oid and oid not in vistos:
-            vistos.add(oid)
-            actas_problematicas.append(a)
-
-    print(f"Caso A (extraccion fallo): {len(actas_a)}")
-    print(f"Caso B (extraccion OK pero no coincide): {len(actas_b)}")
-    print(f"Total unicas a reprocesar: {len(actas_problematicas)}")
+    # Desglose por estado actual de factura
+    desglose = {}
+    for a in actas_problematicas:
+        k = a.get("factura_anterior_estado") or "null"
+        desglose[k] = desglose.get(k, 0) + 1
+    for k, v in sorted(desglose.items(), key=lambda x: -x[1]):
+        print(f"  - estado_factura='{k}': {v}")
 
     if not actas_problematicas:
         print("Nada que limpiar.")
