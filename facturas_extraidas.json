@@ -12,5 +12,82 @@
     "url": "https://www.bia.app/upload-olibia/2-49569053_46671778677_invoice_document_url_2026-01-28_23-14-59.pdf",
     "estado": "ok",
     "fecha": "2026-05-14 22:35:32"
+  },
+  "CO0800006820": {
+    "serial": "1072961",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_51330000513_invoice_document_url_2026-04-14_21-41-13.pdf",
+    "estado": "regex_Air-e/Aire",
+    "fecha": "2026-05-15 15:17:59"
+  },
+  "CO0800006825": {
+    "serial": "50000214",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_51329877138_invoice_document_url_2026-04-14_21-46-30.pdf",
+    "estado": "regex_Air-e/Aire",
+    "fecha": "2026-05-15 15:18:50"
+  },
+  "CO0800006770": {
+    "serial": "41151251",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_52228256564_invoice_document_url_2026-04-20_23-16-28.pdf",
+    "estado": "regex_Air-e/Aire",
+    "fecha": "2026-05-15 15:19:40"
+  },
+  "CO0800006822": {
+    "serial": "3000026517-MCA01",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_51329815205_invoice_document_url_2026-04-14_22-06-23.pdf",
+    "estado": "regex_Air-e/Aire",
+    "fecha": "2026-05-15 15:20:23"
+  },
+  "CO4700006835": {
+    "serial": "84258045-MC983",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_53424495148_invoice_document_url_2026-04-29_21-08-10.pdf",
+    "estado": "regex_Air-e/Aire",
+    "fecha": "2026-05-15 15:21:15"
+  },
+  "CO0800006828": {
+    "serial": null,
+    "express": null,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_47527891086_invoice_document_url_2026-04-28_14-36-52.pdf",
+    "estado": "pdf_vacio",
+    "fecha": "2026-05-15 15:22:05"
+  },
+  "CO1100006831": {
+    "serial": "44746909",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_53149759097_invoice_document_url_2026-04-28_14-51-53.pdf",
+    "estado": "regex_Enel X",
+    "fecha": "2026-05-15 15:23:01"
+  },
+  "CO0800006847": {
+    "serial": "41152232",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_52769646192_invoice_document_url_2026-04-25_04-32-44.pdf",
+    "estado": "regex_Air-e/Aire",
+    "fecha": "2026-05-15 15:23:54"
+  },
+  "CO0000006794": {
+    "serial": null,
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_42158805531_invoice_document_url_2026-01-09_00-16-19.pdf",
+    "estado": "ok",
+    "fecha": "2026-05-15 15:24:36"
+  },
+  "CO0800006848": {
+    "serial": "23184809",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_52846089786_invoice_document_url_2026-04-25_04-30-36.pdf",
+    "estado": "regex_Air-e/Aire",
+    "fecha": "2026-05-15 15:25:24"
+  },
+  "CO0800006843": {
+    "serial": null,
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_51269258097_invoice_document_url_2026-04-28_15-59-28.pdf",
+    "estado": "ok",
+    "fecha": "2026-05-15 15:26:18"
   }
 }

@@ -321,7 +321,7 @@
   },
   "CO0800006847": {
     "ot_nombre": "VIPE_45839_67419C",
-    "fecha_procesada": "2026-05-14 22:31:14",
+    "fecha_procesada": "2026-05-15 15:23:54",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -353,7 +353,7 @@
   },
   "CO0800006848": {
     "ot_nombre": "VIPE_45840_AE9060",
-    "fecha_procesada": "2026-05-14 22:32:07",
+    "fecha_procesada": "2026-05-15 15:25:24",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -362,8 +362,8 @@
       "referencia": "N23U03",
       "lectura_activa_kwh": "027438.33",
       "lectura_reactiva_kvarh": "001419.92",
-      "serie_coincide_foto": true,
-      "observacion_serie_foto": null
+      "serie_coincide_foto": false,
+      "observacion_serie_foto": "No se puede verificar la serie en el registro fotográfico disponible; foto no legible o no contiene la serie del medidor de forma clara."
     },
     "medidor_enc_serie": "23184809",
     "tcs_encontrados": {
@@ -381,7 +381,7 @@
     "tecnico_nombre": "Jose Arevalo",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de comercializador En el sitio funciona corporación educativa Dr. Amin Ariza. Se encontró equipo de medida nivel 1 medida directa en gabinete de caja de policarbonato en fachada. Con conexión a tranformador de distribución de 75 kva compartido. Cable tranzada de sector acometida cable de carga #2, breker totalizador de protección de 315 amp. Cargas tomadas I1. 150.2 amp. I2. 156.6 amp. Tensiones L1. 1113.9v. L2. 111.6v LL. 231.9v Persona que atendió sr. Ivan Cervantes informa que la corporación labora desde 7 am 9 pm de lunes a viernes y sábado 7am 5 pm. Si es posible desenergizar e instalación medida los domingos para no interrumpir actividades. Materiales requeridos Medidor de directa Caja de policarbonato Prensa cable 2 und Cinta de colores Sellos."
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa para cambio de comercializador En el sitio funciona corporación educativa Dr. Amin Ariza. Se encontró equipo de medida nivel 1 medida directa en gabinete de caja de policarbonato en fachada. Con conexión a tranformador de distribución de 75 kva compartido. Cable tranzada de sector acometida cable de carga #2, breker totalizador de protección de 315 amp. Cargas tomadas I1. 150.2 amp. I2. 156.6 amp. Tensiones L1. 1113.9v. L2. 111.6v LL. 231.9v Persona que atendió sr. Ivan Cervantes informa que la corporación labora desde 7 am 9 pm de lunes a viernes y sábado 7am 5 pm. Si es posible desenergizar e instalación medida los domingos para no interrumpir actividades."
   },
   "CO0800006824": {
     "ot_nombre": "VIPE_45832_936B1B",
@@ -551,7 +551,7 @@
   },
   "CO0800006825": {
     "ot_nombre": "VIPE_45833_FEED13",
-    "fecha_procesada": "2026-05-13 23:17:08",
+    "fecha_procesada": "2026-05-15 15:18:50",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": "60",
     "medidor_encontrado": {
@@ -579,7 +579,7 @@
     "tecnico_nombre": "Jorge Gelvez",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA RESTAURANTE MAX GORDOS DENTRO DE\nCENTRO COMERCIAL METRO CENTRO CON EQUIPO DE MEDIDA NIVEL 1 MEDIDA SEMI DIRECTA CONECTADO A BARRAJE PRINCIPAL EL CUAL SE ENERGIZA DE\nTRANSFORMADOR COMPARTIDO DE 800 KVA BARRAJE PRINCIPAL CUENTA CON BREAKER TOTALIZADOR DE 2000 AMP TRABAJOS DE CAMBIO DE COMERCIALIZADOR SE\nDEBEN REALIZAR EN HORAS DE LA NOCHE YA QUE AL ABRIR EL BREAKERS TOTALIZADOR DEL BARRAJE PRINCIPAL SE AFECTARA A MAS DE 10 USUARIOS QUE SE\nENCUENTRAN CONECTADOS A DICHO BARRAJE PARA ESTA MANIOBRA SE REQUIERE QUE ESTE PRESENTE PERSONAL DE MANTENIMIENTO DEL CC YA QUE SOLO ELLOS\nTIENEN AUTORIZADO MANIPULAR LOS BREAKERA DE LOS BARRAJES SEGUN INFORMAN *MATERIALES REQUERIDOS* 1 MEDIDOR ( MEDIDA SEMI DIRECTA ) 3 TCs 1 BLOQUE DE\nPRUEBAS 1 GABINETE METALICO ( PARA MEDIDOR Y BLOQUE DE PRUEBAS) 4 CONECTORES DE CORAZA 1 \" 4 CONECTORES DE PERFORACIÓN 1 CAJA DE PLC 3/4 5 MTS CABLE\n4×12 5 MTS CABLE 6×12 10 MTS CORAZA 1 MODEN 1 SIM CARD 1 ANTENA 2 CHAZOS EXPANSIVOS"
+    "observacion_tecnico_verbatim": "SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA RESTAURANTE MAX GORDOS DENTRO DE CENTRO COMERCIAL METRO CENTRO CON EQUIPO DE MEDIDA NIVEL 1 MEDIDA SEMI DIRECTA CONECTADO A BARRAJE PRINCIPAL EL CUAL SE ENERGIZA DE TRANSFORMADOR COMPARTIDO DE 800 KVA BARRAJE PRINCIPAL CUENTA CON BREAKER TOTALIZADOR DE 2000 AMP TRABAJOS DE CAMBIO DE COMERCIALIZADOR SE DEBEN REALIZAR EN HORAS DE LA NOCHE YA QUE AL ABRIR EL BREAKERS TOTALIZADOR DEL BARRAJE PRINCIPAL SE AFECTARA A MAS DE 10 USUARIOS QUE SE ENCUENTRAN CONECTADOS A DICHO BARRAJE PARA ESTA MANIOBRA SE REQUIERE QUE ESTE PRESENTE PERSONAL DE MANTENIMIENTO DEL CC YA QUE SOLO ELLOS TIENEN AUTORIZADO MANIPULAR LOS BREAKERA DE LOS BARRAJES SEGUN INFORMAN *MATERIALES REQUERIDOS* 1 MEDIDOR ( MEDIDA SEMI DIRECTA ) 3 TCs 1 BLOQUE DE PRUEBAS 1 GABINETE METALICO ( PARA MEDIDOR Y BLOQUE DE PRUEBAS) 4 CONECTORES DE CORAZA 1 \" 4 CONECTORES DE PERFORACIÓN 1 CAJA DE PLC 3/4 5 MTS CABLE 4×12 5 MTS CABLE 6×12 10 MTS CORAZA 1 MODEN 1 SIM CARD 1 ANTENA 2 CHAZOS EXPANSIVOS"
   },
   "CO0100003839": {
     "ot_nombre": "PREC_24623_BFAF87",
@@ -611,7 +611,7 @@
   },
   "CO0800006820": {
     "ot_nombre": "VIPE_45834_62A674",
-    "fecha_procesada": "2026-05-13 23:15:47",
+    "fecha_procesada": "2026-05-15 15:17:59",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -643,7 +643,7 @@
   },
   "CO0800006770": {
     "ot_nombre": "VIPE_45340_D643CD",
-    "fecha_procesada": "2026-05-14 13:12:10",
+    "fecha_procesada": "2026-05-15 15:19:40",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -671,7 +671,7 @@
     "tecnico_nombre": "Jose Arevalo",
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
-    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa cambio de comercializador. En el predio funciona carnicería DISTRICARNES LK. actividad comercial con varios locales alquilados y equipo de medidas, persona que atiende manifiesta que medida de la visita es de los cuartos frío medida que más consumo. Medida directa ubicada en la fachada interna del predio terraza enrrejada. Tranformador de distribución del sector 75 kva compartido. Con conexión acometida y cable parcial #4, breaker totalizador 160 amp, Cliente con generador 45 kva. Para instalación de equipo de medida nivel 1 medida directa en poste Se observa que poste adyacente para ubicación de la medida en caja de policarbonato. Poste en regular estado con base quebrada e inclinado. Para su instalación se requiere Materiales. Caja de policarbonato 3-4 Cinta bandit Hebillas Cable #4. 75 mts cobre. Conectores de perforación 6 und. Cinta de colores Medidor de directa Modem de comunicación Simd card multi operador. Prensa cable 2 und. Tensores de acometida 4 und Amarras platicas Conector de ojo. Cargas tomadas I1. 60.5 amp, I2. 63.5. Amp. Tensiones L1. 115.9 v. L2.114.6 v, LL 230.7 v Cliente solicita instalación en horas de la tarde 1 pm para no interferir con actividades."
+    "observacion_tecnico_verbatim": "Se llega al sitio para visita previa cambio de comercializador. En el predio funciona carnicería DISTRICARNES LK. actividad comercial con varios locales alquilados y equipo de medidas, persona que atiende manifiesta que medida de la visita es de los cuartos frío medida que más consumo. Medida directa ubicada en la fachada interna del predio terraza enrrejada. Tranformador de distribución del sector 75 kva compartido. Con conexión acome­tida y cable parcial #4, breaker totalizador 160 amp, Cliente con generador 45 kva. Para instalación de equipo de medida nivel 1 medida directa en poste Se observa que poste adyacente para ubicación de la medida en caja de policarbonato. Poste en regular estado con base quebrada e inclinado. Para su instalación se requiere Materiales. Caja de policarbonato 3-4 Cinta bandit Hebillas Cable #4. 75 mts cobre. Conectores de perforación 6 und. Cinta de colores Medidor de directa Modem de comunicación Simd card multi operador. Prensa cable 2 und. Tensores de acometida 4 und Amarras platicas Conector de ojo. Cargas tomadas I1. 60.5 amp, I2. 63.5. Amp. Tensiones L1. 115.9 v. L2.114.6 v, LL 230.7 v Cliente solicita instalación en horas de la tarde 1 pm para no interferir con actividades."
   },
   "CO0100003842": {
     "ot_nombre": "PREC_24620_EE8066",
@@ -717,7 +717,7 @@
   },
   "CO0800006822": {
     "ot_nombre": "VIPE_45830_8F1C63",
-    "fecha_procesada": "2026-05-14 13:16:19",
+    "fecha_procesada": "2026-05-15 15:20:23",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -727,7 +727,7 @@
       "lectura_activa_kwh": null,
       "lectura_reactiva_kvarh": null,
       "serie_coincide_foto": false,
-      "observacion_serie_foto": "No se reporta serie del medidor encontrado en el acta; no hay registro fotografico del medidor."
+      "observacion_serie_foto": "Visita previa sin acceso al sitio; no se realizó inspección del medidor ni se capturaron fotos de evidencia técnica."
     },
     "medidor_enc_serie": null,
     "tcs_encontrados": {
@@ -749,16 +749,16 @@
   },
   "CO4700006835": {
     "ot_nombre": "VIPE_45510_4DEB74",
-    "fecha_procesada": "2026-05-14 15:59:06",
+    "fecha_procesada": "2026-05-15 15:21:15",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": "80",
     "medidor_encontrado": {
       "serie": "84258045",
       "marca": "ITRON",
       "referencia": "ACE 6000",
-      "lectura_activa_kwh": "0.0",
-      "lectura_reactiva_kvarh": "0.0",
-      "serie_coincide_foto": true,
+      "lectura_activa_kwh": "0",
+      "lectura_reactiva_kvarh": "0",
+      "serie_coincide_foto": null,
       "observacion_serie_foto": null
     },
     "medidor_enc_serie": "84258045",
@@ -781,7 +781,7 @@
   },
   "CO0800006828": {
     "ot_nombre": "VIPE_45632_354ED0",
-    "fecha_procesada": "2026-05-14 15:59:58",
+    "fecha_procesada": "2026-05-15 15:22:05",
     "tipo_medida": "SEMIDIRECTA",
     "factor_medida": "80",
     "medidor_encontrado": {
@@ -869,7 +869,7 @@
   },
   "CO1100006831": {
     "ot_nombre": "VIPE_45408_30918B",
-    "fecha_procesada": "2026-05-14 21:24:33",
+    "fecha_procesada": "2026-05-15 15:23:01",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
@@ -1027,7 +1027,7 @@
   },
   "CO0800006843": {
     "ot_nombre": "VIPE_45665_5AEEF7",
-    "fecha_procesada": "2026-05-14 22:34:02",
+    "fecha_procesada": "2026-05-15 15:26:18",
     "tipo_medida": "INDIRECTA",
     "factor_medida": "2200",
     "medidor_encontrado": {
@@ -1036,7 +1036,7 @@
       "referencia": "ZMY405",
       "lectura_activa_kwh": "0.0",
       "lectura_reactiva_kvarh": "0.0",
-      "serie_coincide_foto": true,
+      "serie_coincide_foto": null,
       "observacion_serie_foto": null
     },
     "medidor_enc_serie": "82465258",
@@ -1044,13 +1044,13 @@
       "aplica": true,
       "tiene": true,
       "seriales": [],
-      "detalles": "Se reporta presencia de TCs pero sin seriales especificados en acta."
+      "detalles": null
     },
     "tps_encontrados": {
       "aplica": true,
       "tiene": true,
       "seriales": [],
-      "detalles": "Se reporta presencia de TPs pero sin seriales especificados en acta."
+      "detalles": null
     },
     "tecnico_nombre": "Jorge Gelvez",
     "tecnico_empresa": "BIA",
@@ -1059,7 +1059,7 @@
   },
   "CO0000006794": {
     "ot_nombre": "VIPE_45591_57FCF4",
-    "fecha_procesada": "2026-05-15 04:01:35",
+    "fecha_procesada": "2026-05-15 15:24:36",
     "tipo_medida": "DIRECTA",
     "factor_medida": "1",
     "medidor_encontrado": {
