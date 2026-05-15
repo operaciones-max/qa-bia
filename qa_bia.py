@@ -578,6 +578,13 @@ SERIAL_PATTERNS = [
     (r'\bMedidor\s*:\s*([0-9A-Z][0-9A-Z\-]{3,19})', 'EPM/generico'),
 ]
 
+def _limpiar_serial_extraido(s):
+    """Quita sufijos tipo '-MC983', '-MCA01', '-V2' que son codigos de
+    version/modelo, no parte del serial real del medidor."""
+    if not s:
+        return s
+    return re.sub(r'-[A-Z][A-Z0-9]*$', '', s).strip()
+
 def _extraer_serial_contextual(texto, ancla_regex, serial_regex, ventana=800):
     """Busca un ancla en el texto (ej. 'Datos de la Factura') y luego busca
     el serial dentro de los siguientes 'ventana' caracteres. Devuelve serial o None."""
@@ -587,7 +594,7 @@ def _extraer_serial_contextual(texto, ancla_regex, serial_regex, ventana=800):
     seccion = texto[m.end():m.end() + ventana]
     m2 = re.search(serial_regex, seccion, re.IGNORECASE)
     if m2:
-        s = m2.group(1).strip().upper()
+        s = _limpiar_serial_extraido(m2.group(1).strip().upper())
         if s and any(c.isdigit() for c in s):
             return s
     return None
@@ -615,7 +622,7 @@ def extraer_serial_por_patron(texto):
     for pattern, nombre_or in SERIAL_PATTERNS:
         m = re.search(pattern, texto, re.IGNORECASE)
         if m:
-            serial = m.group(1).strip().upper()
+            serial = _limpiar_serial_extraido(m.group(1).strip().upper())
             if serial and any(c.isdigit() for c in serial):
                 return serial, nombre_or
     return None, None
