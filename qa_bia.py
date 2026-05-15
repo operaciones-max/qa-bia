@@ -1010,7 +1010,7 @@ def analizar_acta_lite(texto_pdf, tipo_servicio, estado_electricista,
     # Construir content: si hay imagenes, va multimodal; si no, solo texto.
     if imagenes_pdf:
         content = []
-        for i, img_bytes in enumerate(imagenes_pdf[:2]):
+        for i, img_bytes in enumerate(imagenes_pdf[:4]):
             content.append({
                 "type": "image",
                 "source": {
@@ -2616,15 +2616,15 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
         )
     else:
         # PQR / VICO / Emergencia tienen acta fisica manuscrita en el PDF.
-        # Renderizamos las primeras 2 paginas como imagenes para que Claude
-        # lea con vision el texto manuscrito del "Registro Fotografico Acta".
+        # Renderizamos las primeras 4 paginas como imagenes a dpi=150 para que
+        # Claude lea con vision el texto manuscrito del "Registro Fotografico Acta".
         imagenes_para_lite = None
         if _tipo_necesita_vision_lite(tipo):
             try:
                 r_pdf = requests.get(pdf_url, timeout=30)
                 if r_pdf.ok:
-                    imagenes_para_lite = _renderizar_paginas_pdf(r_pdf.content, n_paginas=2, dpi=100)
-                    print(f"     Vision lite habilitada ({tipo}): {len(imagenes_para_lite)} paginas")
+                    imagenes_para_lite = _renderizar_paginas_pdf(r_pdf.content, n_paginas=4, dpi=150)
+                    print(f"     Vision lite habilitada ({tipo}): {len(imagenes_para_lite)} paginas a dpi=150")
             except Exception as e:
                 print(f"     WARN: no se pudo descargar PDF para vision lite: {e}")
         print(f"     Analizando con Claude lite ({config.CLAUDE_MODEL}) — track {qa_track}")

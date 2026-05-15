@@ -1,0 +1,39 @@
+name: Reprocesar PQR/VICO/Emergencia con vision
+
+on:
+  workflow_dispatch:
+
+jobs:
+  limpiar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install requests
+
+      - name: Correr limpieza
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python limpiar_pqr_vico_emerg.py
+
+      - name: Commitear caches actualizados
+        run: |
+          git config user.email "qa-bot@bia.app"
+          git config user.name "QA Bot"
+          git add -f actas_procesadas.json || true
+          git diff --staged --quiet || git commit -m "Limpiar PQR/VICO/Emergencia para reprocesar con vision [skip ci]"
+          git pull --rebase origin main || true
+          git push || true
