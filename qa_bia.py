@@ -325,6 +325,12 @@ def _clasificar_qa_track(tipo_servicio):
     # Resto: Retencion
     return "Retencion"
 
+def _tipo_necesita_vision_lite(tipo_servicio):
+    """True si el tipo de servicio usa actas FISICAS manuscritas dentro del PDF
+    (Registro Fotografico Acta). Aplica para PQR, Visita Conjunta, Emergencia."""
+    t = (tipo_servicio or "").lower()
+    return any(k in t for k in ("pqr", "visita conjunta", "vico", "emergencia", "alrt"))
+
 def _requiere_wms_comparison(tipo_servicio, qa_track):
     """True si el acta debe comparar contra WMS asignado."""
     if qa_track == "Activacion":
@@ -892,6 +898,27 @@ def _renderizar_pdf_a_imagenes(pdf_bytes):
         print(f"  WARN: no se pudieron renderizar imagenes del PDF: {e}")
     return imagenes
 
+def _renderizar_paginas_pdf(pdf_bytes, n_paginas=2, dpi=80):
+    """Renderiza primeras N paginas del PDF como JPEG bytes. Independiente
+    de MAX_PAGINAS_VISION — usar cuando se necesita vision para casos
+    especificos (PQR/VICO/Emergencia que tienen actas fisicas)."""
+    try:
+        import fitz
+    except ImportError:
+        return []
+    imagenes = []
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        n = min(len(doc), n_paginas)
+        for i in range(n):
+            page = doc[i]
+            pix = page.get_pixmap(dpi=dpi)
+            imagenes.append(pix.tobytes("jpeg"))
+        doc.close()
+    except Exception as e:
+        print(f"  WARN: no se pudieron renderizar paginas para vision: {e}")
+    return imagenes
+
 # =============================================================
 #  ANALISIS CON GEMINI
 # =============================================================
@@ -929,18 +956,32 @@ alertas_qa: max 5 observaciones criticas REALES (no de campos vacios).
 Para RETENCION: NO compares medidor encontrado vs instalado, NO reportes errores de
 TCs/TPs/pruebas/diagrama unifilar — no aplican.
 
-PARA PQRs Y EMERGENCIAS (caso especial):
-En la primera pagina del PDF aparece un bloque llamado "Registro Fotográfico Acta"
-con fotos del acta manuscrita. Si el campo "Observaciones" principal del acta digital
-esta vacio o incompleto, busca el texto extraido (titulos, captions, OCR parcial)
-dentro de ese bloque "Registro Fotográfico Acta". Alli el tecnico suele escribir a
-mano:
-- Las observaciones detalladas del trabajo
-- El numero de medidor encontrado / instalado
+PARA PQRs, EMERGENCIAS Y VISITAS CONJUNTAS (caso especial — incluye IMAGENES):
+Estos tipos de OT tienen ACTAS FISICAS manuscritas que el tecnico llena en papel
+y luego fotografia. Recibis en este mismo mensaje las primeras 2 paginas del PDF
+como IMAGENES, donde aparece el bloque "Registro Fotográfico Acta" con las fotos
+del acta fisica.
 
-Si en el texto del PDF aparecen referencias a "Registro Fotográfico Acta" seguidas
-de descripciones o numeros de serie, USALOS como observacion_tecnico_verbatim y
-extrae el numero de medidor de alli si aplica.
+INSTRUCCIONES PARA LAS IMAGENES:
+1. Identifica las fotos del acta fisica (suelen tener encabezado "BIA" o "Bia").
+2. LEE cuidadosamente la letra manuscrita en esas fotos. Extrae:
+   - **Observaciones** completas (todo lo escrito en el campo Observaciones)
+   - Numero de medidor (encontrado y/o instalado, si aplica)
+   - Lecturas de energia (kWh activa/reactiva)
+   - Sellos (cantidad observada en cada equipo)
+   - Cualquier dato tecnico visible (marca, referencia, etc.)
+3. Si la foto esta borrosa o la letra es ilegible, indicalo en alertas_qa
+   pero NO inventes datos.
+4. Copia las observaciones manuscritas LITERALMENTE en observacion_tecnico_verbatim
+   (preservando errores ortograficos, abreviaturas, todo). Si el campo digital
+   "Observaciones" del acta tambien tiene contenido, concatena ambos con salto
+   de linea.
+5. Si en la foto del acta fisica ves "Cliente firmo" o no firmo, refleja eso en
+   alertas_qa o or_firma segun aplique.
+
+PRIORIZA siempre lo que ves en la foto del acta fisica sobre el texto extraido
+del PDF, porque las observaciones reales del tecnico estan manuscritas en el
+acta fisica.
 
 JSON ESPERADO:
 {{
@@ -952,16 +993,37 @@ JSON ESPERADO:
   "tipificacion_falla": {{ "causa_raiz": "<o null>", "responsable": "<o null>", "detalle": "<o null>", "mejora": "<o null>" }}
 }}"""
 
-def analizar_acta_lite(texto_pdf, tipo_servicio, estado_electricista, internal_bia_code=""):
-    """QA lite para Retencion/Energy Solutions. Usa prompt caching de Anthropic."""
+def analizar_acta_lite(texto_pdf, tipo_servicio, estado_electricista,
+                       internal_bia_code="", imagenes_pdf=None):
+    """QA lite para Retencion/Energy Solutions. Si imagenes_pdf tiene contenido,
+    incluye vision (para PQR/VICO/Emergencia que tienen actas fisicas)."""
+    import base64
     es_exitosa = estado_electricista in config.ESTADOS_EXITOSOS
     sistema = _system_prompt_lite()
-    user_msg = (
+    texto_msg = (
         f"TIPO DE SERVICIO: {tipo_servicio}\n"
         f"RESULTADO EN APP: {'EXITOSA' if es_exitosa else 'FALLIDA'}\n"
         f"CODIGO INTERNO BIA: {internal_bia_code}\n\n"
         f"--- TEXTO DEL ACTA ---\n{texto_pdf[:8000]}"
     )
+
+    # Construir content: si hay imagenes, va multimodal; si no, solo texto.
+    if imagenes_pdf:
+        content = []
+        for i, img_bytes in enumerate(imagenes_pdf[:2]):
+            content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": base64.standard_b64encode(img_bytes).decode("ascii"),
+                },
+            })
+        content.append({"type": "text", "text": texto_msg})
+        user_content = content
+    else:
+        user_content = texto_msg
+
     cd = _cargar_cooldown_llm()
     if cd:
         print(f"  Claude en cooldown ({cd['razon']}) - se omite analisis lite.")
@@ -970,14 +1032,14 @@ def analizar_acta_lite(texto_pdf, tipo_servicio, estado_electricista, internal_b
     try:
         respuesta = cliente_claude.messages.create(
             model=config.CLAUDE_MODEL,
-            max_tokens=1500,
+            max_tokens=2000 if imagenes_pdf else 1500,
             temperature=0.1,
             system=[{
                 "type": "text",
                 "text": sistema,
                 "cache_control": {"type": "ephemeral"},
             }],
-            messages=[{"role": "user", "content": user_msg}],
+            messages=[{"role": "user", "content": user_content}],
         )
         try:
             u = respuesta.usage
@@ -2553,8 +2615,23 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
             imagenes_pdf=imagenes_pdf,
         )
     else:
+        # PQR / VICO / Emergencia tienen acta fisica manuscrita en el PDF.
+        # Renderizamos las primeras 2 paginas como imagenes para que Claude
+        # lea con vision el texto manuscrito del "Registro Fotografico Acta".
+        imagenes_para_lite = None
+        if _tipo_necesita_vision_lite(tipo):
+            try:
+                r_pdf = requests.get(pdf_url, timeout=30)
+                if r_pdf.ok:
+                    imagenes_para_lite = _renderizar_paginas_pdf(r_pdf.content, n_paginas=2, dpi=100)
+                    print(f"     Vision lite habilitada ({tipo}): {len(imagenes_para_lite)} paginas")
+            except Exception as e:
+                print(f"     WARN: no se pudo descargar PDF para vision lite: {e}")
         print(f"     Analizando con Claude lite ({config.CLAUDE_MODEL}) — track {qa_track}")
-        resultado_qa = analizar_acta_lite(texto_pdf, tipo, estado, internal_bia_code)
+        resultado_qa = analizar_acta_lite(
+            texto_pdf, tipo, estado, internal_bia_code,
+            imagenes_pdf=imagenes_para_lite,
+        )
 
     if not resultado_qa:
         return False

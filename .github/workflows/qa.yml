@@ -28,7 +28,7 @@ jobs:
           python-version: '3.11'
 
       - name: Instalar dependencias
-        run: pip install anthropic pdfplumber requests
+        run: pip install anthropic pdfplumber requests pymupdf
 
       - name: Preparar entorno
         run: |
