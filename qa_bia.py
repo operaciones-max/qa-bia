@@ -565,9 +565,37 @@ def _guardar_factura_extraida(co_code, data):
     with open(ARCHIVO_FACTURAS_EXTRAIDAS, "w", encoding="utf-8") as f:
         json.dump(cache, f, ensure_ascii=False, indent=2)
 
+# Patrones de extraccion de serial de medidor por OR/comercializador.
+# Aprendidos del usuario el 2026-05-15. Se prueban en orden — la primera
+# coincidencia gana. Captura grupos: \1 = serial (alfanumerico 4-20 chars).
+SERIAL_PATTERNS = [
+    (r'No\.\s*Medidor\s*:?\s*([0-9A-Z][0-9A-Z\-]{3,19})', 'Enel'),
+    (r'N[úu]mero\s+de\s+Medidor\s*:?\s*([0-9A-Z][0-9A-Z\-]{3,19})', 'Air-e/Aire'),
+    (r'Medidor\s+No\.?\s*:?\s*([0-9A-Z][0-9A-Z\-]{3,19})', 'Enel X'),
+    (r'C[óo]digo\s+(?:del\s+)?medidor\s*:?\s*([0-9A-Z][0-9A-Z\-]{3,19})', 'ERCO'),
+    (r'Medidor\s+Activa\s*:?\s*([0-9A-Z][0-9A-Z\-]{3,19})', 'CENS'),
+    (r'\bMedidor\s*\n\s*([0-9][0-9A-Z\-]{3,19})', 'Celsia (cuadro naranja)'),
+    (r'\bMedidor\s*:\s*([0-9A-Z][0-9A-Z\-]{3,19})', 'EPM/generico'),
+]
+
+def extraer_serial_por_patron(texto):
+    """Intenta extraer el serial del medidor con regex segun patrones por OR.
+    Devuelve (serial, patron_usado) o (None, None)."""
+    if not texto:
+        return None, None
+    for pattern, nombre_or in SERIAL_PATTERNS:
+        m = re.search(pattern, texto, re.IGNORECASE)
+        if m:
+            serial = m.group(1).strip().upper()
+            # Filtrar matches que parecen palabras y no seriales (ej: "ACTIVA")
+            if serial and any(c.isdigit() for c in serial):
+                return serial, nombre_or
+    return None, None
+
 def extraer_serial_factura(pdf_url):
-    """Descarga PDF de factura y extrae el numero de medidor + flag express via Gemini.
-    Devuelve (data_dict, estado) donde data_dict = {serial, express}."""
+    """Descarga PDF de factura y extrae el numero de medidor + flag express.
+    Primero intenta regex por patron de OR (Enel/Aire/Celsia/etc). Si falla,
+    cae al LLM. Devuelve (data_dict, estado) donde data_dict={serial, express}."""
     try:
         r = requests.get(pdf_url, timeout=30)
         r.raise_for_status()
@@ -588,16 +616,32 @@ def extraer_serial_factura(pdf_url):
     if not texto.strip():
         return None, "pdf_vacio"
 
-    # Deteccion express ANTES de Gemini — basta con buscar la palabra
+    # Deteccion express ANTES de Claude — basta con buscar la palabra
     express = "express" in texto.lower()
 
+    # 1er intento: regex por patron de OR (gratis, sin tokens)
+    serial_regex, patron = extraer_serial_por_patron(texto)
+    if serial_regex:
+        print(f"     Serial extraido por regex ({patron}): {serial_regex}")
+        return {"serial": serial_regex, "express": express}, f"regex_{patron}"
+
+    # 2do intento: Claude (si regex falla)
     cd = _cargar_cooldown_llm()
     if cd:
         return {"serial": None, "express": express}, "cooldown"
 
     prompt = (
-        "Factura electrica. Extrae serial del medidor (puede llamarse Numero/Medidor/"
-        "Dispositivo/Serie/Equipo). Si no aparece, null. JSON: {\"serial\": \"<num>\" o null}\n\n"
+        "Factura electrica colombiana. Extrae el serial del medidor.\n\n"
+        "Patrones conocidos por comercializador:\n"
+        "- Enel: 'No. Medidor: XXXX'\n"
+        "- Air-e/Aire: 'Número de Medidor: XXXX'\n"
+        "- Enel X: 'Medidor No: XXXX'\n"
+        "- ERCO: 'Código medidor: XXXX'\n"
+        "- Celsia: cuadro 'Medidor' con numero abajo\n"
+        "- EPM: 'medidor' junto al cuadro de consumos\n"
+        "- CENS: 'Medidor Activa: XXXX'\n\n"
+        "Si no aparece serial reconocible, devuelve null.\n"
+        "JSON estricto: {\"serial\": \"<num>\" o null}\n\n"
         + texto[:3500]
     )
 
