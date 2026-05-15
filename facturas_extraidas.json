@@ -33,5 +33,12 @@
     "url": "https://www.bia.app/upload-olibia/2-49569053_46671778677_invoice_document_url_2026-01-28_23-14-59.pdf",
     "estado": "ok",
     "fecha": "2026-05-14 22:35:32"
+  },
+  "CO0000006794": {
+    "serial": "7727246",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_42158805531_invoice_document_url_2026-01-09_00-16-19.pdf",
+    "estado": "ok",
+    "fecha": "2026-05-15 04:01:35"
   }
 }

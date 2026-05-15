@@ -1056,5 +1056,37 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "SE LLEGA LA SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA OFICINA PRINCIPAL DEL BANCO BOGOTA CON EQUIPO DE MEDIDA NIVEL 2 EN POSTE A 3 ELEMENTOS CON TRANSFORMADOR DE 1000 KVA EXCLUSIVO CLIENTE CUENTA CON SISTEMA DE PANELES SOLARES INSTALADOS Y A SU VEZ TIENE PLANTA ELÉCTRICA DE RESPALDO LA CUAL TIENE UNA CAPACIDAD DE 3200 AMP EN GENERACION CON UNA AUTONOMIA EN TIEMPO DE USO DE 48 HORAS EN CASO DE FALLA DE LA RED PARA EL CAMBIO DE COMERCIALIZADOR SE REQUIERE DESCARGO CON PERDIDA DE MERCADO YA QUE ES NECESARIO DESENERGIZAR TRANSFORMADOR DE 50 KVA CON SERIE 014902 Y MT-CT A29680 QUE PERTENECE A CENTRO MEDICO CARMEN GUERRA QUE ESTA EN FRENTE DEL BANCO PERSONAL DE MANTENIMIENTO INFORMA QUE ACTIVIDAD ES RECOMENDABLE REALIZARLA UN DIA SABADO *MATERIALES REQUERIDOS* 3 TCS 3 TTS 2 MEDIDOR ( MEDIDA INDIRECTA ) 1 GABINETE METALICO 2 BLOQUE DE PRUEBAS 14 CONECTORES DE CORAZA 1 \" 25 MTS CORAZA 15 MTS CABLE 4×12 15 MTS CABLE 6×12 24 PLATINAS 24 TORNILLOS DE 1/4 × 2\" PARA PLATINA CON DOBLE ARANDELA 35 PONCHABLES # 2 30 PONCHABLES #12 30 MTS CABLE DESNUDO #2 4 CONECTORES AMPA 2A2 3 CONECTORES AMPA 4/0-1/0 1 SPT 15 MTS CABLE VERDE #12 2 MTS CABLE BLANCO #12 3 DPS 3 CAJAS CORTA CIRCUITOS 3 FUSIBLES"
+  },
+  "CO0000006794": {
+    "ot_nombre": "VIPE_45591_57FCF4",
+    "fecha_procesada": "2026-05-15 04:01:35",
+    "tipo_medida": "DIRECTA",
+    "factor_medida": "1",
+    "medidor_encontrado": {
+      "serie": "40000184",
+      "marca": "nansen",
+      "referencia": "NSX314i",
+      "lectura_activa_kwh": "70383.45",
+      "lectura_reactiva_kvarh": "22923.39",
+      "serie_coincide_foto": null,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "40000184",
+    "tcs_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Edwin Cubides",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "*Código interno de Bia:* CO0000006794 *Tipo de servicio:* VIPE *Serial del medidor :* 40000184 *IP del medidor encontrado:* n.v *Modem enc:* n.v *Marca modem:* n.v *Factor de medida:* 1 *Transformador:* 800 kva comoartido *Con OR:* si *Observación:* Se llega a sitio, se realiza gestión de ingreso, se realiza inspección visual encontrando equipo de medida nivel 1 directa en gabinete compartido, se realiza toma de datos y registro fotográfico. Persona que atendió Marleidys marimon +573217346132 1002194163 Administradora"
   }
 }
