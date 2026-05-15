@@ -2645,9 +2645,15 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
         factura_estado = "borrosa"  # default si llegamos aca pero falla extraccion
         cache = _cargar_facturas_extraidas()
         cache_entry = cache.get(internal_bia_code) or {}
-        # Invalidar cache si la URL cambio (ej. switch de pregunta 69895 -> 71842)
+        # Invalidar cache si:
+        #   - la URL cambio (ej. switch de pregunta 69895 -> 71842)
+        #   - el cache no tiene serial (reintentar con patrones nuevos)
+        #   - el estado guardado no fue 'ok' (reintentar tras mejoras de extraccion)
         cache_url_distinta = cache_entry and cache_entry.get("url") and cache_entry.get("url") != factura_url
-        if internal_bia_code in cache and not cache_url_distinta:
+        cache_sin_serial = cache_entry and not cache_entry.get("serial")
+        cache_estado_no_ok = cache_entry and cache_entry.get("estado") not in ("ok",) and bool(cache_entry.get("estado"))
+        cache_invalido = cache_url_distinta or cache_sin_serial or cache_estado_no_ok
+        if internal_bia_code in cache and not cache_invalido:
             entry = cache_entry
             serial_factura  = entry.get("serial")
             factura_express = entry.get("express")
