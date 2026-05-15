@@ -34,19 +34,43 @@ def main():
 
     print("Buscando actas con problema de factura anterior...")
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
-    # Filtro: estado NO 'ok' o NO 'no_disponible' (es decir: borrosa, ok_sin_serial, null)
-    # En PostgREST: usar or= con varias condiciones
-    filtro = "factura_anterior_estado=in.(borrosa,ok_sin_serial)"
-    r = requests.get(
-        f"{url_base}/rest/v1/actas_qa?select=ot_id,ot_nombre,internal_bia_code,factura_anterior_estado&{filtro}",
+
+    # Caso A: extraccion fallo (estado=borrosa o ok_sin_serial)
+    filtro_a = "factura_anterior_estado=in.(borrosa,ok_sin_serial)"
+    r_a = requests.get(
+        f"{url_base}/rest/v1/actas_qa?select=ot_id,ot_nombre,internal_bia_code,factura_anterior_estado,medidor_coincide_factura_anterior&{filtro_a}",
         headers=headers,
         timeout=60,
     )
-    if r.status_code != 200:
-        print(f"ERROR consulta Supabase: {r.status_code} {r.text[:200]}")
+    if r_a.status_code != 200:
+        print(f"ERROR consulta A: {r_a.status_code} {r_a.text[:200]}")
         sys.exit(1)
-    actas_problematicas = r.json()
-    print(f"Encontradas {len(actas_problematicas)} actas con factura mal extraida.")
+    actas_a = r_a.json()
+
+    # Caso B: extraccion OK pero medidor NO coincide (probable mal-extraccion como AFINIA 7727246)
+    filtro_b = "factura_anterior_estado=eq.ok&medidor_coincide_factura_anterior=eq.false"
+    r_b = requests.get(
+        f"{url_base}/rest/v1/actas_qa?select=ot_id,ot_nombre,internal_bia_code,factura_anterior_estado,medidor_coincide_factura_anterior&{filtro_b}",
+        headers=headers,
+        timeout=60,
+    )
+    if r_b.status_code != 200:
+        print(f"ERROR consulta B: {r_b.status_code} {r_b.text[:200]}")
+        sys.exit(1)
+    actas_b = r_b.json()
+
+    # Unir sin duplicar
+    vistos = set()
+    actas_problematicas = []
+    for a in actas_a + actas_b:
+        oid = a.get("ot_id")
+        if oid and oid not in vistos:
+            vistos.add(oid)
+            actas_problematicas.append(a)
+
+    print(f"Caso A (extraccion fallo): {len(actas_a)}")
+    print(f"Caso B (extraccion OK pero no coincide): {len(actas_b)}")
+    print(f"Total unicas a reprocesar: {len(actas_problematicas)}")
 
     if not actas_problematicas:
         print("Nada que limpiar.")
