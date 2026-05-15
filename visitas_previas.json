@@ -1088,5 +1088,47 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "*Código interno de Bia:* CO0000006794 *Tipo de servicio:* VIPE *Serial del medidor :* 40000184 *IP del medidor encontrado:* n.v *Modem enc:* n.v *Marca modem:* n.v *Factor de medida:* 1 *Transformador:* 800 kva comoartido *Con OR:* si *Observación:* Se llega a sitio, se realiza gestión de ingreso, se realiza inspección visual encontrando equipo de medida nivel 1 directa en gabinete compartido, se realiza toma de datos y registro fotográfico. Persona que atendió Marleidys marimon +573217346132 1002194163 Administradora"
+  },
+  "CO0100003787": {
+    "ot_nombre": "PREC_24675_487542",
+    "fecha_procesada": "2026-05-15 16:56:34",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Wilson Capador",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Código interno de Bia: CO100003787. Tipo de servicio: Previa Banco de Condensadores. Serial del medidor: Sin Acceso. IP del medidor: S/I. Modem Inst: N/A. Marca modem: N/A. Factor de medida: 1. Transformador: S/I kVA Compartido. Con OR: No. Observación: 1). Visita inicial para validar condiciones de instalación de banco de condensadores. 2). Se llega al centro comercial Plaza de las Américas a las 8:30 am presta servicio al local 2912 El Corral Tradicional. 3). Se encuentran tablero general de distribución TGD trifásico de 36 circuitos con totalizador de 125A y parciales en calibre #4 AWG, ubicado en la escalera. 4). Se toman tensiones de fase con pinza voltiamperimetrica de: 127.0V, 126.9V y 125.4V Tensiones de línea de 219.4V, 221.1V y 219.6V y corrientes de 25.62A, 24.18A y 16.43A 5). Trabajo sin tension bajando totalizador ubicado en el tablero de alimenta de barraje con tornillo cuadrante de pala. 6). Se válida con persona encargada del punto para la instalación del banco y se puede ubicar en la parte superior del TGD dentro del muro para no incomodar el acceso. Banco de condensadores dependiendo la capacidad determinada por el área de ingeniería. 8 MTS de cable encauchetado 4x10 o 32 metros de cable #10 línea abierta. 4 chazos con tornillo tipo caimán para dry wall. Broca escalonada para perforar tapa de TGD y cofre. Sikaflex o silicona para tapar tableros y cualquier agujero o hueco que se deje ya que por normativa y control de plagas de debe de sellar todo. 3 metros de canaleta plástica de 4 centímetros de ancho y 1 CM de alto. 7). Corte del servicio aproximadamente de 20 a 30 minutos cliente sugiere los días lunes a miércoles en la mañana preferiblemente a las 09:00 am, programar con una semana de anticipación para disponibilidad del personal para apertura del local y tramitar los permisos de ingreso con el centro comercial la notificación de la fecha y personal que realizara las actividades debe de ser enviada al correo bta.plazadelasamericas@elcorral.com, los trabajos deben de ser aprobads por el centro comercial. 8). Se toma registro fotográfico. 9). No se afecta el servicio de energía durante la visita. 10). Todo queda en normal funcionamiento en el predio. 11). Se socializa las condiciones de instalación con el cliente."
+  },
+  "CO0100003837": {
+    "ot_nombre": "PREC_24625_CDDAA8",
+    "fecha_procesada": "2026-05-15 16:57:03",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Jhojan Gordillo",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Visita previa para levantamiento de información y posterior instalación de banco de condensadores. Se llega al predio a las 08:25 a.m. Se ingresa al centro comercial Bima y se procede a buscar el local 4.113, el cual no es encontrado, tampoco el local de Papa John's. Se solicita información a personal de seguridad del centro comercial, quien manifiesta que no existe un local de Papa John's en el lugar ni el número de local que se busca. El último local del centro comercial termina en 4-112. Se escala internamente la situación, a lo que se informa que el local es el 4-112, al lado de la oficina de la Dial. Al ubicarlo, se encuentra vacío. Se escala internamente nuevamente y se da por finalizada la visita a las 10:02 a.m., al no tener ingreso al lugar ni encontrar personal que atienda la visita. No se accede a la medida durante la visita. Se procede al retiro de sitio. Nota importante: Para una visita futura se requiere que el local esté ocupado y operando con normalidad, ya que se necesita conocer los equipos y carga que van a manejar para poder calcular el banco a los kVAr necesarios."
+  },
+  "CO0100003816": {
+    "ot_nombre": "PREC_24646_51418F",
+    "fecha_procesada": "2026-05-15 16:57:36",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": null,
+    "medidor_enc_serie": null,
+    "tcs_encontrados": null,
+    "tps_encontrados": null,
+    "tecnico_nombre": "Carlos Arturo Salas Herrera",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "1). Visita técnica previa para instalación de banco de condensadores 2). Se llega al sitio a las 09:22 am 3). Se tramitan ingresos con el encargado del punto, estando OK. 4). Se encontró medidor marca Microstar de capacidad 100A de Bia energy, FX 1 5). Totalizador de TABLERO PRINCIPAL de 100A MARCA LEGRAND 6). Tableros de distribución en parte interna del predio, en cocina 7). Se toman datos de medida tension y corrientes de fase , de línea obteniendo los siguientes datos VR F-F = 209.9 VS F-F = 207.5 VT F-F = 207.8 VR F-N = 123.6 VS F-N = 118.5 VT F-N = 122.9 IR = 12.52 IS = 23.85 IT = 16.99 Al momento de la visita no está a full carga el predio, ya que empiezan operación a las 12 del medio día 8). Medidor presta servicio a local m EL CORRAL calle 109 9). Se validan tensiones y corrientes desde tablero de distribución dentro del local 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son iluminacio, refrigeradores y extractores 11). Para conexión del banco de condensadores se requieren 12 metros de cable para potencia, (canaleta plastica de 17x20 mm ) chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad, tigera para lamina, brocas 12). Punto de ubicación del banco parte superior del tablero de distribución dentro del local en cocina 13). Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución 14). Instalacion con corte de energía aproximadamente de 1 hora 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona que atiende manifiesta que para instalacion de banco de condensadores se puede hacer corte de energia de lunes a jueves a las 7 am"
   }
 }
