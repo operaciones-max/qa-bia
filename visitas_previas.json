@@ -1172,5 +1172,37 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "1). Visita técnica previa para instalación de banco de condensadores 2). Se llega al sitio a las 11:48 am, pero se encuentra local cerrado se retorna nuevamente al predio a las 3: 15 pm 3). Se tramitan ingresos con el encargado del punto, estando OK. 4). Se encontró medidor marca Microstar de capacidad 100A de Bia energy, FX 1 5). Totalizador de TABLERO PRINCIPAL de 100A MARCA LEGRAND 6). Tableros de distribución en parte interna del predio, en cocina 7). Se toman datos de medida tension y corrientes, mediante prueba de telemedida ya que clie te no permite acceder a tabmero de circuitos debido a que este se encuentra sellado con Sikaflex y manifiesta que se tiene que volver a dejar sellado, obteniendo los siguientes datos VR F-N = 117.11 VS F-N = 119.16 VT F-N = 118.18 IR = 36.35 IS = 23.56 IT = 13.78 Al momento de la visita no está a full carga el predio, ya que empiezan operación a las 3:30 pm 8). Medidor presta servicio a local BEER STATION calle 84 9). Se validan tensiones y corrientes desde prueba de telemedida 10). De acuerdo a la naturaleza de las cargas, se requiere banco de condensadores ya que las cargas en el predio son iluminacion, refrigeradores y extractores 11). Para conexión del banco de condensadores se requieren 30 metros de cable para potencia, (canaleta plastica de 17x20 mm ) chazos de 1/4 con tornillo para fijar banco de condensadores y demás consumible (Chasos, amarres, cintas, terminales, tornillería). Y herramientas adecuadas para la actividad, tigera para lamina, brocas, sika flex, para sellar tapa del TGD 12). Punto de ubicación del banco parte inferior del tablero de distribución dentro del local en cocina 13). Se debe realizar corte desde el totalizador de la celda del medidor para trabajo en frio sobre el tablero de distribución 14). Instalacion con corte de energía aproximadamente de 1 hora 15). El cliente queda con suministro de energía normal 16). La persona que atiende firma acta a conformidad. 17). Persona que atiende manifiesta que para instalacion de banco de condensadores se debe coordinar previamente con el administrador del local ya que este abre unicamente en las tardes y hay un solo dia a la semana que llegan en la mañana para realizar aseo al local"
+  },
+  "CO2000006705": {
+    "ot_nombre": "VIPE_44240_A5E4BE",
+    "fecha_procesada": "2026-05-16 02:52:21",
+    "tipo_medida": "INDIRECTA",
+    "factor_medida": "660",
+    "medidor_encontrado": {
+      "serie": "63209291",
+      "marca": "ITRON",
+      "referencia": "Ace 6000",
+      "lectura_activa_kwh": "3250",
+      "lectura_reactiva_kvarh": "720",
+      "serie_coincide_foto": true,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "63209291",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": "Se encontraron TCs instalados pero no se tomaron fotos ni se registraron seriales debido a que el operador de red no quitó sellos."
+    },
+    "tps_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": "Se encontraron TPs en celda metálica compartida, ubicados en piso, en buen estado. No se registraron seriales ni se tomaron fotos debido a que el operador de red no quitó sellos."
+    },
+    "tecnico_nombre": "Ricardo Carcamo",
+    "tecnico_empresa": "CONTRATISTA",
+    "contratista_nombre": "C3",
+    "observacion_tecnico_verbatim": "Se llega al punto para realizar previcita con operador de red encontrando medida indirecta con transformador de 500 KVA propiedad del cliente se verifica medidor visual en buen estado el cual se encuentra en gabinete no se toma fotos a equipos debido que el operador de red no quito sellos persona que atiende la visita manifiesta que la medida o medidor se instale dentro debido que en el predio hay una antena de claro con transformador de 30 KVA y afinia le instalo un medidor en el ramal exterior el cuál le está midiendo y registrando el consumo de la antena en el cuál ellos no tienen nada que ver con la antena se encontró poste con abejas si se van a instalar los equipos en poste se recomienda mandar a sacar abejas una semana antes de que se instalen los equipos o se realice el cambio de comercializador factor suministrado por operador de red 660 se toma registro fotográfico"
   }
 }
