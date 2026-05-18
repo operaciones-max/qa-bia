@@ -25,10 +25,6 @@ if os.environ.get('ANTHROPIC_API_KEY'):
         # claude-haiku-4-5 = cheap+fast; claude-sonnet-4-6 = balanced; claude-opus-4-7 = most capable
         CLAUDE_MODEL         = "claude-haiku-4-5-20251001"
         SLACK_WEBHOOK_URL    = ""  # Sin Slack — solo Supabase
-        TWILIO_ACCOUNT_SID   = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        TWILIO_AUTH_TOKEN    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        TWILIO_FROM_WHATSAPP = "whatsapp:+14155238886"
-        TWILIO_TO_WHATSAPP   = "whatsapp:+57TUNUMERODECELULAR"
         MODO_PRUEBA          = False
         MODO_UNICO           = True
         MODO_BACKFILL        = False  # False = notificaciones activas en Slack/WhatsApp/Cooldown
@@ -851,7 +847,7 @@ def obtener_actas_nuevas():
 #  LEER PDF
 # =============================================================
 
-MAX_PAGINAS_VISION = 0   # 0 = vision desactivada (volver a 4-8 cuando free tier reset)
+MAX_PAGINAS_VISION = 0   # 0 = vision global desactivada en analisis full (PQR/VICO/Emergencia usan vision lite via _renderizar_paginas_pdf, independiente)
 DPI_VISION         = 60  # resolucion de las imagenes — mas bajo = menos tokens
 
 def descargar_y_leer_pdf(url):
@@ -920,7 +916,7 @@ def _renderizar_paginas_pdf(pdf_bytes, n_paginas=2, dpi=80):
     return imagenes
 
 # =============================================================
-#  ANALISIS CON GEMINI
+#  ANALISIS CON CLAUDE
 # =============================================================
 
 def _system_prompt_lite():
@@ -2398,37 +2394,6 @@ def verificar_nuevos_alcances(alcances, visitas_previas_dict):
         print("  Sin nuevos alcances de ingenieria.")
     else:
         print(f"  {nuevos} alcance(s) nuevo(s) notificado(s).")
-
-def enviar_whatsapp(acta, resultado_qa):
-    if not config.TWILIO_ACCOUNT_SID or "xxxxx" in config.TWILIO_ACCOUNT_SID:
-        return
-    es_exitosa = resultado_qa.get("estado_ot") == "EXITOSA"
-    estado_txt = "EXITOSA" if es_exitosa else "FALLIDA"
-    planner    = resultado_qa.get("planner", "N/A")
-    inst       = resultado_qa.get("medidor_instalado") or {}
-    med_acta   = inst.get("serie") or resultado_qa.get("medidor_instalado_acta", "N/A")
-    coincide   = resultado_qa.get("medidor_coincide_wms")
-    alerta_wms = " | MEDIDOR NO COINCIDE WMS" if coincide is False else ""
-    errores    = resultado_qa.get("validaciones", {}).get("errores_encontrados", [])
-    txt_err    = (" | " + " | ".join(errores[:2])) if errores else ""
-    mensaje = (
-        f"{estado_txt} - {acta.get('title', 'N/A')}\n"
-        f"Planner: {planner}\n"
-        f"{acta.get('Tipo de servicio', '')} | {resultado_qa.get('tipo_medida', '')}\n"
-        f"Medidor: {med_acta}\n"
-        f"{acta.get('address', 'N/A')}"
-        f"{txt_err}{alerta_wms}"
-    )
-    try:
-        cliente = TwilioClient(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN)
-        cliente.messages.create(
-            from_=config.TWILIO_FROM_WHATSAPP,
-            to=config.TWILIO_TO_WHATSAPP,
-            body=mensaje
-        )
-        print("  WhatsApp enviado.")
-    except Exception as e:
-        print(f"  ERROR WhatsApp: {e}")
 
 def _supabase_base_url():
     url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")

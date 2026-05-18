@@ -28,12 +28,12 @@ jobs:
           python-version: '3.11'
 
       - name: Instalar dependencias
-        run: pip install anthropic pdfplumber requests pymupdf
+        run: pip install -r requirements.txt
 
       - name: Preparar entorno
         run: |
           git log -1 --oneline
-          rm -f config.py create_config.py
+          rm -f config.py
 
       - name: Correr QA
         env:
