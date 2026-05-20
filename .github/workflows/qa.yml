@@ -2,12 +2,12 @@ name: QA BIA Automatico
 
 on:
   schedule:
-    # Colombia 00:00–11:59 (UTC 05:00–16:59) — cada 15 min
-    - cron: '*/15 5-16 * * *'
-    # Colombia 12:00–17:59 (UTC 17:00–22:59) — cada 5 min (horario pico)
-    - cron: '*/5 17-22 * * *'
-    # Colombia 18:00–23:59 (UTC 23:00 y 00:00–04:59) — cada 15 min
-    - cron: '*/15 0-4,23 * * *'
+    # Colombia 00:00–11:59 (UTC 05:00–16:59) — cada 30 min
+    - cron: '*/30 5-16 * * *'
+    # Colombia 12:00–17:59 (UTC 17:00–22:59) — cada 10 min (horario pico)
+    - cron: '*/10 17-22 * * *'
+    # Colombia 18:00–23:59 (UTC 23:00 y 00:00–04:59) — cada 30 min
+    - cron: '*/30 0-4,23 * * *'
   workflow_dispatch:
 
 jobs:

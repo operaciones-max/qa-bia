@@ -1033,7 +1033,7 @@ def analizar_acta_lite(texto_pdf, tipo_servicio, estado_electricista,
             system=[{
                 "type": "text",
                 "text": sistema,
-                "cache_control": {"type": "ephemeral"},
+                "cache_control": {"type": "ephemeral", "ttl": "1h"},
             }],
             messages=[{"role": "user", "content": user_content}],
         )
@@ -1329,7 +1329,7 @@ def analizar_acta(texto_pdf, tipo_servicio, estado_electricista,
             system=[{
                 "type": "text",
                 "text": sistema,
-                "cache_control": {"type": "ephemeral"},
+                "cache_control": {"type": "ephemeral", "ttl": "1h"},
             }],
             messages=[{"role": "user", "content": user_msg}],
         )
