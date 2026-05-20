@@ -1204,5 +1204,69 @@
     "tecnico_empresa": "CONTRATISTA",
     "contratista_nombre": "C3",
     "observacion_tecnico_verbatim": "Se llega al punto para realizar previcita con operador de red encontrando medida indirecta con transformador de 500 KVA propiedad del cliente se verifica medidor visual en buen estado el cual se encuentra en gabinete no se toma fotos a equipos debido que el operador de red no quito sellos persona que atiende la visita manifiesta que la medida o medidor se instale dentro debido que en el predio hay una antena de claro con transformador de 30 KVA y afinia le instalo un medidor en el ramal exterior el cuál le está midiendo y registrando el consumo de la antena en el cuál ellos no tienen nada que ver con la antena se encontró poste con abejas si se van a instalar los equipos en poste se recomienda mandar a sacar abejas una semana antes de que se instalen los equipos o se realice el cambio de comercializador factor suministrado por operador de red 660 se toma registro fotográfico"
+  },
+  "CO0100003377": {
+    "ot_nombre": "PREB_21752_811696",
+    "fecha_procesada": "2026-05-20 04:39:04",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": {
+      "serie": null,
+      "marca": null,
+      "referencia": null,
+      "lectura_activa_kwh": null,
+      "lectura_reactiva_kvarh": null,
+      "serie_coincide_foto": null,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": null,
+    "tcs_encontrados": {
+      "aplica": null,
+      "tiene": null,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": null,
+      "tiene": null,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Edwin Cubides",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": null
+  },
+  "CO0100003378": {
+    "ot_nombre": "PREB_21753_0EC83E",
+    "fecha_procesada": "2026-05-20 04:39:49",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": {
+      "serie": null,
+      "marca": null,
+      "referencia": null,
+      "lectura_activa_kwh": null,
+      "lectura_reactiva_kvarh": null,
+      "serie_coincide_foto": null,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": null,
+    "tcs_encontrados": {
+      "aplica": null,
+      "tiene": null,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": null,
+      "tiene": null,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Edwin Cubides",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": null
   }
 }
