@@ -1268,5 +1268,37 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": null
+  },
+  "CO0100003376": {
+    "ot_nombre": "PREB_CO0100003376_1350990039_1",
+    "fecha_procesada": "2026-05-21 04:56:14",
+    "tipo_medida": "SEMIDIRECTA",
+    "factor_medida": "60",
+    "medidor_encontrado": {
+      "serie": "34011634",
+      "marca": null,
+      "referencia": null,
+      "lectura_activa_kwh": null,
+      "lectura_reactiva_kvarh": null,
+      "serie_coincide_foto": false,
+      "observacion_serie_foto": "No hay bloque de Registro fotografico en el acta para verificar serie del medidor encontrado"
+    },
+    "medidor_enc_serie": "34011634",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Edwin Cubides",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": null
   }
 }

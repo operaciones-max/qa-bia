@@ -117,5 +117,12 @@
     "url": "https://www.bia.app/upload-olibia/2-49569053_51269441970_invoice_document_url_2026-04-09_18-36-55.pdf",
     "estado": "regex_Air-e/Aire",
     "fecha": "2026-05-20 17:29:30"
+  },
+  "CO0100003376": {
+    "serial": null,
+    "express": true,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_54795882322_invoice_document_url_2026-05-14_20-45-46.pdf",
+    "estado": "ok",
+    "fecha": "2026-05-21 04:56:14"
   }
 }
