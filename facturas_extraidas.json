@@ -145,5 +145,19 @@
     "url": "https://www.bia.app/upload-olibia/2-49569053_47220719506_invoice_document_url_2026-02-05_15-40-04.pdf",
     "estado": "ok",
     "fecha": "2026-05-22 18:52:22"
+  },
+  "CO0500006475": {
+    "serial": null,
+    "express": null,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_42468151673_invoice_document_url_2025-12-05_13-38-45.jpeg",
+    "estado": "error_pdf: No /Root object! - Is this really a PDF?",
+    "fecha": "2026-05-22 21:50:13"
+  },
+  "CO0100006575": {
+    "serial": null,
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_39057453645_invoice_document_url_2026-02-20_16-06-50.pdf",
+    "estado": "ok",
+    "fecha": "2026-05-22 21:51:16"
   }
 }
