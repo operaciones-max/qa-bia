@@ -138,5 +138,12 @@
     "url": "https://www.bia.app/upload-olibia/2-49569053_44274081680_invoice_document_url_2025-12-30_14-29-05.pdf",
     "estado": "regex_EPM/generico",
     "fecha": "2026-05-22 00:12:46"
+  },
+  "CO0800006559": {
+    "serial": null,
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_47220719506_invoice_document_url_2026-02-05_15-40-04.pdf",
+    "estado": "ok",
+    "fecha": "2026-05-22 18:52:22"
   }
 }
