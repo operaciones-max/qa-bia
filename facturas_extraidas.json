@@ -124,5 +124,19 @@
     "url": "https://www.bia.app/upload-olibia/2-49569053_54795882322_invoice_document_url_2026-05-14_20-45-46.pdf",
     "estado": "ok",
     "fecha": "2026-05-21 04:56:14"
+  },
+  "CO0100006445": {
+    "serial": null,
+    "express": null,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_41661829483_invoice_document_url_2025-11-28_19-52-02.pdf",
+    "estado": "pdf_vacio",
+    "fecha": "2026-05-22 00:12:18"
+  },
+  "CO0500006487": {
+    "serial": "84238332",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_44274081680_invoice_document_url_2025-12-30_14-29-05.pdf",
+    "estado": "regex_EPM/generico",
+    "fecha": "2026-05-22 00:12:46"
   }
 }
