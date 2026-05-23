@@ -159,5 +159,12 @@
     "url": "https://www.bia.app/upload-olibia/2-49569053_39057453645_invoice_document_url_2026-02-20_16-06-50.pdf",
     "estado": "ok",
     "fecha": "2026-05-22 21:51:16"
+  },
+  "CO0100006570": {
+    "serial": "13013376",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_39849609528_invoice_document_url_2025-11-11_21-32-21.pdf",
+    "estado": "ok",
+    "fecha": "2026-05-23 07:18:19"
   }
 }
