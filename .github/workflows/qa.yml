@@ -2,12 +2,11 @@ name: QA BIA Automatico
 
 on:
   schedule:
-    # Colombia 00:00–11:59 (UTC 05:00–16:59) — cada 30 min
-    - cron: '*/30 5-16 * * *'
-    # Colombia 12:00–17:59 (UTC 17:00–22:59) — cada 10 min (horario pico)
-    - cron: '*/10 17-22 * * *'
-    # Colombia 18:00–23:59 (UTC 23:00 y 00:00–04:59) — cada 30 min
-    - cron: '*/30 0-4,23 * * *'
+    # Colombia 06:00 y 10:00 (UTC 11:00 y 15:00) — cada 4h en la maniana
+    - cron: '0 11,15 * * *'
+    # Colombia 12:00–18:00 (UTC 17:00–23:00) — cada 1h en la tarde
+    - cron: '0 17-23 * * *'
+    # 18:01–05:59 Colombia: apagado para no gastar tokens
   workflow_dispatch:
 
 jobs:
