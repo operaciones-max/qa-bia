@@ -1300,5 +1300,37 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": null
+  },
+  "CO1100006717": {
+    "ot_nombre": "VIPE_44006_CDE862",
+    "fecha_procesada": "2026-05-26 17:59:23",
+    "tipo_medida": "INDIRECTA",
+    "factor_medida": "440",
+    "medidor_encontrado": {
+      "serie": "02860102",
+      "marca": "ELSTER",
+      "referencia": "A1800",
+      "lectura_activa_kwh": "7008.548",
+      "lectura_reactiva_kvarh": "2724.021",
+      "serie_coincide_foto": null,
+      "observacion_serie_foto": null
+    },
+    "medidor_enc_serie": "02860102",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Juan Jaramillo",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "Código interno de bia: VIPE_CO1100006717 Tipo de servicio: Visita Previa Serial del medidor: Factor de medida: 440 según factura y lo que se encontró escrito en celda de medidor Transformador: 300 kva de uso exclusivo Observación 1). Visita para realizar levantamiento de información por visita previa 2). Se llega al predio a las 08:20 am 3). Se validan ingresos con persona encargada se ingresa al predio siendo las 08:35am 4) Se encuentra sistema de medida FX440 según factura por confirmar,en celda de medida EA325 marca TSA EN PARTE INTERNA DEL PREDIO 5) no de encuentra totalizador 6). Acometida 3×XLPE 7). Parcial 3×XLPE 8) no sé válida Transformador DE TENSIÓN Y DE CORRIENTE celda de medidas se encuentra sellada por el comercializador y operador de red no se valían placas de características de los equipos por riesgo eléctrico 9) se evidencia celda de medida \" medidor \" sin sellos 10). Presta servicio a Xpress Estudio Grafico Y Digital S A S 11). No se retiran sellos 12). No se realizan pruebas de funcionamiento por alcance de la vista 13). No se afecta el suministro de energía durante la visita 14). La medida NO cuenta con planta de respaldo 15). Todo queda funcionando normal en el predio. 16). Se toma registro fotográfico. 17) se toman tensiones y corrientes del menú alterno del medidor con resultados 59.5V. 0.7A 58.3V. 1.0A 59.1V. 1.0A 18). Cliente firma acta a conformidad 19). En comunicación con personal encargado informa que para dicha actividad se requiere validar permisos de ingreso y la actividad se puede realizar en los dias domingos en horas de la mañana para no afectar su operación 20). Para cambio de comercializador y cambio de equipos de la medida hay dos OPCIONES OPCION #1 se solicitaría descargos con OR enel para realizar desconexion circuito desde red área en grapas de operar en caliente de cable XLPE OPCION #2 personal BIA puede realizar desenergización de grupo de medida realizando apertura de punta 1 y punta 3 en celda de protección APLICANDO LAS 5 REGLAS DE ORO para aceptar al grupo de medida sin Tensio y sin corriente y realizar actividades sin riesgo 21) para la actividad se sugiere cambiar de dos elementos a tres elementos para cumplir con la Norma Se requiere: - medidor de medida indirectas - modem de comunicación . antena DE MAYOR GANANCIA y plande datos multiusuarios XMA - Bloqueado de pruebas - cable de control 12×12 ( 7 metros aproximadamente) - equipos de media tension CTs y PTS tres elementos ( relacion por confirmar) segun lo que se encontro escrito en celda de medida FX440 - así como platina en cobre 3 mts y cable #2 para sus tierras 8mts aproximadamente bornas #2 15uni y sus respectivos consumibles y herramientas adecuadas para la actividad - se requiere apertura y cierre del circuito apertura aproximadamente de 7 a 8 horas"
   }
 }
