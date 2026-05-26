@@ -1332,5 +1332,37 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "Código interno de bia: VIPE_CO1100006717 Tipo de servicio: Visita Previa Serial del medidor: Factor de medida: 440 según factura y lo que se encontró escrito en celda de medidor Transformador: 300 kva de uso exclusivo Observación 1). Visita para realizar levantamiento de información por visita previa 2). Se llega al predio a las 08:20 am 3). Se validan ingresos con persona encargada se ingresa al predio siendo las 08:35am 4) Se encuentra sistema de medida FX440 según factura por confirmar,en celda de medida EA325 marca TSA EN PARTE INTERNA DEL PREDIO 5) no de encuentra totalizador 6). Acometida 3×XLPE 7). Parcial 3×XLPE 8) no sé válida Transformador DE TENSIÓN Y DE CORRIENTE celda de medidas se encuentra sellada por el comercializador y operador de red no se valían placas de características de los equipos por riesgo eléctrico 9) se evidencia celda de medida \" medidor \" sin sellos 10). Presta servicio a Xpress Estudio Grafico Y Digital S A S 11). No se retiran sellos 12). No se realizan pruebas de funcionamiento por alcance de la vista 13). No se afecta el suministro de energía durante la visita 14). La medida NO cuenta con planta de respaldo 15). Todo queda funcionando normal en el predio. 16). Se toma registro fotográfico. 17) se toman tensiones y corrientes del menú alterno del medidor con resultados 59.5V. 0.7A 58.3V. 1.0A 59.1V. 1.0A 18). Cliente firma acta a conformidad 19). En comunicación con personal encargado informa que para dicha actividad se requiere validar permisos de ingreso y la actividad se puede realizar en los dias domingos en horas de la mañana para no afectar su operación 20). Para cambio de comercializador y cambio de equipos de la medida hay dos OPCIONES OPCION #1 se solicitaría descargos con OR enel para realizar desconexion circuito desde red área en grapas de operar en caliente de cable XLPE OPCION #2 personal BIA puede realizar desenergización de grupo de medida realizando apertura de punta 1 y punta 3 en celda de protección APLICANDO LAS 5 REGLAS DE ORO para aceptar al grupo de medida sin Tensio y sin corriente y realizar actividades sin riesgo 21) para la actividad se sugiere cambiar de dos elementos a tres elementos para cumplir con la Norma Se requiere: - medidor de medida indirectas - modem de comunicación . antena DE MAYOR GANANCIA y plande datos multiusuarios XMA - Bloqueado de pruebas - cable de control 12×12 ( 7 metros aproximadamente) - equipos de media tension CTs y PTS tres elementos ( relacion por confirmar) segun lo que se encontro escrito en celda de medida FX440 - así como platina en cobre 3 mts y cable #2 para sus tierras 8mts aproximadamente bornas #2 15uni y sus respectivos consumibles y herramientas adecuadas para la actividad - se requiere apertura y cierre del circuito apertura aproximadamente de 7 a 8 horas"
+  },
+  "CO0800006891": {
+    "ot_nombre": "VIPE_46315_CF3274",
+    "fecha_procesada": "2026-05-26 19:15:02",
+    "tipo_medida": "SEMIDIRECTA",
+    "factor_medida": "80",
+    "medidor_encontrado": {
+      "serie": "36099954",
+      "marca": "Actaris - SL7000",
+      "referencia": null,
+      "lectura_activa_kwh": "000020839",
+      "lectura_reactiva_kvarh": "000009929",
+      "serie_coincide_foto": false,
+      "observacion_serie_foto": "No se puede verificar serie en foto del registro fotográfico; bloque de fotos presente pero imagen no legible o no contiene serie visible del medidor."
+    },
+    "medidor_enc_serie": "36099954",
+    "tcs_encontrados": {
+      "aplica": true,
+      "tiene": true,
+      "seriales": [],
+      "detalles": "Se reporta presencia de TCs pero sin seriales registrados en acta."
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "Jorge Gelvez",
+    "tecnico_empresa": "BIA",
+    "contratista_nombre": null,
+    "observacion_tecnico_verbatim": "SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA DISTRIBUIDORA DE FRUTAS Y VERDURAS CON EQUIPO DE MEDIDA NIVEL 1 EN SUBESTACIÓN MEDIDA SEMIDIRECTA CON TRANSFORMADOR DE 112.5 KVA EXCLUSIVO SE TOMAN DATOS DE MEDIDOR , LECTURAS Y PUNTO DE CONEXIÓN CLIENTE NO CUENTA CON PLANTA ELÉCTRICA DE RESPALDO, COMO TAMPOCO CUANTA CON SISTEMA DE PANELES SOLARES ATIENDE VISTA EL SEÑOR IVAN GARCÍA QUIEN PIDE QUE TRABAJOS DE CAMBIO DE COMERCIALIZADOR SE REALICEN UN DIA DOMINGO PARA QUE SU PRODUCCION NO SE VEA AFECTADA *MANIOBRA A REALIZAR* SE DEBE NORMALIZAR CLIENTE CON EQUIPO DE MEDIDA NIVEL 2 EN POSTE POR LO QUE SE DEBE SOLICITAR DESCARGO CON OR CON PERDIDA DE MERCADO YA QUE SE REQUIERE ADECUAR PUNTO DE CONEXION ESTO DEBIDO A QUE EN EL POSTE SE ENCUENTRA TRANSFORMADOR DE 75 KVA EXCLUSIVO CON MATRICULA A39176 DE LA EMPRESA ALIMENTOS MANBU LA CUAL PERTENECE AL COMERCIALIZADOR Bia Energy BAJO EL CODIGO CO050006396 *MATERIALES REQUERIDOS* 1 MEDIDOR ( INDIRECTA ) 3 TCS 3 TTS 1 MODEN 1 ANTENA 1 SIM CARD 1 GABINETE METALICO 4 MTS CINTA BANDY 2 HEBILLAS 15 MTS CABLE 6×12 15 MTS CABLE 4×12 25 MTS CORAZA 1\" 14 CONECTORES DE CORAZA 1\" 6 DPS 1 CRUCETA 27 PONCHABLES #2 30 PONCHABLES #12 4 CONECTORES AMPA 2A2 3 CONECTORES AMPA 4/0 A #2 10 MTS CABLE VERDE #12 1 MTS CABLE BLANCO #12 1 BLOQUE DE PRUEBAS 35 MTS CABLE #2 DESNUDO COBRE 24 PLATINAS 24 TORNILLOS DOBLE ARANDELA 2\"×1/4 24 TORNILLOS DOBLE ARANDELA 4\"×1/4"
   }
 }
