@@ -1396,5 +1396,37 @@
     "tecnico_empresa": "BIA",
     "contratista_nombre": null,
     "observacion_tecnico_verbatim": "SE LLEGA AL SITIO PARA REALIZAR VIPE POR FUTURO CAMBIO DE COMERCIALIZADOR SE ENCONTRÓ PREDIO OCUPADO FUNCIONA ESTADERO RESTAURANTE LA INA #2 CON EQUIPO DE MEDIDA NIVEL 1 EN FACHADA MEDIDOR DE DIRECTA CONECTADO A TRANSFORMADOR DE 75 KVA COMPARTIDO SE TOMAN DATOS DE MEDIDOR LECTURAS Y PLANTA ELECTRICA CLIENTE NO CUENTA CON SISTEMA DE PANELES SOLARES EQUIPO DE MEDIDA PUEDE SER INSTALADO EN FACHADA YA QUE EL PREDIO NO SE ENCUENTRA ERREJADO *MATERIALES REQUERIDOS* 1 MEDIDOR ( DIRECTA ) 1 CAJA DE PLC 1 MODEN 1 ANTENA 1 SIN CARD *MATERIALES ADICIONALES EN CASO DE INSTALACION EN POSTE* 17 MTS ACOMETIDA 2×4+4 COBRE ( DE NO USARSE ACOMETIDA CONCENTRICA SE REQUIEREN 40 MTS DE CABLE #4 EN COBRE ) 3 MTS CINTA BANDY 2 HEBILLAS 6 CONECTORES DE PERFORACIÓN 4/0-2/0 2 TENSORES DE ACOMETIDA 2 OJOS DE ALUMINIO *MANIOBRA PARA INSTALCION EN POSTE* SE REQUIERE APOYO DE MINI CANASTA YA QUE ACOMETIDA DEL CLIENTE SE ENCUENTRA CONECTADA A 3 MTS DEL POSTE EN RED TRENZADA"
+  },
+  "0": {
+    "ot_nombre": "PREB_0_1356001852_1",
+    "fecha_procesada": "2026-05-27 17:59:52",
+    "tipo_medida": null,
+    "factor_medida": null,
+    "medidor_encontrado": {
+      "serie": null,
+      "marca": null,
+      "referencia": null,
+      "lectura_activa_kwh": null,
+      "lectura_reactiva_kvarh": null,
+      "serie_coincide_foto": false,
+      "observacion_serie_foto": "Acta de visita previa sin registro fotografico de medidor encontrado"
+    },
+    "medidor_enc_serie": null,
+    "tcs_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tps_encontrados": {
+      "aplica": false,
+      "tiene": false,
+      "seriales": [],
+      "detalles": null
+    },
+    "tecnico_nombre": "WILLIAN   CORDOBA",
+    "tecnico_empresa": "CONTRATISTA",
+    "contratista_nombre": "ELECPROYECTOS",
+    "observacion_tecnico_verbatim": null
   }
 }
