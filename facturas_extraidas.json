@@ -109,7 +109,7 @@
     "express": false,
     "url": "https://www.bia.app/upload-olibia/2-49569053_39056778884_invoice_document_url_2026-02-05_13-13-23.pdf",
     "estado": "regex_Air-e/Aire",
-    "fecha": "2026-05-16 15:17:30"
+    "fecha": "2026-05-27 19:16:10"
   },
   "CO0800006811": {
     "serial": "02927722",
@@ -119,11 +119,11 @@
     "fecha": "2026-05-22 20:42:34"
   },
   "CO0100003376": {
-    "serial": null,
+    "serial": "541M5155",
     "express": true,
     "url": "https://www.bia.app/upload-olibia/2-49569053_54795882322_invoice_document_url_2026-05-14_20-45-46.pdf",
     "estado": "ok",
-    "fecha": "2026-05-21 04:56:14"
+    "fecha": "2026-05-27 19:15:20"
   },
   "CO0100006445": {
     "serial": null,
