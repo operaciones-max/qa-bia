@@ -194,5 +194,19 @@
     "url": "https://www.bia.app/upload-olibia/2-49569053_38982676319_invoice_document_url_2026-02-05_19-55-58.pdf",
     "estado": "pdf_vacio",
     "fecha": "2026-05-26 23:02:33"
+  },
+  "CO0500006421": {
+    "serial": null,
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_41502935704_invoice_document_url_2025-11-25_13-57-47.pdf",
+    "estado": "ok",
+    "fecha": "2026-05-29 18:15:51"
+  },
+  "CO0100006459": {
+    "serial": "4564671",
+    "express": false,
+    "url": "https://www.bia.app/upload-olibia/2-49569053_39061215115_invoice_document_url_2025-12-12_13-24-32.pdf",
+    "estado": "regex_Enel X",
+    "fecha": "2026-05-29 18:18:40"
   }
 }
