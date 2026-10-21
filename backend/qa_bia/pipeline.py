@@ -170,7 +170,7 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
     )
     _limpiar_errores_fantasma(resultado_qa, tipo)
     # _override_fallida_si_incompleto: DESACTIVADO. Respetamos el estado del tecnico.
-    # El reviewer humano puede marcar como FALLIDA desde Lovable si lo considera.
+    # El reviewer humano puede marcar como FALLIDA desde el dashboard (frontend/).
     _simplificar_fallida(resultado_qa)
     _validar_tipificacion(resultado_qa)
 

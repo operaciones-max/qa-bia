@@ -124,6 +124,7 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
         "tipo_servicio":             acta.get("Tipo de servicio"),
         "estado_ot":                 resultado_qa.get("estado_ot"),
         "fecha_ejecucion":           acta.get("start"),
+        "pdf_url":                   acta.get("act_pdf_url") or None,
         "internal_bia_code":         acta.get("internal_bia_code"),
         "contract_id":               resultado_qa.get("contract_id"),
         "or_norm":                   acta.get("OR_NORM"),

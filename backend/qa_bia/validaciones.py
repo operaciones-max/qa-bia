@@ -108,7 +108,7 @@ def _limpiar_errores_fantasma(qa, tipo_servicio):
         s = " " + (item or "").lower() + " "
         # REGLA UNIVERSAL: cualquier "no se reporta(n)" es un dump de fields vacios,
         # no un error real. Si un campo falta y es realmente critico, el reviewer
-        # marca FALLIDA manual desde Lovable.
+        # marca FALLIDA manual desde el dashboard (frontend/).
         if " no se reporta " in s or " no se reportan " in s:
             return True
         if " no se encontraron " in s or " no se encontro " in s or " no se encontró " in s:

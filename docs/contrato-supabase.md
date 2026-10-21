@@ -1,11 +1,27 @@
 # Contrato backend ↔ frontend: tabla `actas_qa`
 
-El backend escribe y el frontend (dashboard) lee y edita la revisión. No hay API
-entre ellos: este documento es el contrato. Si se cambia una columna, hay que
-actualizar los dos lados y este archivo.
+El backend escribe y el frontend (dashboard) lee y guarda la revisión humana.
+No hay API entre ellos: este documento es el contrato. Si se cambia una
+columna, hay que actualizar los tres lados:
+- el backend: `backend/qa_bia/supabase.py`;
+- el frontend: `frontend/src/types/acta.ts`;
+- la base: una migración nueva en `supabase/migrations/`.
+
+Y también este archivo.
 
 Clave única: `ot_id`. El backend hace *upsert* (`on_conflict=ot_id`,
-`resolution=merge-duplicates`).
+`resolution=merge-duplicates`): al reprocesar un acta reescribe solo las
+columnas que envía, nunca las de revisión.
+
+## Permisos
+
+Definidos en `supabase/migrations/20261021000003_seguridad.sql`:
+
+| Rol | Quién | Puede |
+|---|---|---|
+| `service_role` | Backend (GitHub Actions) | Todo |
+| `authenticated` | Usuarios del dashboard con login | Leer todo; escribir solo `revision_*` y `revisado_*` |
+| `anon` | Cualquiera sin login | Nada |
 
 ## Columnas que escribe el backend
 
@@ -18,6 +34,7 @@ Fuente: `backend/qa_bia/supabase.py` → `enviar_supabase()`.
 | `procesado_en` | timestamp (ISO, UTC) | Momento del análisis |
 | `tipo_servicio` | text | Metabase |
 | `fecha_ejecucion` | text | `start` en Metabase |
+| `pdf_url` | text | Link al PDF del acta |
 | `internal_bia_code` | text | Código CO del cliente |
 | `contract_id` | text | HubSpot (vía Metabase 71842) |
 | `or_norm` | text | Operador de red |
@@ -59,20 +76,17 @@ Fuente: `backend/qa_bia/supabase.py` → `enviar_supabase()`.
 | `actualizar_supabase_alcance()` | `tiene_alcance`, `alcance_viable`, `alcance_medida_instalar`, `alcance_completo` | Cuando aparece un alcance nuevo para una visita previa |
 | `scripts/limpiar_facturas.py` | `serial_medidor_factura_anterior`, `medidor_coincide_factura_anterior`, `factura_anterior_estado` → null | Manual, antes de reprocesar |
 
-## Lo que edita el frontend
+## Columnas que escribe el frontend
 
-Según los comentarios del código, el revisor puede marcar una OT como FALLIDA
-desde el dashboard. **Pendiente de confirmar con el código de Lovable** qué
-columnas escribe exactamente.
+Solo estas; el backend nunca las toca. Fuente: `frontend/src/lib/actas.ts` →
+`guardarRevision()`.
 
-Hay que tener en cuenta dos cosas al definirlo:
+| Columna | Tipo | Significado |
+|---|---|---|
+| `revision_resultado` | `EXITOSA` \| `FALLIDA` \| null | Veredicto del revisor. null = sin revisar. Si existe, el dashboard lo muestra como estado final de la OT |
+| `revision_comentario` | text | Comentario del revisor |
+| `revisado_por` | text | Correo del revisor. Lo pone un trigger con el usuario logueado |
+| `revisado_en` | timestamptz | Lo pone el mismo trigger |
 
-- Si el backend reprocesa un acta (por ejemplo, con los scripts de limpieza), el
-  *upsert* sobrescribe **todas** las columnas de la tabla de arriba, incluidas
-  las que haya editado el revisor.
-- `estado_app_ops` y `estado_revision` se recalculan en cada corrida, así que
-  cualquier cambio manual en ellas se pierde.
-
-Recomendación: que el frontend escriba solo en columnas propias (por ejemplo
-`revision_estado_manual`, `revision_comentario`, `revisado_por`, `revisado_en`)
-que el backend nunca toque.
+No confundir con `estado_revision` (`pendiente` / `cerrada`), que es si la OT
+está cerrada formalmente en App Ops y la recalcula el backend.

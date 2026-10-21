@@ -1,6 +1,11 @@
 # Secrets locales
 .env
+.env.local
 /config.py
+
+# Frontend
+node_modules/
+frontend/dist/
 
 # Estado y outputs locales
 reportes_qa/
