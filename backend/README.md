@@ -37,13 +37,18 @@ Paquete Python `qa_bia`. Se ejecuta desde esta carpeta con `python -m qa_bia`.
 | Reglas | `validaciones.py` | Post-validaciones sobre la respuesta de la IA |
 | Salida | `supabase.py` | Escritura en `actas_qa` (contrato con el frontend) |
 | Salida | `reportes.py` | JSON local por acta en `reportes_qa/` (no se versiona) |
-| Salida | `slack.py` | Mensajes de Slack — **deshabilitado**, no se llama |
 | Estado | `estado.py` | Archivos JSON de `state/` y cooldown del LLM |
 | Orquestación | `pipeline.py` | `procesar_acta()` y `main()` |
-| Utilidades | `utils.py` | Fecha actual, normalización de seriales |
+| Utilidades | `utils.py` | Fechas, normalización de seriales |
 
 Los nombres de funciones se mantuvieron iguales al `qa_bia.py` original para
-poder rastrear cambios en el historial.
+poder rastrear cambios en el historial. El código de notificaciones a Slack
+(deshabilitado desde hace tiempo) se eliminó; está en el historial de git si
+hace falta recuperarlo.
+
+Un acta (o un alcance) solo se marca como procesada en `state/` cuando quedó
+guardada en Supabase; si la escritura falla, se reintenta en la siguiente
+corrida.
 
 ## Configuración
 
@@ -91,3 +96,9 @@ Los dos modifican `state/` y Supabase.
 pip install -r requirements-dev.txt
 python -m pytest
 ```
+
+## Dependencias
+
+`requirements.txt` fija versiones exactas. Para actualizar una librería:
+cambiar la versión, correr las pruebas y probar en local con
+`QA_MODO_PRUEBA=true` antes de subirlo a `main`.

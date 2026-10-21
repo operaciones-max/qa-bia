@@ -50,17 +50,13 @@ ANTHROPIC_API_KEY    = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 # claude-haiku-4-5 = cheap+fast; claude-sonnet-4-6 = balanced; claude-opus-4-7 = most capable
 CLAUDE_MODEL         = os.environ.get("CLAUDE_MODEL", "").strip() or "claude-haiku-4-5-20251001"
 
-# --- Notificaciones ---
-SLACK_WEBHOOK_URL    = ""  # Sin Slack — solo Supabase
-
 # --- Modos de ejecucion ---
 MODO_PRUEBA          = _env_bool("QA_MODO_PRUEBA", False)
 MODO_UNICO           = _env_bool("QA_MODO_UNICO", True)
-MODO_BACKFILL        = False  # False = notificaciones activas en Slack/WhatsApp/Cooldown
 ACTAS_PRUEBA         = _env_int("QA_ACTAS_PRUEBA", 2)
 FECHA_INICIO          = os.environ.get("QA_FECHA_INICIO", "").strip() or "2026-05-10"
 FECHA_INICIO_ALCANCES = os.environ.get("QA_FECHA_INICIO_ALCANCES", "").strip() or "2026-04-30"
-PAUSA_GROQ_SEGUNDOS  = 20
+PAUSA_ENTRE_ACTAS_SEGUNDOS = 20
 INTERVALO_SEGUNDOS   = 300
 MAX_ACTAS_POR_RUN    = _env_int("QA_MAX_ACTAS_POR_RUN", 30)
 
@@ -76,7 +72,6 @@ ARCHIVO_COOLDOWN_LLM        = str(STATE_DIR / "llm_cooldown.json")
 CARPETA_REPORTES     = str(BACKEND_DIR / "reportes_qa")
 
 # --- Reglas de negocio ---
-TIPOS_SERVICIO_VALIDOS = ["Instalación", "Visita previa"]
 ESTADOS_EXITOSOS       = ["CLOSURE_SUCCESSFUL", "COMPLETED"]
 ESTADOS_FALLIDOS       = ["CLOSURE_FAILED", "ELECTRICIAN_FAILED_VISIT"]
 ESTADOS_ANALIZAR       = ESTADOS_EXITOSOS + ESTADOS_FALLIDOS
@@ -88,7 +83,3 @@ OR_PLANNERS = {
     "AFINIA": "Ervison Plata",
 }
 PLANNER_DEFAULT = "Dinovi Sanchez"
-SLACK_USER_IDS = {
-    "Ervison Plata":  "U090B8YQMAM",
-    "Dinovi Sanchez": "U06NVHEE9GD",
-}

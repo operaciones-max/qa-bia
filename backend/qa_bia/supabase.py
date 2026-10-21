@@ -3,9 +3,50 @@ que lee el dashboard (frontend). Ver docs/contrato-supabase.md.
 """
 import os
 import requests
-from datetime import datetime
 
-from .utils import _av
+from .utils import _av, ahora_utc_iso
+
+# PostgREST devuelve como maximo 1000 filas por consulta (configuracion por defecto de Supabase).
+TAM_PAGINA = 1000
+
+
+def _supabase_base_url():
+    url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
+    if url.endswith("/rest/v1"):
+        url = url[:-len("/rest/v1")]
+    return url
+
+
+def _credenciales():
+    """(url_base, key) o (None, None) si Supabase no esta configurado."""
+    url = _supabase_base_url()
+    key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+           or os.environ.get("SUPABASE_ANON_KEY", "").strip())
+    return (url, key) if url and key else (None, None)
+
+
+def _headers(key, prefer=None):
+    h = {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    if prefer:
+        h["Prefer"] = prefer
+    return h
+
+
+def _leer_todas(url_base, key, select):
+    """Lee todas las filas de actas_qa paginando de a TAM_PAGINA."""
+    filas = []
+    while True:
+        r = requests.get(
+            f"{url_base}/rest/v1/actas_qa",
+            params={"select": select, "order": "ot_id", "limit": TAM_PAGINA, "offset": len(filas)},
+            headers=_headers(key),
+            timeout=30,
+        )
+        r.raise_for_status()
+        pagina = r.json()
+        filas.extend(pagina)
+        if len(pagina) < TAM_PAGINA:
+            return filas
 
 
 def reconciliar_estado_app_ops(by_id, by_title):
@@ -21,37 +62,23 @@ def reconciliar_estado_app_ops(by_id, by_title):
     if not by_id and not by_title:
         print("  Reconciliacion: no hay estados de App Ops cargados, se omite.")
         return
-    url_base = _supabase_base_url()
-    key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
-           or os.environ.get("SUPABASE_ANON_KEY", "").strip())
-    if not url_base or not key:
+    url_base, key = _credenciales()
+    if not url_base:
         print("  Reconciliacion: sin Supabase, se omite.")
         return
 
     try:
-        r = requests.get(
-            f"{url_base}/rest/v1/actas_qa?select=ot_id,ot_nombre,internal_bia_code,estado_app_ops,estado_revision",
-            headers={"apikey": key, "Authorization": f"Bearer {key}"},
-            timeout=30,
-        )
-        if r.status_code != 200:
-            print(f"  Reconciliacion: error leyendo Supabase: {r.status_code}")
-            return
-        actas = r.json()
+        actas = _leer_todas(url_base, key, "ot_id,ot_nombre,internal_bia_code,estado_app_ops,estado_revision")
     except Exception as e:
         print(f"  Reconciliacion: error consultando Supabase: {e}")
         return
 
     cambios = 0
+    fallidos = 0
     matched_by_id = 0
     matched_by_title = 0
     sin_match_list = []
-    headers_patch = {
-        "apikey":        key,
-        "Authorization": f"Bearer {key}",
-        "Content-Type":  "application/json",
-        "Prefer":        "return=minimal",
-    }
+    headers_patch = _headers(key, "return=minimal")
     for acta in actas:
         ot_id = acta.get("ot_id")
         ot_nombre = acta.get("ot_nombre")
@@ -79,16 +106,19 @@ def reconciliar_estado_app_ops(by_id, by_title):
         if acta.get("estado_app_ops") == nueva_app and acta.get("estado_revision") == nueva_rev:
             continue
         try:
-            requests.patch(
-                f"{url_base}/rest/v1/actas_qa?ot_id=eq.{ot_id}",
+            r = requests.patch(
+                f"{url_base}/rest/v1/actas_qa",
+                params={"ot_id": f"eq.{ot_id}"},
                 headers=headers_patch,
                 json={"estado_app_ops": nueva_app, "estado_revision": nueva_rev},
                 timeout=10,
             )
+            r.raise_for_status()
             cambios += 1
         except Exception:
-            pass
-    print(f"  Reconciliacion App Ops: {cambios}/{len(actas)} actualizadas. "
+            fallidos += 1
+    print(f"  Reconciliacion App Ops: {cambios}/{len(actas)} actualizadas"
+          f"{f', {fallidos} con error' if fallidos else ''}. "
           f"Match por ot_id={matched_by_id}, por Title={matched_by_title}, "
           f"sin match={len(sin_match_list)}.")
     if sin_match_list:
@@ -96,19 +126,12 @@ def reconciliar_estado_app_ops(by_id, by_title):
         print(f"  Sin match (primeras 5): {muestra}")
 
 
-def _supabase_base_url():
-    url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
-    if url.endswith("/rest/v1"):
-        url = url[:-len("/rest/v1")]
-    return url
-
-
 def enviar_supabase(acta, resultado_qa, alcance_row=None):
-    url = _supabase_base_url()
-    key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
-           or os.environ.get("SUPABASE_ANON_KEY", "").strip())
-    if not url or not key:
-        return
+    """Guarda (upsert) el resultado del QA. Devuelve False solo si hubo un error;
+    sin Supabase configurado (corrida local) no guarda nada y devuelve True."""
+    url, key = _credenciales()
+    if not url:
+        return True
 
     med_enc  = resultado_qa.get("medidor_encontrado") or {}
     med_inst = resultado_qa.get("medidor_instalado") or {}
@@ -118,7 +141,7 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
     falla    = resultado_qa.get("tipificacion_falla") or {}
 
     registro = {
-        "procesado_en":              datetime.utcnow().isoformat() + "Z",
+        "procesado_en":              ahora_utc_iso(),
         "ot_nombre":                 acta.get("title"),
         "ot_id":                     acta.get("id"),
         "tipo_servicio":             acta.get("Tipo de servicio"),
@@ -179,29 +202,24 @@ def enviar_supabase(acta, resultado_qa, alcance_row=None):
     try:
         r = requests.post(
             f"{url}/rest/v1/actas_qa?on_conflict=ot_id",
-            headers={
-                "apikey":        key,
-                "Authorization": f"Bearer {key}",
-                "Content-Type":  "application/json",
-                "Prefer":        "resolution=merge-duplicates,return=minimal",
-            },
+            headers=_headers(key, "resolution=merge-duplicates,return=minimal"),
             json=registro,
             timeout=15,
         )
         if 200 <= r.status_code < 300:
             print("  Supabase: registro guardado.")
-        else:
-            print(f"  ERROR Supabase: {r.status_code} {r.text[:200]}")
+            return True
+        print(f"  ERROR Supabase: {r.status_code} {r.text[:200]}")
     except Exception as e:
         print(f"  ERROR Supabase: {e}")
+    return False
 
 
 def actualizar_supabase_alcance(co_code, alcance_row):
-    url = _supabase_base_url()
-    key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
-           or os.environ.get("SUPABASE_ANON_KEY", "").strip())
-    if not url or not key:
-        return
+    """Marca con el alcance las visitas previas del CO. Devuelve False solo si hubo error."""
+    url, key = _credenciales()
+    if not url:
+        return True
 
     body = {
         "tiene_alcance":           True,
@@ -216,18 +234,14 @@ def actualizar_supabase_alcance(co_code, alcance_row):
                 "internal_bia_code": f"eq.{co_code}",
                 "tipo_servicio":     "eq.Visita previa",
             },
-            headers={
-                "apikey":        key,
-                "Authorization": f"Bearer {key}",
-                "Content-Type":  "application/json",
-                "Prefer":        "return=minimal",
-            },
+            headers=_headers(key, "return=minimal"),
             json=body,
             timeout=15,
         )
         if 200 <= r.status_code < 300:
             print(f"  Supabase: VIPE {co_code} marcada con alcance.")
-        else:
-            print(f"  ERROR Supabase alcance: {r.status_code} {r.text[:200]}")
+            return True
+        print(f"  ERROR Supabase alcance: {r.status_code} {r.text[:200]}")
     except Exception as e:
         print(f"  ERROR Supabase alcance: {e}")
+    return False

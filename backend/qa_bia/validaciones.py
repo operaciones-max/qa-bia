@@ -79,19 +79,6 @@ def _validar_coincidencia_wms(qa, serial_wms, tcs_wms, tps_wms, debe_comparar):
         qa["tps_coinciden_wms"] = None
 
 
-_VALORES_BASURA = {
-    "", "n/a", "na", "n.v", "nv", "no aplica", "no se reporta",
-    "otra", "otro", ".0", "0.0", ".o", "0", "null", "none", "-", "—",
-}
-
-
-def _es_valor_basura(v):
-    if v is None:
-        return True
-    s = str(v).strip().lower()
-    return s in _VALORES_BASURA
-
-
 def _limpiar_errores_fantasma(qa, tipo_servicio):
     """Saca errores que reportan comportamiento NORMAL segun reglas de medida/servicio.
     Tambien dedupea errores vs alertas y elimina ruido."""
@@ -201,57 +188,4 @@ def _simplificar_fallida(qa):
     qa["alertas_qa"] = keep
     falla = qa.get("tipificacion_falla") or {}
     falla["cinco_por_que"] = []
-    qa["tipificacion_falla"] = falla
-
-
-def _override_fallida_si_incompleto(qa):
-    """Si estado_ot=EXITOSA pero los datos critically incompletos, fuerza FALLIDA
-    con tipificacion auto-poblada. Tambien limpia errores ya que tipificacion
-    los explica."""
-    if qa.get("estado_ot") != "EXITOSA":
-        return
-
-    med = qa.get("medidor_encontrado") or {}
-    diag = qa.get("diagrama_unifilar") or {}
-    val  = qa.get("validaciones") or {}
-
-    flags = [
-        _es_valor_basura(med.get("serie")),
-        _es_valor_basura(med.get("marca")),
-        _es_valor_basura(med.get("referencia")),
-        _es_valor_basura(med.get("lectura_activa_kwh")),
-        _es_valor_basura(qa.get("sellos_medidor_encontrado")),
-        not diag.get("tiene_foto"),
-    ]
-    n_basura = sum(1 for f in flags if f)
-    coherencia_mala = (val.get("coherencia") or "").upper() in ("INCOHERENTE", "INCOMPLETO")
-
-    if n_basura < 4 and not coherencia_mala:
-        return
-
-    qa["estado_ot"] = "FALLIDA"
-    # Limpiar errores cuando override fire — tipificacion ya explica
-    val["errores_encontrados"] = []
-    val["coherencia"] = "INCOHERENTE"
-    qa["validaciones"] = val
-    co = qa.get("internal_bia_code", "")
-    falla = qa.get("tipificacion_falla") or {}
-    falla.update({
-        "causa_raiz":  "Acta cerrada exitosa con informacion sustancialmente incompleta",
-        "responsable": "Tecnico ejecutor / Coordinador Operativo",
-        "detalle": (
-            f"Override automatico a FALLIDA: la OT {co} fue cerrada como CLOSURE_SUCCESSFUL "
-            f"pero la informacion reportada en el acta es sustancialmente incompleta o contiene "
-            f"valores placeholder (n.v, .o, .0, Otra, etc.) en campos criticos del medidor "
-            f"encontrado, sellos, lecturas y registro fotografico. La data no permite cerrar "
-            f"el QA como exitoso ni validar la ejecucion."
-        ),
-        "mejora": (
-            "Implementar validacion estricta en el formulario del acta para rechazar valores "
-            "placeholder y exigir captura completa de los campos minimos del medidor (serie, "
-            "marca, referencia, lecturas, sellos, foto, diagrama unifilar) antes de permitir "
-            "el cierre exitoso de la OT. Agregar revision de calidad de captura previa al cierre."
-        ),
-        "cinco_por_que": [],
-    })
     qa["tipificacion_falla"] = falla

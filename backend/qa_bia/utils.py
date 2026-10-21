@@ -1,11 +1,21 @@
 """Utilidades compartidas sin dependencias de negocio.
 """
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def ahora():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def ahora_utc():
+    """Hora UTC sin zona (reemplaza a datetime.utcnow(), deprecado en Python 3.12)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def ahora_utc_iso():
+    """Hora UTC en ISO con sufijo Z, ej. 2026-05-21T10:00:00.123456Z."""
+    return ahora_utc().isoformat() + "Z"
 
 
 def _normalizar_serial(s):

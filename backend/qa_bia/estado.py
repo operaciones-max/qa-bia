@@ -9,6 +9,7 @@ import re
 from datetime import datetime, timedelta
 
 from . import config
+from .utils import ahora_utc
 
 
 def cargar_procesados():
@@ -68,7 +69,7 @@ def _cargar_cooldown_llm():
     try:
         with open(ARCHIVO_COOLDOWN_LLM, "r", encoding="utf-8") as f:
             data = json.load(f)
-        if datetime.utcnow() >= datetime.fromisoformat(data["until"].replace("Z", "")):
+        if ahora_utc() >= datetime.fromisoformat(data["until"].replace("Z", "")):
             os.remove(ARCHIVO_COOLDOWN_LLM)
             return None
         return data
@@ -77,25 +78,24 @@ def _cargar_cooldown_llm():
 
 
 def _activar_cooldown_llm(msg_error):
-    print(f"  [cooldown] Error original Gemini: {msg_error[:400]}")
+    print(f"  [cooldown] Error original Claude: {msg_error[:400]}")
     msg = msg_error.lower()
     es_diario = ("per day" in msg or "tokens per day" in msg or "requests per day" in msg)
     if es_diario:
-        until = datetime.utcnow().replace(hour=0, minute=5, second=0, microsecond=0) + timedelta(days=1)
+        until = ahora_utc().replace(hour=0, minute=5, second=0, microsecond=0) + timedelta(days=1)
         razon = "daily_quota"
     else:
         m = re.search(r"(?:try again in|retry.*?in|retry_delay.*?seconds:)\s*(\d+\.?\d*)", msg_error)
         segundos = int(float(m.group(1))) + 5 if m else 65
-        until = datetime.utcnow() + timedelta(seconds=segundos)
+        until = ahora_utc() + timedelta(seconds=segundos)
         razon = "per_minute"
     data = {
         "until":   until.isoformat(timespec="seconds") + "Z",
         "razon":   razon,
-        "activado": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "activado": ahora_utc().isoformat(timespec="seconds") + "Z",
     }
     with open(ARCHIVO_COOLDOWN_LLM, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    # Slack cooldown alert deshabilitado — solo loguea en consola
     return data
 
 

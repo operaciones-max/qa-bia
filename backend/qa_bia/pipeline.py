@@ -2,7 +2,6 @@
 """
 import os
 import time
-import requests
 from datetime import date
 
 from . import config
@@ -31,7 +30,7 @@ from .reportes import guardar_reporte
 
 
 def verificar_nuevos_alcances(alcances, visitas_previas_dict):
-    """Check alcances CSV for new entries and notify Slack."""
+    """Marca en Supabase las visitas previas que ya tienen alcance de ingenieria."""
     procesados   = cargar_alcances_procesados()
     fecha_inicio = date.fromisoformat(getattr(config, "FECHA_INICIO_ALCANCES", "2026-05-02"))
     nuevos       = 0
@@ -50,8 +49,9 @@ def verificar_nuevos_alcances(alcances, visitas_previas_dict):
 
         visita_data = visitas_previas_dict.get(co_code)
         print(f"\n  -> Nuevo alcance: {co_code} (VP almacenada: {'Si' if visita_data else 'No'})")
-        # Slack deshabilitado — solo Supabase
-        actualizar_supabase_alcance(co_code, alcance_row)
+        if not actualizar_supabase_alcance(co_code, alcance_row):
+            print("     No se marca como procesado: se reintenta en la proxima corrida.")
+            continue
         guardar_alcance_procesado(alcance_id)
         nuevos += 1
         if nuevos < 10:
@@ -95,7 +95,7 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
     else:
         print(f"     WMS: No encontrado para {internal_bia_code}")
 
-    texto_pdf, imagenes_pdf = descargar_y_leer_pdf(pdf_url)
+    texto_pdf, imagenes_pdf, pdf_bytes = descargar_y_leer_pdf(pdf_url)
     if not texto_pdf:
         print("     No se pudo leer el PDF. Se omite.")
         return False
@@ -116,13 +116,8 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
         # Claude lea con vision el texto manuscrito del "Registro Fotografico Acta".
         imagenes_para_lite = None
         if _tipo_necesita_vision_lite(tipo):
-            try:
-                r_pdf = requests.get(pdf_url, timeout=30)
-                if r_pdf.ok:
-                    imagenes_para_lite = _renderizar_paginas_pdf(r_pdf.content, n_paginas=4, dpi=150)
-                    print(f"     Vision lite habilitada ({tipo}): {len(imagenes_para_lite)} paginas a dpi=150")
-            except Exception as e:
-                print(f"     WARN: no se pudo descargar PDF para vision lite: {e}")
+            imagenes_para_lite = _renderizar_paginas_pdf(pdf_bytes, n_paginas=4, dpi=150)
+            print(f"     Vision lite habilitada ({tipo}): {len(imagenes_para_lite)} paginas a dpi=150")
         print(f"     Analizando con Claude lite ({config.CLAUDE_MODEL}) — track {qa_track}")
         resultado_qa = analizar_acta_lite(
             texto_pdf, tipo, estado, internal_bia_code,
@@ -169,7 +164,7 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
         debe_comparar_wms,
     )
     _limpiar_errores_fantasma(resultado_qa, tipo)
-    # _override_fallida_si_incompleto: DESACTIVADO. Respetamos el estado del tecnico.
+    # No se fuerza FALLIDA por datos incompletos: se respeta el estado del tecnico.
     # El reviewer humano puede marcar como FALLIDA desde el dashboard (frontend/).
     _simplificar_fallida(resultado_qa)
     _validar_tipificacion(resultado_qa)
@@ -280,9 +275,9 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
     if resultado_qa.get("medidor_coincide_wms") is False:
         print(f"     ALERTA: Medidor instalado != WMS asignado {serial_asignado}")
     if resultado_qa.get("tcs_coinciden_wms") is False:
-        print(f"     ALERTA: TCs instalados != WMS asignados")
+        print("     ALERTA: TCs instalados != WMS asignados")
     if resultado_qa.get("tps_coinciden_wms") is False:
-        print(f"     ALERTA: TPs instalados != WMS asignados")
+        print("     ALERTA: TPs instalados != WMS asignados")
     errores = resultado_qa.get("validaciones", {}).get("errores_encontrados", [])
     if errores:
         print(f"     Errores QA: {', '.join(errores)}")
@@ -305,21 +300,20 @@ def procesar_acta(acta, wms, alcances=None, facturas=None):
         }
         guardar_visita_previa(internal_bia_code, vp_data)
 
-        # Si ya existe un alcance para este CO, enviarlo inmediatamente
-        if alcances:
-            alcance_row = alcances.get(internal_bia_code)
-            if alcance_row:
-                alcance_id = alcance_row.get("ID", "").strip()
-                procesados_alc = cargar_alcances_procesados()
-                if alcance_id and alcance_id not in procesados_alc:
-                    print(f"     Alcance encontrado para {internal_bia_code} — registrado en Supabase.")
-                    # Slack deshabilitado — solo Supabase
-                    guardar_alcance_procesado(alcance_id)
-
+    alcance_row = (alcances or {}).get(internal_bia_code)
     guardar_reporte(acta, resultado_qa)
-    # Slack y WhatsApp deshabilitados — solo escritura a Supabase.
-    enviar_supabase(acta, resultado_qa, alcances.get(internal_bia_code) if alcances else None)
+    # Si Supabase falla, el acta NO se marca como procesada: se reintenta en la proxima corrida.
+    if not enviar_supabase(acta, resultado_qa, alcance_row):
+        print(f"     {ot_nombre} no se guardo en Supabase; se reintenta en la proxima corrida.")
+        return False
     guardar_procesado(acta.get("id"))
+
+    # La visita previa ya viajo con su alcance: no hace falta volver a marcarlo despues.
+    if es_visita and alcance_row:
+        alcance_id = alcance_row.get("ID", "").strip()
+        if alcance_id and alcance_id not in cargar_alcances_procesados():
+            print(f"     Alcance de {internal_bia_code} registrado en Supabase junto con la visita previa.")
+            guardar_alcance_procesado(alcance_id)
     print(f"     OK: {ot_nombre} auditada.")
     return True
 
@@ -331,7 +325,7 @@ def main():
     print("   Modo: " + modo)
     print("=" * 58)
     print("   Fecha inicio : " + config.FECHA_INICIO)
-    print("   Pausa        : " + str(config.PAUSA_GROQ_SEGUNDOS) + "s entre actas")
+    print("   Pausa        : " + str(config.PAUSA_ENTRE_ACTAS_SEGUNDOS) + "s entre actas")
     if config.MODO_PRUEBA:
         print("   Actas prueba : " + str(config.ACTAS_PRUEBA))
     print("=" * 58)
@@ -357,8 +351,8 @@ def main():
             if procesar_acta(acta, wms, alcances, facturas):
                 procesadas += 1
             if i < len(actas) - 1:
-                print("     Pausa " + str(config.PAUSA_GROQ_SEGUNDOS) + "s...")
-                time.sleep(config.PAUSA_GROQ_SEGUNDOS)
+                print("     Pausa " + str(config.PAUSA_ENTRE_ACTAS_SEGUNDOS) + "s...")
+                time.sleep(config.PAUSA_ENTRE_ACTAS_SEGUNDOS)
         print("")
         print("=" * 58)
         print("   PRUEBA TERMINADA - " + str(procesadas) + " acta(s) auditada(s)")
@@ -370,7 +364,7 @@ def main():
             for i, acta in enumerate(actas):
                 procesar_acta(acta, wms, alcances, facturas)
                 if i < len(actas) - 1:
-                    time.sleep(config.PAUSA_GROQ_SEGUNDOS)
+                    time.sleep(config.PAUSA_ENTRE_ACTAS_SEGUNDOS)
         else:
             print("[" + ahora() + "] Sin actas nuevas.")
 
@@ -389,7 +383,7 @@ def main():
                     for i, acta in enumerate(actas):
                         procesar_acta(acta, wms, alcances, facturas)
                         if i < len(actas) - 1:
-                            time.sleep(config.PAUSA_GROQ_SEGUNDOS)
+                            time.sleep(config.PAUSA_ENTRE_ACTAS_SEGUNDOS)
                 else:
                     print("[" + ahora() + "] Sin actas nuevas. Revisando en " + str(config.INTERVALO_SEGUNDOS) + "s...")
                 visitas_previas_dict = cargar_visitas_previas()
