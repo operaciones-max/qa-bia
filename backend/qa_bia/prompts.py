@@ -38,9 +38,8 @@ TCs/TPs/pruebas/diagrama unifilar — no aplican.
 
 PARA PQRs, EMERGENCIAS Y VISITAS CONJUNTAS (caso especial — incluye IMAGENES):
 Estos tipos de OT tienen ACTAS FISICAS manuscritas que el tecnico llena en papel
-y luego fotografia. Recibis en este mismo mensaje las primeras 2 paginas del PDF
-como IMAGENES, donde aparece el bloque "Registro Fotográfico Acta" con las fotos
-del acta fisica.
+y luego fotografia. Cuando el mensaje trae IMAGENES (las primeras paginas del PDF),
+ahi aparece el bloque "Registro Fotográfico Acta" con las fotos del acta fisica.
 
 INSTRUCCIONES PARA LAS IMAGENES:
 1. Identifica las fotos del acta fisica (suelen tener encabezado "BIA" o "Bia").
@@ -83,18 +82,16 @@ Tu redaccion debe ser tecnica, profesional y estructural, NO descriptiva basica.
 INSTRUCCIONES CRITICAS:
 - Devuelve UNICAMENTE un JSON valido sin texto adicional ni bloques de codigo.
 - NO inventes datos. Si un campo no esta en el acta usa null.
-- VAS A RECIBIR el texto del acta Y las paginas del acta como imagenes adjuntas. USA AMBAS fuentes:
-  * Verifica visualmente las series, lecturas y marcas del medidor en las fotos del acta.
-  * Cuenta visualmente los SELLOS presentes en cada equipo (medidor, TCs, TPs) y reporta el numero exacto que veas.
-  * Si la serie escrita en el campo "Serie del medidor" NO se ve en la foto del medidor o se ve diferente, marca serie_coincide_foto=false con observacion explicita ("se ve serie XXX en foto, acta dice YYY").
-  * Si la foto muestra el diagrama unifilar, marca diagrama_unifilar.tiene_foto=true.
-  * Si las fotos estan borrosas, oscuras o no permiten leer, NO marques verificaciones como true; marca como false con observacion ("foto ilegible").
+- estado_ot: copia EXACTAMENTE el RESULTADO EN APP. El sistema lo fija desde App Ops; no lo cambies.
+- FUENTES: siempre recibes el TEXTO extraido del PDF. Solo si el mensaje dice "SE ADJUNTAN IMAGENES" recibes ademas paginas del acta como imagenes.
+  * CON imagenes: verifica visualmente series, lecturas y marcas; cuenta los SELLOS visibles en cada equipo; si la serie del campo "Serie del medidor" se ve distinta en la foto marca serie_coincide_foto=false con observacion explicita ("se ve serie XXX en foto, acta dice YYY"); si la foto muestra el diagrama unifilar marca diagrama_unifilar.tiene_foto=true; si las fotos estan borrosas no marques verificaciones como true (false con observacion "foto ilegible").
+  * SIN imagenes: NO afirmes nada que requiera ver una foto. Sellos, lecturas y marcas salen SOLO de lo escrito en el acta; si no esta escrito usa null. NUNCA inventes conteos.
 - MARCAS: si "Marca del medidor", "Marca del modem", "Marca del totalizador" dice "Otra"/"Otro", usa el valor del siguiente campo "Ingresar marca..." como marca real. NUNCA concatenes.
-- "serie_coincide_foto" SIEMPRE true o false (nunca null si hay seccion Registro fotografico):
+- "serie_coincide_foto": true/false SOLO si lo puedes verificar; si no, null:
     1. Toma la serie EXACTA del campo "Serie del medidor".
-    2. En el bloque "Registro fotografico medidor, sellos y celdas" siguiente busca esa misma cadena.
-    3. Si aparece -> true. Si no aparece o aparece distinta -> false.
-    4. Si true: "observacion_serie_foto" = null. Si false: explica brevemente con la serie real vista.
+    2. Buscala en la foto del medidor (si hay imagenes) o escrita en el bloque "Registro fotografico medidor, sellos y celdas".
+    3. Si aparece -> true. Si aparece una serie distinta -> false. Si no hay como verificarlo -> null.
+    4. Si true o null: "observacion_serie_foto" = null. Si false: explica brevemente con la serie real vista.
 - CONTEO DE FOTOS: cada foto cargada en el acta tiene un timestamp con formato "Bia [fecha] [hora]" (ej: "Bia 2 may 2026 09:52:45"). Cuenta esos timestamps DENTRO de cada bloque "Registro fotografico" relevante:
   * "fotos_medidor": cuenta los timestamps en los bloques "Registro fotografico medidor, sellos y celdas" (encontrado E instalado combinados). Aplica para DIRECTA/SEMIDIRECTA/INDIRECTA.
   * "fotos_tcs": cuenta los timestamps en los bloques "Registro fotografico de TCs..." (encontrados E instalados). null si DIRECTA.
@@ -111,7 +108,7 @@ INSTRUCCIONES CRITICAS:
   5. tecnico_nombre debe ser el nombre completo de la persona que firmo o aparece como ejecutor — NO el nombre de la empresa.
   6. NUNCA inventes nombres de empresa o de tecnico. Si no aparece, usa null.
 - OBSERVACION VERBATIM: Copia LETRA POR LETRA el contenido del campo "Observaciones" del acta. NO resumas, NO parafrasees, NO corrijas ortografia, NO agregues nada. Si hay varias secciones de observaciones concatena con salto de linea. Si no existe el campo usa null.
-- SELLOS: Cuenta los sellos visibles/reportados en el acta para cada equipo:
+- SELLOS: Cuenta los sellos reportados en el acta (o visibles, si hay imagenes) para cada equipo:
   * "sellos_medidor_encontrado": sellos presentes en el medidor encontrado (int, 0 si no tiene, null si no se reporta).
   * "sellos_tcs_encontrados": sellos en TCs encontrados (null si DIRECTA).
   * "sellos_tps_encontrados": sellos en TPs encontrados (null si DIRECTA o SEMIDIRECTA).
@@ -127,6 +124,7 @@ REGLAS POR TIPO DE MEDIDA:
 REGLAS POR TIPO DE SERVICIO:
 - INSTALACION: campos *_instalado se llenan si se instalo el equipo (se_instalo true) o false.
 - VISITA PREVIA: TODOS los *_instalado tienen aplica=false.
+- NORMALIZACION, ALTA INGENIERIA y otros: igual que INSTALACION (se pueden instalar o cambiar equipos).
 
 REGLAS ESTRICTAS PARA validaciones.errores_encontrados:
 - NUNCA reportes como error el comportamiento esperado por las REGLAS POR TIPO DE MEDIDA y REGLAS POR TIPO DE SERVICIO. Por ejemplo:
@@ -136,12 +134,6 @@ REGLAS ESTRICTAS PARA validaciones.errores_encontrados:
 - Solo reporta ERRORES REALES de QA: discrepancias entre acta y foto, datos faltantes que SI deberian existir, contradicciones internas, valores fuera de rango.
 - CONSISTENCIA OBLIGATORIA: si pones "serie no coincide con foto" en errores_encontrados, entonces medidor_*.serie_coincide_foto DEBE ser false. Si pones serie_coincide_foto=true, NO listes ese error. Cero contradicciones entre campos.
 - Si la observacion del tecnico explica por que falta un dato (ej: "OR no permitio tomar fotos"), reportalo como ALERTA en alertas_qa, no como error en errores_encontrados.
-
-REGLA CRITICA DE OVERRIDE A FALLIDA:
-- Si RESULTADO EN APP dice EXITOSA pero el acta esta SUSTANCIALMENTE INCOMPLETA (ej: medidor encontrado sin serie ni marca ni lecturas, sin sellos reportados, sin fotos del medidor, sin pruebas, sin diagrama unifilar, todo simultaneamente), debes marcar estado_ot=FALLIDA aunque el RESULTADO EN APP diga EXITOSA. La data incompleta no permite cerrar el QA como exitoso.
-- Solo manten estado_ot=EXITOSA si los datos clave del acta (medidor, lecturas, fotos al menos parciales, sellos, pruebas si aplica) estan razonablemente completos.
-- Si haces este override, en tipificacion_falla.detalle empieza con: "Override automatico a FALLIDA: el acta esta cerrada como CLOSURE_SUCCESSFUL pero la informacion reportada es sustancialmente incompleta (especificar campos faltantes)." Despues sigue con el resto del detalle estandar.
-- Si el override aplica, tipificacion_falla.causa_raiz debe reflejar el problema de calidad del acta (ej: "Acta cerrada exitosa con informacion sustancialmente incompleta").
 
 JSON ESPERADO:
 {{
@@ -168,7 +160,7 @@ JSON ESPERADO:
     "referencia": "<o null>",
     "lectura_activa_kwh": "<o null>",
     "lectura_reactiva_kvarh": "<o null>",
-    "serie_coincide_foto": <bool>,
+    "serie_coincide_foto": <bool o null>,
     "observacion_serie_foto": "<o null>"
   }},
 
@@ -179,7 +171,7 @@ JSON ESPERADO:
     "marca": "<o null>",
     "referencia": "<o null>",
     "lectura_activa_kwh": "<o null>",
-    "serie_coincide_foto": <bool>,
+    "serie_coincide_foto": <bool o null>,
     "observacion_serie_foto": "<o null>"
   }},
 
@@ -286,8 +278,8 @@ JSON ESPERADO:
 
 EJEMPLO GOLD DE TIPIFICACION (replica este nivel):
 {{
-  "causa_raiz": "Condiciones tecnicas no viables",
-  "responsable": "Technical Expert / Coordinador Operativo",
+  "causa_raiz": "Error en alcance",
+  "responsable": "Technical expert / Coordinador",
   "detalle": "En la OT CO0400006548, no fue posible realizar la instalacion del medidor debido a que el espacio disponible en el gabinete (25 cm x 20 cm) no permite la instalacion ni el radio de curvatura del cable 1/0. Aunque esta condicion ya estaba identificada en la visita previa, no se gestionaron soluciones tecnicas ni aprobaciones necesarias antes de la ejecucion.",
   "mejora": "Implementar un control de cierre de viabilidad tecnica previo a la programacion de instalaciones, asegurando que todas las restricciones detectadas en visitas previas cuenten con solucion aprobada (diseno, materiales y permisos) antes de agendar la OT."
 }}

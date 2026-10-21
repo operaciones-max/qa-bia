@@ -1,6 +1,5 @@
 """Extraccion del serial del medidor desde la factura anterior (regex + Claude).
 """
-import json
 import io
 import re
 import requests
@@ -8,7 +7,7 @@ import pdfplumber
 
 from . import config
 from .estado import _activar_cooldown_llm, _cargar_cooldown_llm
-from .ia import cliente_claude
+from .ia import cliente_claude, es_limite_de_uso, extraer_json
 
 
 # Patrones de extraccion de serial de medidor por OR/comercializador.
@@ -138,20 +137,12 @@ def extraer_serial_factura(pdf_url):
             messages=[{"role": "user", "content": prompt}],
         )
         texto_r = "".join(b.text for b in respuesta.content if hasattr(b, "text")).strip()
-        # Limpiar markdown si Claude lo envuelve
-        if "```json" in texto_r:
-            texto_r = texto_r.split("```json")[1].split("```")[0].strip()
-        elif "```" in texto_r:
-            texto_r = texto_r.split("```")[1].split("```")[0].strip()
-        inicio = texto_r.find("{"); fin = texto_r.rfind("}")
-        if inicio != -1 and fin != -1:
-            texto_r = texto_r[inicio:fin+1]
-        data = json.loads(texto_r)
+        data = extraer_json(texto_r)
         serial = (data.get("serial") or "").strip() or None
         return {"serial": serial, "express": express}, "ok"
     except Exception as e:
         msg = str(e)
-        if "429" in msg or "rate" in msg.lower() or "overloaded" in msg.lower():
+        if es_limite_de_uso(e):
             _activar_cooldown_llm(msg)
             return {"serial": None, "express": express}, "rate_limit"
         return {"serial": None, "express": express}, f"error_claude: {msg[:120]}"
