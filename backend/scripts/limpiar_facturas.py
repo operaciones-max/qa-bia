@@ -10,18 +10,19 @@ Lo que hace:
 3. Quita esos internal_bia_code de facturas_extraidas.json
 4. Resetea las columnas de factura en Supabase para esas actas
 5. El proximo run del cron las reprocesa con los nuevos patrones AFINIA/Enel/etc.
+
+Ejecutar desde backend/:  python -m scripts.limpiar_facturas
 """
 import json
 import os
 import sys
 import requests
 
+from qa_bia import config
+from qa_bia.supabase import _supabase_base_url
 
-def _supabase_base_url():
-    url = (os.environ.get("SUPABASE_URL") or "").strip().rstrip("/")
-    if url.endswith("/rest/v1"):
-        url = url[:-len("/rest/v1")]
-    return url
+ARCHIVO_PROCESADOS = config.ARCHIVO_PROCESADOS
+ARCHIVO_FACTURAS = config.ARCHIVO_FACTURAS_EXTRAIDAS
 
 
 def main():
@@ -70,23 +71,23 @@ def main():
         print(f"  ... y {len(actas_problematicas) - 10} mas")
 
     # 1. Limpiar actas_procesadas.json
-    if os.path.exists("actas_procesadas.json"):
-        with open("actas_procesadas.json", "r", encoding="utf-8") as f:
+    if os.path.exists(ARCHIVO_PROCESADOS):
+        with open(ARCHIVO_PROCESADOS, "r", encoding="utf-8") as f:
             procesadas = json.load(f)
         antes = len(procesadas)
         procesadas = [x for x in procesadas if x not in ot_ids_remover]
-        with open("actas_procesadas.json", "w", encoding="utf-8") as f:
+        with open(ARCHIVO_PROCESADOS, "w", encoding="utf-8") as f:
             json.dump(procesadas, f, ensure_ascii=False, indent=2)
         print(f"actas_procesadas.json: {antes} -> {len(procesadas)} (removidas {antes - len(procesadas)})")
 
     # 2. Limpiar facturas_extraidas.json
-    if os.path.exists("facturas_extraidas.json"):
-        with open("facturas_extraidas.json", "r", encoding="utf-8") as f:
+    if os.path.exists(ARCHIVO_FACTURAS):
+        with open(ARCHIVO_FACTURAS, "r", encoding="utf-8") as f:
             facturas_cache = json.load(f)
         antes = len(facturas_cache)
         for co in cos_remover:
             facturas_cache.pop(co, None)
-        with open("facturas_extraidas.json", "w", encoding="utf-8") as f:
+        with open(ARCHIVO_FACTURAS, "w", encoding="utf-8") as f:
             json.dump(facturas_cache, f, ensure_ascii=False, indent=2)
         print(f"facturas_extraidas.json: {antes} -> {len(facturas_cache)} (removidas {antes - len(facturas_cache)})")
     else:

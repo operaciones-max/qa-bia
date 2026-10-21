@@ -11,6 +11,8 @@ on:
   #   # 18:01–05:59 Colombia: apagado para no gastar tokens
   workflow_dispatch:
 
+# Corre el codigo de la rama desde la que se lanza (main en el cron).
+# OJO: desde cualquier rama escribe en el mismo Supabase de produccion.
 jobs:
   qa:
     runs-on: ubuntu-latest
@@ -19,7 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
           clean: true
 
@@ -29,33 +30,28 @@ jobs:
           python-version: '3.11'
 
       - name: Instalar dependencias
-        run: pip install -r requirements.txt
+        run: pip install -r backend/requirements.txt
 
       - name: Preparar entorno
-        run: |
-          git log -1 --oneline
-          rm -f config.py
+        run: git log -1 --oneline
 
       - name: Correr QA
+        working-directory: backend
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           METABASE_API_KEY: ${{ secrets.METABASE_API_KEY }}
-        run: python qa_bia.py
+        run: python -m qa_bia
 
       - name: Guardar estado procesados
         run: |
           git config user.email "qa-bot@bia.app"
           git config user.name "QA Bot"
-          git add -f actas_procesadas.json || true
-          git add -f visitas_previas.json || true
-          git add -f alcances_procesados.json || true
-          git add -f groq_cooldown.json || true
-          git add -f facturas_extraidas.json || true
+          git add -f backend/state/ || true
           git diff --staged --quiet || git commit -m "Actualizar estado procesados [skip ci]"
           git checkout -- . || true
           git clean -fd || true
-          git pull --rebase origin main || true
+          git pull --rebase origin "${GITHUB_REF_NAME}" || true
           git push || true

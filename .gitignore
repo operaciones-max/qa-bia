@@ -1,14 +1,17 @@
 # Secrets locales
-config.py
+.env
+/config.py
 
 # Estado y outputs locales
 reportes_qa/
+backend/state-local/
 
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.pytest_cache/
 
 # Tests y scripts locales (uso personal, no van al CI)
 test_csv.py

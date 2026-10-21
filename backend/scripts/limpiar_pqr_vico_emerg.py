@@ -4,18 +4,18 @@ Script one-shot para reprocesar PQR, VICO y EMERGENCIA con vision habilitada.
 Saca esos ot_ids de actas_procesadas.json para que el cron los re-analize con
 las primeras 4 paginas del PDF renderizadas como imagenes (vision habilitada
 solo para estos tipos en analizar_acta_lite).
+
+Ejecutar desde backend/:  python -m scripts.limpiar_pqr_vico_emerg
 """
 import json
 import os
 import sys
 import requests
 
+from qa_bia import config
+from qa_bia.supabase import _supabase_base_url
 
-def _supabase_base_url():
-    url = (os.environ.get("SUPABASE_URL") or "").strip().rstrip("/")
-    if url.endswith("/rest/v1"):
-        url = url[:-len("/rest/v1")]
-    return url
+ARCHIVO_PROCESADOS = config.ARCHIVO_PROCESADOS
 
 
 def main():
@@ -55,12 +55,12 @@ def main():
     ot_ids_remover = {a["ot_id"] for a in actas if a.get("ot_id")}
 
     # Limpiar actas_procesadas.json
-    if os.path.exists("actas_procesadas.json"):
-        with open("actas_procesadas.json", "r", encoding="utf-8") as f:
+    if os.path.exists(ARCHIVO_PROCESADOS):
+        with open(ARCHIVO_PROCESADOS, "r", encoding="utf-8") as f:
             procesadas = json.load(f)
         antes = len(procesadas)
         procesadas = [x for x in procesadas if x not in ot_ids_remover]
-        with open("actas_procesadas.json", "w", encoding="utf-8") as f:
+        with open(ARCHIVO_PROCESADOS, "w", encoding="utf-8") as f:
             json.dump(procesadas, f, ensure_ascii=False, indent=2)
         print(f"actas_procesadas.json: {antes} -> {len(procesadas)} (removidas {antes - len(procesadas)})")
 
