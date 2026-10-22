@@ -1,63 +1,69 @@
 # Backend — motor de QA
 
-Paquete Python `qa_bia`. Se ejecuta desde esta carpeta con `python -m qa_bia`.
+Programa Go que se ejecuta desde la raíz del repo con `go run ./backend/cmd/qa`
+(en producción, desde GitHub Actions).
 
 ## Flujo de una corrida
 
-1. **Carga de fuentes** (`metabase.py`): inventario WMS, alcances de ingeniería,
+1. **Carga de fuentes** (`metabase`): inventario WMS, alcances de ingeniería,
    facturas anteriores (HubSpot vía Metabase) y estado de cierre de App Ops.
-2. **Reconciliación** (`supabase.py`): actualiza `estado_app_ops` y
+2. **Reconciliación** (`supabase`): actualiza `estado_app_ops` y
    `estado_revision` de las actas ya guardadas según App Ops.
-3. **Actas nuevas** (`metabase.py`): filtra por estado, fecha
+3. **Actas nuevas** (`metabase`): filtra por estado, fecha
    (`QA_FECHA_INICIO`), que tengan PDF y que no estén en `state/actas_procesadas.json`.
    Máximo `QA_MAX_ACTAS_POR_RUN` por corrida.
-4. **Por cada acta** (`pipeline.procesar_acta`):
-   - lee el PDF (`pdf.py`);
-   - la analiza con Claude (`ia.py` + `prompts.py`): QA *full* para
-     Activación y normalizaciones con WMS, QA *lite* para el resto (con visión
-     para PQR / visita conjunta / emergencia);
-   - aplica reglas defensivas (`validaciones.py`, `catalogo.py`): el estado de
-     la OT lo manda Metabase, no la IA;
-   - cruza seriales con WMS y con la factura anterior (`facturas.py`);
-   - guarda en Supabase (`supabase.py`) y marca el acta como procesada (`estado.py`).
-5. **Alcances nuevos** (`pipeline.verificar_nuevos_alcances`): marca en Supabase
+4. **Por cada acta** (`pipeline.ProcesarActa`):
+   - lee el PDF (`pdf`, con MuPDF);
+   - la analiza con Claude (`ia`): QA *full* para Activación y normalizaciones
+     con WMS, QA *lite* para el resto (con visión para PQR / visita conjunta /
+     emergencia);
+   - aplica reglas defensivas (`validaciones`, `catalogo`): el estado de la OT
+     lo manda Metabase, no la IA;
+   - cruza seriales con WMS y con la factura anterior (`facturas`);
+   - guarda en Supabase (`supabase`) y, solo si se guardó, marca el acta como
+     procesada (`estado`). Si falla, se reintenta en la próxima corrida.
+5. **Alcances nuevos** (`pipeline.VerificarNuevosAlcances`): marca en Supabase
    las visitas previas que ya tienen alcance de ingeniería.
 
-## Módulos
+## Paquetes
 
-| Capa | Módulo | Qué hace |
+| Capa | Paquete | Qué hace |
 |---|---|---|
-| Configuración | `config.py` | Valores de producción + overrides por variables de entorno / `.env` |
-| Entrada | `metabase.py` | Descarga CSVs de Metabase (actas, WMS, alcances, facturas, App Ops) |
-| Entrada | `pdf.py` | Texto (pdfplumber) e imágenes (PyMuPDF) de los PDFs |
-| Análisis | `prompts.py` | System prompts de Claude (lite y full) |
-| Análisis | `ia.py` | Llamadas a Claude y parseo del JSON |
-| Análisis | `facturas.py` | Serial del medidor en la factura anterior (regex, y Claude si falla) |
-| Reglas | `catalogo.py` | Catálogo de tipificaciones, tracks de QA, planner por OR |
-| Reglas | `validaciones.py` | Post-validaciones sobre la respuesta de la IA |
-| Salida | `supabase.py` | Escritura en `actas_qa` (contrato con el frontend) |
-| Salida | `reportes.py` | JSON local por acta en `reportes_qa/` (no se versiona) |
-| Estado | `estado.py` | Archivos JSON de `state/` y cooldown del LLM |
-| Orquestación | `pipeline.py` | `procesar_acta()` y `main()` |
-| Utilidades | `utils.py` | Fechas, normalización de seriales |
+| Programas | `cmd/qa`, `cmd/limpiar-facturas`, `cmd/limpiar-pqr-vico-emerg` | Puntos de entrada |
+| Configuración | `config` | Valores de producción + overrides por variables de entorno / `backend/.env` |
+| Entrada | `metabase` | CSVs de Metabase (actas, WMS, alcances, facturas, App Ops) |
+| Entrada | `pdf` | Texto e imágenes de los PDFs con MuPDF ([go-fitz](https://github.com/gen2brain/go-fitz)) |
+| Análisis | `ia` | Prompts y llamadas a Claude con el SDK oficial de Go |
+| Análisis | `facturas` | Serial del medidor en la factura anterior (regex, y Claude si falla) |
+| Reglas | `catalogo` | Catálogo de tipificaciones, tracks de QA, planner por OR |
+| Reglas | `validaciones` | Post-validaciones sobre la respuesta de la IA |
+| Salida | `supabase` | Escritura en `actas_qa` (contrato con el frontend) |
+| Salida | `reportes` | JSON local por acta en `backend/reportes_qa/` (no se versiona) |
+| Estado | `estado` | Archivos JSON de `state/` y cooldown del LLM |
+| Orquestación | `pipeline` | `ProcesarActa()` y `Main()` |
+| Utilidades | `dato`, `util` | JSON libre de la IA, fechas, normalización de seriales |
 
-Los nombres de funciones se mantuvieron iguales al `qa_bia.py` original para
-poder rastrear cambios en el historial. El código de notificaciones a Slack
-(deshabilitado desde hace tiempo) se eliminó; está en el historial de git si
-hace falta recuperarlo.
+La respuesta de Claude es un JSON libre que se maneja como `map[string]any`
+(paquete `dato`), con la misma semántica que tenía la versión en Python.
 
-Un acta (o un alcance) solo se marca como procesada en `state/` cuando quedó
-guardada en Supabase; si la escritura falla, se reintenta en la siguiente
-corrida.
+## Claude
+
+- SDK `github.com/anthropics/anthropic-sdk-go` **v1.78.0** (versión de API
+  `2023-06-01`), modelo `claude-haiku-4-5-20251001` (configurable con `CLAUDE_MODEL`).
+- System prompt cacheado 1 hora y `temperature` 0.1.
+- Ante un 429 o 529 se activa un cooldown (`state/llm_cooldown.json`) y no se
+  vuelve a llamar hasta que vence.
+- La API `2026-10-21` (SDK v2) ya no acepta `temperature`: ver
+  [docs/hallazgos.md](../docs/hallazgos.md) antes de actualizar el SDK.
 
 ## Configuración
 
-Copiar `.env.example` a `.env` (no se versiona). Variables:
+Copiar `backend/.env.example` a `backend/.env` (no se versiona). Variables:
 
 | Variable | Default | Uso |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | — (obligatoria) | Claude |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY` | vacío | Si faltan, no se escribe en Supabase |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | vacío | Si faltan, no se escribe en Supabase |
 | `METABASE_API_KEY` | vacío | Facturas anteriores y reconciliación con App Ops |
 | `CLAUDE_MODEL` | `claude-haiku-4-5-20251001` | Modelo |
 | `QA_MODO_PRUEBA` | `false` | Procesa solo `QA_ACTAS_PRUEBA` actas |
@@ -66,39 +72,35 @@ Copiar `.env.example` a `.env` (no se versiona). Variables:
 | `QA_FECHA_INICIO` | `2026-05-10` | Ignora actas anteriores |
 | `QA_FECHA_INICIO_ALCANCES` | `2026-04-30` | Ignora alcances anteriores |
 | `QA_MAX_ACTAS_POR_RUN` | `30` | Tope por corrida |
-| `QA_STATE_DIR` | `state` | Carpeta de estado (relativa a `backend/`). En local usar `state-local` para no tocar el de producción |
+| `QA_PAUSA_ENTRE_ACTAS_SEGUNDOS` | `20` | Pausa entre llamadas a Claude |
+| `QA_STATE_DIR` | `backend/state` | Carpeta de estado. En local usar `backend/state-local` para no tocar la de producción |
+| `QA_CARPETA_REPORTES` | `backend/reportes_qa` | Reportes locales |
+| `METABASE_BASE_URL`, `ANTHROPIC_BASE_URL` | URLs reales | Solo para pruebas contra servidores falsos |
 
 ## Correr en local sin tocar producción
 
 ```bash
-cp .env.example .env    # trae QA_MODO_PRUEBA=true y QA_STATE_DIR=state-local
+cp backend/.env.example backend/.env    # trae QA_MODO_PRUEBA=true y QA_STATE_DIR=backend/state-local
 # completar solo ANTHROPIC_API_KEY
-python -m qa_bia
+go run ./backend/cmd/qa
 ```
 
 Analiza 2 actas reales de Metabase, no escribe en Supabase y deja el avance en
-`state-local/` (ignorado por git).
+`backend/state-local/` (ignorado por git).
 
 ## Scripts de mantenimiento
 
-Se corren desde GitHub Actions (botón manual) o en local desde `backend/`:
+Se corren desde GitHub Actions (botón manual) o en local desde la raíz:
 
-- `python -m scripts.limpiar_facturas` — fuerza reprocesar visitas previas para
-  volver a extraer la factura anterior.
-- `python -m scripts.limpiar_pqr_vico_emerg` — fuerza reprocesar PQR / visita
-  conjunta / emergencia.
+- `go run ./backend/cmd/limpiar-facturas`: fuerza reprocesar las visitas
+  previas para volver a extraer la factura anterior.
+- `go run ./backend/cmd/limpiar-pqr-vico-emerg`: fuerza reprocesar PQR,
+  visita conjunta y emergencia.
 
 Los dos modifican `state/` y Supabase.
 
 ## Pruebas
 
 ```bash
-pip install -r requirements-dev.txt
-python -m pytest
+go test ./backend/...
 ```
-
-## Dependencias
-
-`requirements.txt` fija versiones exactas. Para actualizar una librería:
-cambiar la versión, correr las pruebas y probar en local con
-`QA_MODO_PRUEBA=true` antes de subirlo a `main`.

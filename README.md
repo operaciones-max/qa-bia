@@ -5,6 +5,8 @@ Sistema que revisa con IA (Anthropic Claude) las actas de campo de BIA Energy
 inventario WMS, los alcances de ingeniería y la factura anterior, y deja el
 resultado en Supabase para que el equipo lo revise en un dashboard web.
 
+Todo está escrito en **Go** (un solo módulo: `github.com/operaciones-max/qa-bia`).
+
 > **Estado:** pausado. El cron de GitHub Actions está desactivado; el QA solo
 > corre a mano desde *Actions → QA BIA Automatico → Run workflow*.
 
@@ -15,16 +17,16 @@ Metabase (actas, WMS, alcances, facturas, App Ops)
         │ lee
         ▼
 ┌─ BACKEND · backend/ ─────────────────────────────────────────┐
-│ Python, corre en GitHub Actions                              │
+│ go run ./backend/cmd/qa   (en GitHub Actions)                │
 │ metabase → pdf → ia (Claude) → validaciones → supabase       │
 └──────────────────────────────────────────────────────────────┘
         │ escribe (service role key)
         ▼
 Supabase · tabla actas_qa          ← esquema y permisos en supabase/migrations/
-        ▲ lee y guarda la revisión (usuario con login)
+        ▲ lee y guarda la revisión (usuario con login, RLS)
         │
 ┌─ FRONTEND · frontend/ ───────────────────────────────────────┐
-│ React + Vite, sitio estático                                 │
+│ go run ./frontend/cmd/dashboard   (servidor web)             │
 │ listado con filtros · detalle del acta · revisión humana     │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -37,18 +39,21 @@ de la tabla `actas_qa`. Qué columna escribe cada lado está en
 
 ```
 qa-bia/
-├── backend/                 Motor de QA en Python (ver backend/README.md)
-│   ├── qa_bia/              Paquete principal
-│   ├── scripts/             Scripts de mantenimiento (forzar reprocesos)
-│   ├── state/               Estado del bot: actas ya procesadas, caches (lo commitea el bot)
-│   └── tests/
-├── frontend/                Dashboard de revisión (ver frontend/README.md)
-│   └── src/
-├── supabase/migrations/     Tabla actas_qa, columnas de revisión y permisos (RLS)
+├── go.mod, go.sum
+├── backend/                  Motor de QA (ver backend/README.md)
+│   ├── cmd/qa/               Programa principal del QA
+│   ├── cmd/limpiar-*/        Scripts de mantenimiento (forzar reprocesos)
+│   ├── metabase, pdf, ia, facturas, catalogo, validaciones, supabase, …  paquetes
+│   └── state/                Estado del bot: actas ya procesadas, caches (lo commitea el bot)
+├── frontend/                 Dashboard de revisión (ver frontend/README.md)
+│   ├── cmd/dashboard/        Servidor web
+│   └── web/                  Handlers, plantillas HTML y CSS (embebidos en el binario)
+├── internal/envfile/         Lectura de archivos .env (compartido)
+├── supabase/migrations/      Tabla actas_qa, columnas de revisión y permisos (RLS)
 ├── docs/
-│   ├── contrato-supabase.md Columnas de actas_qa: quién escribe qué
-│   └── hallazgos.md         Revisión del código: bugs y riesgos encontrados
-└── .github/workflows/       CI, QA automático y 2 workflows de limpieza manual
+│   ├── contrato-supabase.md  Columnas de actas_qa: quién escribe qué
+│   └── hallazgos.md          Revisión del código: bugs, riesgos y su estado
+└── .github/workflows/        CI, QA automático y 2 workflows de limpieza manual
 ```
 
 ## Puesta en marcha (una sola vez)
@@ -62,27 +67,30 @@ qa-bia/
 
 ## Uso diario
 
+Requiere Go 1.24+ y un compilador C (gcc/clang) para leer PDFs con MuPDF.
+Todos los comandos se corren desde la raíz del repo.
+
 ```bash
 # Backend: correr el QA en local sin tocar producción
-cd backend && pip install -r requirements-dev.txt
-cp .env.example .env              # completar ANTHROPIC_API_KEY
-python -m qa_bia
+cp backend/.env.example backend/.env      # completar ANTHROPIC_API_KEY
+go run ./backend/cmd/qa
 
 # Frontend: levantar el dashboard
-cd frontend && npm install
-cp .env.example .env.local        # URL y anon key de Supabase
-npm run dev
+cp frontend/.env.example frontend/.env    # URL y anon key de Supabase
+go run ./frontend/cmd/dashboard           # http://localhost:8080
+
+# Pruebas
+go test ./...
 ```
 
-Pruebas: `python -m pytest` en `backend/` y `npm test` en `frontend/`. El
-workflow **CI** las corre en cada push y PR.
+El workflow **CI** corre `gofmt`, `go vet`, las pruebas y el build en cada push y PR.
 
 ## Trabajar en una rama
 
 1. Crear la rama desde `main` y hacer los cambios.
-2. Probar en local: backend con `QA_MODO_PRUEBA=true` y sin credenciales de
-   Supabase (ver `backend/.env.example`); frontend con `npm run dev`.
+2. Probar en local: el backend con `QA_MODO_PRUEBA=true` y sin credenciales de
+   Supabase (ver `backend/.env.example`), y el dashboard con `go run`.
 3. Si hace falta correr el QA en GitHub Actions, lanzar el workflow eligiendo
    la rama: corre el código de esa rama y commitea el estado en esa misma rama.
-   **Ojo:** usa los mismos secretos, o sea escribe en el Supabase de producción.
+   **Ojo:** usa los mismos secretos, o sea que escribe en el Supabase de producción.
 4. Abrir un PR hacia `main`; el CI tiene que pasar.

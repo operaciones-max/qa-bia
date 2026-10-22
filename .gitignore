@@ -1,28 +1,19 @@
 # Secrets locales
 .env
-.env.local
 /config.py
-
-# Frontend
-node_modules/
-frontend/dist/
 
 # Estado y outputs locales
 reportes_qa/
 backend/state-local/
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
+# Binarios de go build en la raiz
+/qa
+/dashboard
+/limpiar-facturas
+/limpiar-pqr-vico-emerg
 
-# Tests y scripts locales (uso personal, no van al CI)
-test_csv.py
-test_dash.py
+# Scripts locales (uso personal, no van al CI)
 test_key.ps1
-diagnostico.py
 run_qa.bat
 
 # Editor

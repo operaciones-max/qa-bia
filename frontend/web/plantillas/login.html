@@ -1,0 +1,16 @@
+{{define "contenido"}}
+<div class="centrado">
+  <form method="post" action="/login" class="tarjeta login">
+    <h1>QA BIA</h1>
+    <p class="tenue">Revisión de actas de campo</p>
+    <label>Correo
+      <input type="email" name="email" required autocomplete="email" value="{{.EmailIngresado}}" autofocus>
+    </label>
+    <label>Contraseña
+      <input type="password" name="clave" required autocomplete="current-password">
+    </label>
+    {{if .Error}}<div class="alerta" role="alert">{{.Error}}</div>{{end}}
+    <button type="submit" class="boton primario ancho">Entrar</button>
+  </form>
+</div>
+{{end}}

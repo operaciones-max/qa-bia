@@ -24,26 +24,22 @@ jobs:
           fetch-depth: 0
           clean: true
 
-      - name: Instalar Python
-        uses: actions/setup-python@v5
+      - name: Instalar Go
+        uses: actions/setup-go@v5
         with:
-          python-version: '3.11'
-
-      - name: Instalar dependencias
-        run: pip install -r backend/requirements.txt
+          go-version-file: go.mod
 
       - name: Preparar entorno
         run: git log -1 --oneline
 
       - name: Correr QA
-        working-directory: backend
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           METABASE_API_KEY: ${{ secrets.METABASE_API_KEY }}
-        run: python -m qa_bia
+        run: go run ./backend/cmd/qa
 
       - name: Guardar estado procesados
         run: |

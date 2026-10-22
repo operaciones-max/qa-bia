@@ -1,69 +1,66 @@
 # Frontend — dashboard de revisión
 
-App web para revisar los resultados del QA. Lee y escribe directo en Supabase
-(tabla `actas_qa`); no habla con el backend.
+Servidor web en Go que muestra los resultados del QA y permite revisarlos.
+Lee y escribe directo en Supabase (tabla `actas_qa`); no habla con el backend.
 
-Stack: React 19 + TypeScript + Vite + Tailwind CSS + supabase-js.
+Usa solo HTML del servidor: plantillas `html/template` y un CSS propio, sin
+JavaScript. Las plantillas y el CSS van embebidos en el binario.
 
 ## Pantallas
 
-- **Login** con correo y contraseña (Supabase Auth).
-- **Listado** (`/#/`): indicadores (total, exitosas, fallidas, con
+- **Login** con correo y contraseña (Supabase Auth). La sesión se guarda en una
+  cookie `HttpOnly` y el token se refresca solo antes de vencer.
+- **Listado** (`/`): indicadores (total, exitosas, fallidas, con
   discrepancias, sin revisar), filtros por texto, tipo de servicio, planner,
   estado, track, revisión, fechas y "solo con discrepancias", con paginación.
   Los filtros quedan en la URL: se pueden compartir y se mantienen al volver
   del detalle.
-- **Detalle** (`/#/actas/<ot_id>`): datos de la OT, técnico y observación
+- **Detalle** (`/actas/<ot_id>`): datos de la OT, técnico y observación
   literal, medida y equipos, comparación con WMS, factura anterior, alcance,
   tipificación de la falla, errores y alertas, y la respuesta completa de la IA.
 - **Revisión**: aprobar como exitosa, marcar como fallida o quitar la revisión,
   con comentario. Se guarda en las columnas `revision_*`, que el backend nunca
   toca. Quién revisó y cuándo lo pone la base de datos.
 
-## Correr en local
+## Seguridad
+
+- Las consultas a Supabase usan la **anon key + el token del usuario**, así que
+  aplican las políticas RLS de `supabase/migrations/…_seguridad.sql`: sin login
+  no se ve nada y el revisor solo puede escribir las columnas de revisión.
+- Los formularios solo se aceptan desde el mismo origen (cookie `SameSite=Lax`
+  y chequeo del header `Origin`).
+- En producción, servirlo detrás de HTTPS y poner `COOKIE_SEGURA=true`.
+
+## Correr
 
 ```bash
-cd frontend
-cp .env.example .env.local      # URL del proyecto y ANON key de Supabase
-npm install
-npm run dev                     # http://localhost:5173
+cp frontend/.env.example frontend/.env    # SUPABASE_URL y SUPABASE_ANON_KEY
+go run ./frontend/cmd/dashboard           # http://localhost:8080
 ```
 
 Requisitos en Supabase (una sola vez):
 1. Aplicar las migraciones de [`../supabase/migrations`](../supabase/migrations).
 2. Crear los usuarios revisores en *Authentication → Users → Add user*.
 
-## Scripts
-
-| Comando | Qué hace |
-|---|---|
-| `npm run dev` | Servidor de desarrollo |
-| `npm test` | Pruebas de la lógica de filtros y formato (`node --test`) |
-| `npm run typecheck` | Chequeo de tipos |
-| `npm run build` | Build estático en `dist/` |
+`GET /salud` responde `ok` (para monitoreo o el health check del hosting).
 
 ## Estructura
 
 ```
-src/
-├── main.tsx, App.tsx    Entrada, login y rutas
-├── pages/               Login, ListaActas, DetalleActa
-├── components/          Tabla, filtros, indicadores, panel de revisión, piezas de UI
-├── lib/
-│   ├── supabase.ts      Cliente de Supabase
-│   ├── actas.ts         Todas las consultas a actas_qa
-│   ├── filtros.ts       Filtros de pantalla → condiciones de PostgREST (puro, con pruebas)
-│   └── formato.ts       Fechas, estados y etiquetas (puro, con pruebas)
-├── hooks/useSesion.ts   Sesión de Supabase Auth
-└── types/acta.ts        Tipo de la fila de actas_qa (contrato con el backend)
+frontend/
+├── cmd/dashboard/main.go   Configuración y arranque del servidor
+└── web/
+    ├── servidor.go         Rutas, sesión, CSRF y handlers
+    ├── supabase.go         Auth y consultas a actas_qa
+    ├── filtros.go          Filtros de pantalla ↔ URL ↔ condiciones de PostgREST
+    ├── formato.go          Fechas, estados y etiquetas para las plantillas
+    ├── acta.go             Tipo de la fila de actas_qa (contrato con el backend)
+    ├── plantillas/         base, login, lista, detalle, error
+    └── estaticos/          estilos.css
 ```
 
 ## Publicar
 
-`npm run build` genera archivos estáticos en `dist/`. Las rutas usan `#`, así
-que se puede publicar tal cual en cualquier hosting estático (Netlify, Vercel,
-Cloudflare Pages, S3) sin configurar redirecciones. Hay que definir
-`VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` al momento del build.
-
-La anon key es pública por diseño: lo que protege los datos son las políticas
-RLS de la migración `..._seguridad.sql` (sin login no se ve nada).
+`go build -o dashboard ./frontend/cmd/dashboard` genera un único binario
+autocontenido. Se puede correr en cualquier servidor o contenedor con las
+variables de `frontend/.env.example`.

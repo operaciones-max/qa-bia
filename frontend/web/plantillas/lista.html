@@ -1,0 +1,107 @@
+{{define "contenido"}}
+<div class="pila">
+  <div class="indicadores">
+    <div class="tarjeta indicador"><p>Actas</p><strong>{{numero .Indicadores.Total}}</strong></div>
+    <div class="tarjeta indicador"><p>Exitosas</p><strong class="t-verde">{{numero .Indicadores.Exitosas}}</strong></div>
+    <div class="tarjeta indicador"><p>Fallidas</p><strong class="t-rojo">{{numero .Indicadores.Fallidas}}</strong></div>
+    <div class="tarjeta indicador"><p>Con discrepancias</p><strong class="t-ambar">{{numero .Indicadores.ConDiscrepancias}}</strong></div>
+    <div class="tarjeta indicador"><p>Sin revisar</p><strong class="t-azul">{{numero .Indicadores.SinRevisar}}</strong></div>
+  </div>
+
+  {{with .Filtros}}
+  <form method="get" action="/" class="tarjeta filtros">
+    <div class="rejilla-filtros">
+      <label class="doble">Buscar (OT, código CO, técnico, empresa)
+        <input type="search" name="busqueda" value="{{.Busqueda}}" placeholder="Ej: VIPE_44339 o CO0800006765">
+      </label>
+      <label>Tipo de servicio
+        <select name="tipoServicio">
+          <option value="">Todos</option>
+          {{$sel := .TipoServicio}}{{range $.Opciones.TiposServicio}}<option{{if eq . $sel}} selected{{end}}>{{.}}</option>{{end}}
+        </select>
+      </label>
+      <label>Planner
+        <select name="planner">
+          <option value="">Todos</option>
+          {{$sel := .Planner}}{{range $.Opciones.Planners}}<option{{if eq . $sel}} selected{{end}}>{{.}}</option>{{end}}
+        </select>
+      </label>
+      <label>Estado OT
+        <select name="estadoOt">
+          <option value="">Todos</option>
+          <option value="EXITOSA"{{if eq .EstadoOT "EXITOSA"}} selected{{end}}>Exitosa</option>
+          <option value="FALLIDA"{{if eq .EstadoOT "FALLIDA"}} selected{{end}}>Fallida</option>
+        </select>
+      </label>
+      <label>Track QA
+        <select name="qaTrack">
+          <option value="">Todos</option>
+          <option value="Activacion"{{if eq .QATrack "Activacion"}} selected{{end}}>Activación</option>
+          <option value="Retencion"{{if eq .QATrack "Retencion"}} selected{{end}}>Retención</option>
+          <option value="Energy Solutions"{{if eq .QATrack "Energy Solutions"}} selected{{end}}>Energy Solutions</option>
+        </select>
+      </label>
+      <label>Revisión
+        <select name="revision">
+          <option value="">Todas</option>
+          <option value="pendiente"{{if eq .Revision "pendiente"}} selected{{end}}>Sin revisar</option>
+          <option value="EXITOSA"{{if eq .Revision "EXITOSA"}} selected{{end}}>Aprobada como exitosa</option>
+          <option value="FALLIDA"{{if eq .Revision "FALLIDA"}} selected{{end}}>Marcada como fallida</option>
+        </select>
+      </label>
+      <div class="fechas">
+        <label>Ejecutada desde<input type="date" name="desde" value="{{.Desde}}"></label>
+        <label>Hasta<input type="date" name="hasta" value="{{.Hasta}}"></label>
+      </div>
+    </div>
+    <div class="acciones-filtros">
+      <label class="casilla"><input type="checkbox" name="conDiscrepancias" value="1"{{if .ConDiscrepancias}} checked{{end}}>
+        Solo con discrepancias (WMS o factura anterior)</label>
+      <div class="botones">
+        <a href="/" class="boton">Limpiar filtros</a>
+        <button type="submit" class="boton primario">Filtrar</button>
+      </div>
+    </div>
+  </form>
+  {{end}}
+
+  {{if .Filas}}
+  <div class="tabla-contenedor">
+    <table>
+      <thead>
+        <tr><th>OT</th><th>Tipo</th><th>Ejecución</th><th>Técnico</th><th>Estado</th><th>Medidor WMS</th><th>Factura ant.</th><th class="der">Errores</th><th>Revisión</th></tr>
+      </thead>
+      <tbody>
+        {{range .Filas}}{{$e := .EstadoFinal}}
+        <tr{{if .TieneDiscrepancias}} class="discrepancia"{{end}}>
+          <td><a href="{{urlDetalle .OTID $.Query}}" class="fuerte">{{texto .OTNombre}}</a><div class="pequeno tenue">{{texto .InternalBIACode}}</div></td>
+          <td>{{texto .TipoServicio}}</td>
+          <td class="nowrap">{{fecha .FechaEjecucion}}</td>
+          <td>{{texto .TecnicoNombre}}</td>
+          <td><span class="insignia {{tonoEstado $e}}">{{texto $e}}</span></td>
+          <td>{{template "coincide" .MedidorCoincideWMS}}</td>
+          <td>{{template "coincide" .MedidorCoincideFacturaAnterior}}</td>
+          <td class="der">{{len .ErroresQA}}</td>
+          <td>{{if .RevisionResultado}}<span class="insignia azul">Revisada</span>{{else}}<span class="pequeno tenue">Pendiente</span>{{end}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+  <p class="vacio">No hay actas con estos filtros.</p>
+  {{end}}
+
+  {{if .Paginar}}
+  <div class="paginacion">
+    <span>Página {{.Pagina}} de {{.Paginas}} · {{numero .Total}} actas</span>
+    <div class="botones">
+      {{if .Anterior}}<a class="boton" href="{{.Anterior}}">Anterior</a>{{else}}<span class="boton deshabilitado">Anterior</span>{{end}}
+      {{if .Siguiente}}<a class="boton" href="{{.Siguiente}}">Siguiente</a>{{else}}<span class="boton deshabilitado">Siguiente</span>{{end}}
+    </div>
+  </div>
+  {{end}}
+</div>
+{{end}}
+
+{{define "coincide"}}{{if not .}}<span class="tenue">—</span>{{else if eq (tonoCoincidencia .) "verde"}}<span class="insignia verde">OK</span>{{else}}<span class="insignia rojo">No</span>{{end}}{{end}}

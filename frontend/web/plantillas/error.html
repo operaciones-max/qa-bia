@@ -1,0 +1,6 @@
+{{define "contenido"}}
+<div class="pila">
+  {{if .Volver}}<a href="{{.Volver}}" class="volver">← Volver al listado</a>{{end}}
+  <div class="alerta" role="alert">{{.Error}}</div>
+</div>
+{{end}}

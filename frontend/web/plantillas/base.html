@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QA BIA</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/estaticos/estilos.css">
+</head>
+<body>
+{{- if .Email}}
+  <header class="barra">
+    <div class="contenedor barra-interior">
+      <a href="/" class="marca">QA BIA <span>· Revisión de actas</span></a>
+      <div class="usuario">
+        <span class="ocultar-movil">{{.Email}}</span>
+        <form method="post" action="/logout"><button type="submit" class="enlace">Salir</button></form>
+      </div>
+    </div>
+  </header>
+  <main class="contenedor">{{template "contenido" .}}</main>
+{{- else}}
+  {{template "contenido" .}}
+{{- end}}
+</body>
+</html>

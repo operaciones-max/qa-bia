@@ -1,0 +1,133 @@
+{{define "contenido"}}
+{{$a := .Acta}}{{$qa := .QA}}{{$e := $a.EstadoFinal}}
+<div class="pila">
+  <a href="{{.Volver}}" class="volver">← Volver al listado</a>
+
+  <header class="encabezado-acta">
+    <div>
+      <h1>{{texto $a.OTNombre}}</h1>
+      <p class="tenue">{{texto $a.InternalBIACode}} · {{texto $a.TipoServicio}} · {{fechaHora $a.FechaEjecucion}}</p>
+    </div>
+    <div class="botones">
+      <span class="insignia {{tonoEstado $e}}">{{texto $e}}</span>
+      {{if and $a.RevisionResultado (ne (deref $a.RevisionResultado) (deref $a.EstadoOT))}}<span class="pequeno tenue">(App Ops: {{texto $a.EstadoOT}})</span>{{end}}
+      {{if $a.PDFURL}}<a href="{{deref $a.PDFURL}}" target="_blank" rel="noreferrer" class="boton">Ver PDF del acta</a>{{end}}
+    </div>
+  </header>
+
+  <div class="columnas">
+    <div class="pila">
+      <section class="tarjeta"><h2>Datos generales</h2>
+        <dl class="campos">
+          <div><dt>Track QA</dt><dd>{{texto $a.QATrack}}</dd></div>
+          <div><dt>Analizada</dt><dd>{{fechaHora $a.ProcesadoEn}}</dd></div>
+          <div><dt>Empresa</dt><dd>{{texto $a.Empresa}}</dd></div>
+          <div><dt>Dirección</dt><dd>{{texto $a.Direccion}}</dd></div>
+          <div><dt>Operador de red</dt><dd>{{texto $a.ORNorm}}</dd></div>
+          <div><dt>Planner</dt><dd>{{texto $a.Planner}}</dd></div>
+          <div><dt>Contrato</dt><dd>{{texto $a.ContractID}}</dd></div>
+          <div><dt>Cierre en App Ops</dt><dd>{{if $a.EstadoAppOps}}{{deref $a.EstadoAppOps}}{{else}}Sin cerrar{{end}} ({{texto $a.EstadoRevision}})</dd></div>
+        </dl>
+      </section>
+
+      <section class="tarjeta"><h2>Técnico</h2>
+        <dl class="campos">
+          <div><dt>Nombre</dt><dd>{{texto $a.TecnicoNombre}}</dd></div>
+          <div><dt>Empresa</dt><dd>{{if es $a.TecnicoEmpresa "CONTRATISTA"}}Contratista · {{texto $a.ContratistaNombre}}{{else if es $a.TecnicoEmpresa "BIA"}}BIA Energy{{else}}—{{end}}</dd></div>
+        </dl>
+        <p class="etiqueta">Observación del técnico (literal)</p>
+        <blockquote>{{texto (campo $qa "observacion_tecnico_verbatim")}}</blockquote>
+        {{with campo $qa "observaciones_tecnicas"}}<p class="etiqueta">Resumen técnico (IA)</p><p>{{.}}</p>{{end}}
+      </section>
+
+      <section class="tarjeta"><h2>Medida y equipos</h2>
+        <dl class="campos">
+          <div><dt>Tipo de medida</dt><dd>{{texto $a.TipoMedida}} · factor {{texto $a.FactorMedida}}</dd></div>
+          <div><dt>Firma del operador de red</dt><dd>{{texto $a.ORFirma}}</dd></div>
+          <div><dt>Medidor encontrado</dt><dd>{{texto $a.MedidorEncontradoSerie}} · {{texto $a.MedidorEncontradoMarca}}</dd></div>
+          <div><dt>Medidor instalado</dt><dd>{{texto $a.MedidorInstaladoSerie}} · {{texto $a.MedidorInstaladoMarca}}</dd></div>
+          <div><dt>Sellos medidor (encontrado / instalado)</dt><dd>{{texto $a.SellosMedidorEncontrado}} / {{texto $a.SellosMedidorInstalado}}</dd></div>
+          <div><dt>Sellos TCs (encontrados / instalados)</dt><dd>{{texto $a.SellosTCsEncontrados}} / {{texto $a.SellosTCsInstalados}}</dd></div>
+          <div><dt>TCs / TPs</dt><dd>{{siNo $a.TieneTCs}} / {{siNo $a.TieneTPs}}</dd></div>
+          <div><dt>Telemedida · diagrama unifilar</dt><dd>{{siNo $a.TieneTelemedida}} · {{siNo $a.TieneDiagramaUnifilar}}</dd></div>
+        </dl>
+      </section>
+
+      <section class="tarjeta"><h2>Comparación con WMS</h2>
+        {{if and $a.WMSAsignado (deref2 $a.WMSAsignado)}}
+        <dl class="campos">
+          <div><dt>Medidor asignado</dt><dd>{{texto $a.WMSMedidorSerial}} · {{texto $a.WMSMedidorMarca}}</dd></div>
+          <div><dt>Medidor instalado vs WMS</dt><dd>{{template "comparacion" $a.MedidorCoincideWMS}}</dd></div>
+          <div><dt>TCs asignados en WMS</dt><dd>{{if $a.WMSCompleto}}{{seriales $a.WMSCompleto.TCs}}{{else}}—{{end}}</dd></div>
+          <div><dt>TCs instalados (acta)</dt><dd>{{lista (subcampo $qa "tcs_instalados" "seriales")}}</dd></div>
+          <div><dt>TCs vs WMS</dt><dd>{{template "comparacion" $a.TCsCoincidenWMS}}</dd></div>
+          <div><dt>TPs vs WMS</dt><dd>{{template "comparacion" $a.TPsCoincidenWMS}}</dd></div>
+          <div><dt>Marca WMS vs alcance</dt><dd>{{template "comparacion" $a.WMSMarcaCoincideAlcance}}</dd></div>
+        </dl>
+        {{else}}<p class="tenue">Este código no tiene equipos asignados en WMS.</p>{{end}}
+      </section>
+
+      <div class="dos-columnas">
+        <section class="tarjeta"><h2>Factura anterior</h2>
+          <dl class="campos">
+            <div><dt>Lectura</dt><dd>{{textoFactura $a.FacturaAnteriorEstado}}</dd></div>
+            <div><dt>Serial en factura</dt><dd>{{texto $a.SerialMedidorFacturaAnterior}}</dd></div>
+            <div><dt>vs medidor encontrado</dt><dd>{{template "comparacion" $a.MedidorCoincideFacturaAnterior}}</dd></div>
+            <div><dt>Express</dt><dd>{{siNo $a.FacturaAnteriorExpress}}</dd></div>
+          </dl>
+        </section>
+        <section class="tarjeta"><h2>Alcance de ingeniería</h2>
+          {{if and $a.TieneAlcance (deref2 $a.TieneAlcance)}}
+          <dl class="campos">
+            <div><dt>Viable para instalar</dt><dd>{{texto $a.AlcanceViable}}</dd></div>
+            <div><dt>Medida a instalar</dt><dd>{{texto $a.AlcanceMedidaInstalar}}</dd></div>
+          </dl>
+          {{else}}<p class="tenue">Sin alcance registrado.</p>{{end}}
+        </section>
+      </div>
+
+      {{if eq $e "FALLIDA"}}{{with campo $qa "tipificacion_falla"}}
+      <section class="tarjeta"><h2>Tipificación de la falla</h2>
+        <dl class="campos">
+          <div><dt>Causa raíz</dt><dd>{{texto (campo . "causa_raiz")}}</dd></div>
+          <div><dt>Responsable</dt><dd>{{texto (campo . "responsable")}}</dd></div>
+        </dl>
+        <p class="etiqueta">Detalle</p><p>{{texto (campo . "detalle")}}</p>
+        <p class="etiqueta">Mejora propuesta</p><p>{{texto (campo . "mejora")}}</p>
+      </section>
+      {{end}}{{end}}
+    </div>
+
+    <div class="pila">
+      <section class="tarjeta"><h2>Revisión</h2>
+        {{if .Guardado}}<div class="aviso" role="status">Revisión guardada.</div>{{end}}
+        {{if $a.RevisionResultado}}
+        <p><span class="insignia {{tonoEstado (deref $a.RevisionResultado)}}">{{if es $a.RevisionResultado "EXITOSA"}}Aprobada como exitosa{{else}}Marcada como fallida{{end}}</span>
+          por {{texto $a.RevisadoPor}} el {{fechaHora $a.RevisadoEn}}</p>
+        {{else}}<p class="tenue">Esta acta todavía no fue revisada.</p>{{end}}
+        <form method="post" action="{{urlRevision $a.OTID}}">
+          <input type="hidden" name="q" value="{{.Query}}">
+          <label>Comentario
+            <textarea name="comentario" rows="3" placeholder="Qué se revisó, qué hay que corregir…">{{deref $a.RevisionComentario}}</textarea>
+          </label>
+          {{if .ErrorRevision}}<div class="alerta" role="alert">{{.ErrorRevision}}</div>{{end}}
+          <div class="botones">
+            <button type="submit" name="accion" value="EXITOSA" class="boton primario">Aprobar como exitosa</button>
+            <button type="submit" name="accion" value="FALLIDA" class="boton peligro">Marcar como fallida</button>
+            {{if $a.RevisionResultado}}<button type="submit" name="accion" value="quitar" class="boton">Quitar revisión</button>{{end}}
+          </div>
+        </form>
+      </section>
+      <section class="tarjeta"><h2>Errores QA ({{len $a.ErroresQA}})</h2>
+        {{if $a.ErroresQA}}<ul>{{range $a.ErroresQA}}<li>{{.}}</li>{{end}}</ul>{{else}}<p class="tenue">Sin errores.</p>{{end}}
+      </section>
+      <section class="tarjeta"><h2>Alertas ({{len $a.AlertasQA}})</h2>
+        {{if $a.AlertasQA}}<ul>{{range $a.AlertasQA}}<li>{{.}}</li>{{end}}</ul>{{else}}<p class="tenue">Sin alertas.</p>{{end}}
+      </section>
+      <details class="tarjeta"><summary>Respuesta completa de la IA</summary><pre>{{json $qa}}</pre></details>
+    </div>
+  </div>
+</div>
+{{end}}
+
+{{define "comparacion"}}<span class="insignia {{tonoCoincidencia .}}">{{textoCoincidencia .}}</span>{{end}}

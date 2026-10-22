@@ -1,5 +1,0 @@
-# Versiones exactas: una version nueva no debe entrar sin probarla antes.
-anthropic==1.11.0
-pdfplumber==0.10.3
-pymupdf==1.28.2
-requests==2.34.2

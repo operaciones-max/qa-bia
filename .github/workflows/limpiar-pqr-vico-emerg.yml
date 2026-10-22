@@ -13,21 +13,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Instalar Python
-        uses: actions/setup-python@v5
+      - name: Instalar Go
+        uses: actions/setup-go@v5
         with:
-          python-version: '3.11'
-
-      - name: Instalar dependencias
-        run: pip install requests
+          go-version-file: go.mod
 
       - name: Correr limpieza
-        working-directory: backend
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python -m scripts.limpiar_pqr_vico_emerg
+        run: go run ./backend/cmd/limpiar-pqr-vico-emerg
 
       - name: Commitear caches actualizados
         run: |

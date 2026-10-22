@@ -3,8 +3,8 @@
 El backend escribe y el frontend (dashboard) lee y guarda la revisión humana.
 No hay API entre ellos: este documento es el contrato. Si se cambia una
 columna, hay que actualizar los tres lados:
-- el backend: `backend/qa_bia/supabase.py`;
-- el frontend: `frontend/src/types/acta.ts`;
+- el backend: `backend/supabase/supabase.go`;
+- el frontend: `frontend/web/acta.go`;
 - la base: una migración nueva en `supabase/migrations/`.
 
 Y también este archivo.
@@ -25,7 +25,7 @@ Definidos en `supabase/migrations/20261021000003_seguridad.sql`:
 
 ## Columnas que escribe el backend
 
-Fuente: `backend/qa_bia/supabase.py` → `enviar_supabase()`.
+Fuente: `backend/supabase/supabase.go` → `Registro()`.
 
 | Columna | Tipo | Origen |
 |---|---|---|
@@ -53,8 +53,8 @@ Fuente: `backend/qa_bia/supabase.py` → `enviar_supabase()`.
 | `tiene_tcs`, `tiene_tps`, `tiene_telemedida`, `tiene_diagrama_unifilar` | bool | IA |
 | `or_firma` | `SI` \| `NO` | IA |
 | `validacion_coherente` | `COHERENTE` \| `INCOHERENTE` \| `INCOMPLETO` | IA |
-| `errores_qa`, `alertas_qa` | jsonb (lista de textos) | IA, filtrado por `validaciones.py` |
-| `tipificacion_causa_raiz`, `tipificacion_responsable` | text | IA, ajustado al catálogo (`catalogo.py`) |
+| `errores_qa`, `alertas_qa` | jsonb (lista de textos) | IA, filtrado por `backend/validaciones` |
+| `tipificacion_causa_raiz`, `tipificacion_responsable` | text | IA, ajustado al catálogo (`backend/catalogo`) |
 | `wms_asignado` | bool | ¿Hay medidor asignado en WMS? |
 | `wms_medidor_serial`, `wms_medidor_marca` | text | WMS |
 | `wms_completo` | jsonb | `{medidor, tcs[], tps[]}` de WMS |
@@ -72,14 +72,14 @@ Fuente: `backend/qa_bia/supabase.py` → `enviar_supabase()`.
 
 | Quién | Columnas | Cuándo |
 |---|---|---|
-| `reconciliar_estado_app_ops()` | `estado_app_ops`, `estado_revision` | Al inicio de **cada** corrida, para todas las actas |
-| `actualizar_supabase_alcance()` | `tiene_alcance`, `alcance_viable`, `alcance_medida_instalar`, `alcance_completo` | Cuando aparece un alcance nuevo para una visita previa |
-| `scripts/limpiar_facturas.py` | `serial_medidor_factura_anterior`, `medidor_coincide_factura_anterior`, `factura_anterior_estado` → null | Manual, antes de reprocesar |
+| `supabase.ReconciliarEstadoAppOps()` | `estado_app_ops`, `estado_revision` | Al inicio de **cada** corrida, para todas las actas |
+| `supabase.ActualizarAlcance()` | `tiene_alcance`, `alcance_viable`, `alcance_medida_instalar`, `alcance_completo` | Cuando aparece un alcance nuevo para una visita previa |
+| `backend/cmd/limpiar-facturas` | `serial_medidor_factura_anterior`, `medidor_coincide_factura_anterior`, `factura_anterior_estado` → null | Manual, antes de reprocesar |
 
 ## Columnas que escribe el frontend
 
-Solo estas; el backend nunca las toca. Fuente: `frontend/src/lib/actas.ts` →
-`guardarRevision()`.
+Solo estas; el backend nunca las toca. Fuente: `frontend/web/supabase.go` →
+`GuardarRevision()`.
 
 | Columna | Tipo | Significado |
 |---|---|---|
