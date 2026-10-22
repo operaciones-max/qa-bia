@@ -11,6 +11,7 @@ backend/state-local/
 /dashboard
 /limpiar-facturas
 /limpiar-pqr-vico-emerg
+/extraccion
 
 # Scripts locales (uso personal, no van al CI)
 test_key.ps1

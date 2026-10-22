@@ -4,6 +4,7 @@ package supabase
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -354,4 +355,24 @@ func (c *Cliente) ActualizarOT(otID string, cambios map[string]any) error {
 		return fmt.Errorf("%d %s", status, recortar(string(data), 200))
 	}
 	return nil
+}
+
+// Insertar agrega una fila a una tabla y devuelve su id. Lo usa el servicio de
+// extraccion (tabla extracciones).
+func (c *Cliente) Insertar(tabla string, fila any) (int64, error) {
+	status, data, err := c.pedir(http.MethodPost, tabla, url.Values{"select": {"id"}}, fila,
+		"return=representation", 15*time.Second)
+	if err != nil {
+		return 0, err
+	}
+	if status < 200 || status >= 300 {
+		return 0, fmt.Errorf("%d %s", status, recortar(string(data), 200))
+	}
+	var filas []struct {
+		ID int64 `json:"id"`
+	}
+	if err := json.Unmarshal(data, &filas); err != nil || len(filas) == 0 {
+		return 0, fmt.Errorf("respuesta inesperada de Supabase: %s", recortar(string(data), 200))
+	}
+	return filas[0].ID, nil
 }

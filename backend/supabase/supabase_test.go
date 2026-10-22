@@ -68,3 +68,21 @@ func TestRegistroUsaNullDondePythonUsabaNone(t *testing.T) {
 		t.Fatalf("factor_medida = %v", r["factor_medida"])
 	}
 }
+
+func TestInsertarDevuelveElID(t *testing.T) {
+	var ruta, prefer string
+	var cuerpo map[string]any
+	c := clientePara(t, func(w http.ResponseWriter, r *http.Request) {
+		ruta, prefer = r.URL.RequestURI(), r.Header.Get("Prefer")
+		json.NewDecoder(r.Body).Decode(&cuerpo)
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(`[{"id": 42}]`))
+	})
+	id, err := c.Insertar("extracciones", map[string]any{"link": "https://x/a.pdf"})
+	if err != nil || id != 42 {
+		t.Fatalf("id = %d, err = %v", id, err)
+	}
+	if ruta != "/rest/v1/extracciones?select=id" || prefer != "return=representation" || cuerpo["link"] != "https://x/a.pdf" {
+		t.Errorf("ruta=%s prefer=%s cuerpo=%v", ruta, prefer, cuerpo)
+	}
+}

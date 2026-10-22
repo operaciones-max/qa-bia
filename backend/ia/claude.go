@@ -55,6 +55,15 @@ var errJSONInvalido = errors.New("JSON invalido")
 // ExtraerJSON parsea el objeto JSON de la respuesta aunque venga envuelto en
 // ```json o con texto alrededor.
 func ExtraerJSON(texto string) (dato.Objeto, error) {
+	var obj dato.Objeto
+	if err := dato.Decodificar([]byte(recortarJSON(texto)), &obj); err != nil || obj == nil {
+		return nil, errJSONInvalido
+	}
+	return obj, nil
+}
+
+// recortarJSON deja solo el objeto JSON: quita los bloques ``` y el texto alrededor.
+func recortarJSON(texto string) string {
 	if strings.Contains(texto, "```json") {
 		texto = strings.TrimSpace(strings.SplitN(strings.SplitN(texto, "```json", 2)[1], "```", 2)[0])
 	} else if strings.Contains(texto, "```") {
@@ -65,11 +74,7 @@ func ExtraerJSON(texto string) (dato.Objeto, error) {
 	if inicio != -1 && fin != -1 && fin >= inicio {
 		texto = texto[inicio : fin+1]
 	}
-	var obj dato.Objeto
-	if err := dato.Decodificar([]byte(texto), &obj); err != nil || obj == nil {
-		return nil, errJSONInvalido
-	}
-	return obj, nil
+	return texto
 }
 
 func bloquesImagen(imagenes [][]byte) []anthropic.ContentBlockParamUnion {

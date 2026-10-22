@@ -9,6 +9,7 @@ no hay que tocar Go.
 | `qa_full.md` | `ia.SystemPromptFull()` | Extracción del acta: Activación y normalizaciones con WMS |
 | `qa_lite.md` | `ia.SystemPromptLite()` | Extracción del acta: Retención y Energy Solutions |
 | `evaluador_cierre_v1.md` | `ia.SystemPromptEvaluadorCierre()` | Veredicto independiente de cierre. **Todavía no lo usa el pipeline** |
+| `extraccion.md` | `ia.SystemPromptExtraccion()` | Servicio de extracción de documentos (`backend/extraccion`) |
 
 Marcadores que se reemplazan al cargar el prompt:
 

@@ -29,7 +29,7 @@ Programa Go que se ejecuta desde la raíz del repo con `go run ./backend/cmd/qa`
 
 | Capa | Paquete | Qué hace |
 |---|---|---|
-| Programas | `cmd/qa`, `cmd/limpiar-facturas`, `cmd/limpiar-pqr-vico-emerg` | Puntos de entrada |
+| Programas | `cmd/qa`, `cmd/limpiar-facturas`, `cmd/limpiar-pqr-vico-emerg`, `cmd/extraccion` | Puntos de entrada |
 | Configuración | `config` | Valores de producción + overrides por variables de entorno / `backend/.env` |
 | Entrada | `metabase` | CSVs de Metabase (actas, WMS, alcances, facturas, App Ops) |
 | Entrada | `pdf` | Texto e imágenes de los PDFs con MuPDF ([go-fitz](https://github.com/gen2brain/go-fitz)) |
@@ -41,6 +41,7 @@ Programa Go que se ejecuta desde la raíz del repo con `go run ./backend/cmd/qa`
 | Salida | `reportes` | JSON local por acta en `backend/reportes_qa/` (no se versiona) |
 | Estado | `estado` | Archivos JSON de `state/` y cooldown del LLM |
 | Orquestación | `pipeline` | `ProcesarActa()` y `Main()` |
+| Servicio | `extraccion` | Servicio HTTP de extracción de documentos (OCR con Claude) |
 | Utilidades | `dato`, `util` | JSON libre de la IA, fechas, normalización de seriales |
 
 La respuesta de Claude es un JSON libre que se maneja como `map[string]any`
@@ -101,6 +102,14 @@ Se corren desde GitHub Actions (botón manual) o en local desde la raíz:
   visita conjunta y emergencia.
 
 Los dos modifican `state/` y Supabase.
+
+## Servicio de extracción de documentos
+
+`go run ./backend/cmd/extraccion` levanta un servicio HTTP aparte del QA:
+recibe el link de un PDF o una imagen y el JSON esperado, y devuelve ese JSON
+con los datos del documento (RUT, cámara de comercio…). Usa los mismos
+paquetes `pdf`, `ia` y `supabase`. Detalle, API y configuración en
+[docs/servicio-extraccion.md](../docs/servicio-extraccion.md).
 
 ## Pruebas
 

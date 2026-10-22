@@ -18,6 +18,8 @@ var (
 	promptFull string
 	//go:embed prompts/evaluador_cierre_v1.md
 	promptEvaluadorCierre string
+	//go:embed prompts/extraccion.md
+	promptExtraccion string
 )
 
 // listaCatalogo arma "  - causa" por linea, en el orden del catalogo.
@@ -69,3 +71,7 @@ func SystemPromptFull() string {
 func SystemPromptEvaluadorCierre() string {
 	return strings.Replace(promptEvaluadorCierre, "{{CATALOGO_POR_RESPONSABLE}}", catalogoPorResponsable(), 1)
 }
+
+// SystemPromptExtraccion es el system prompt del servicio de extraccion de
+// documentos (backend/extraccion).
+func SystemPromptExtraccion() string { return promptExtraccion }

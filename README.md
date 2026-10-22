@@ -31,6 +31,10 @@ Supabase · tabla actas_qa          ← esquema y permisos en supabase/migration
 └──────────────────────────────────────────────────────────────┘
 ```
 
+Aparte, `backend/` tiene un **servicio de extracción de documentos** (OCR con
+Claude): recibe el link de un PDF o una imagen y devuelve el JSON pedido. Ver
+[docs/servicio-extraccion.md](docs/servicio-extraccion.md).
+
 El backend y el frontend **no se llaman entre sí**: se comunican solo a través
 de la tabla `actas_qa`. Qué columna escribe cada lado está en
 [docs/contrato-supabase.md](docs/contrato-supabase.md).
@@ -43,15 +47,17 @@ qa-bia/
 ├── backend/                  Motor de QA (ver backend/README.md)
 │   ├── cmd/qa/               Programa principal del QA
 │   ├── cmd/limpiar-*/        Scripts de mantenimiento (forzar reprocesos)
+│   ├── cmd/extraccion/       Servicio HTTP de extracción de documentos (OCR) + Dockerfile
 │   ├── metabase, pdf, ia, facturas, catalogo, validaciones, supabase, …  paquetes
 │   └── state/                Estado del bot: actas ya procesadas, caches (lo commitea el bot)
 ├── frontend/                 Dashboard de revisión (ver frontend/README.md)
 │   ├── cmd/dashboard/        Servidor web
 │   └── web/                  Handlers, plantillas HTML y CSS (embebidos en el binario)
 ├── internal/envfile/         Lectura de archivos .env (compartido)
-├── supabase/migrations/      Tabla actas_qa, columnas de revisión y permisos (RLS)
+├── supabase/migrations/      Tablas actas_qa y extracciones, columnas de revisión y permisos (RLS)
 ├── docs/
 │   ├── contrato-supabase.md  Columnas de actas_qa: quién escribe qué
+│   ├── servicio-extraccion.md  Servicio de extracción: API, configuración y origen
 │   └── hallazgos.md          Revisión del código: bugs, riesgos y su estado
 └── .github/workflows/        CI, QA automático y 2 workflows de limpieza manual
 ```
@@ -78,6 +84,9 @@ go run ./backend/cmd/qa
 # Frontend: levantar el dashboard
 cp frontend/.env.example frontend/.env    # URL y anon key de Supabase
 go run ./frontend/cmd/dashboard           # http://localhost:8080
+
+# Servicio de extracción de documentos
+go run ./backend/cmd/extraccion           # http://localhost:8081
 
 # Pruebas
 go test ./...

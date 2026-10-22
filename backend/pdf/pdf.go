@@ -38,23 +38,34 @@ func Descargar(url string) ([]byte, error) {
 
 // Texto extrae el texto de todas las paginas, una tras otra.
 func Texto(pdfBytes []byte) (string, error) {
-	doc, err := fitz.NewFromMemory(pdfBytes)
+	paginas, err := TextoPorPagina(pdfBytes)
 	if err != nil {
 		return "", err
 	}
-	defer doc.Close()
 	var texto strings.Builder
-	for i := 0; i < doc.NumPage(); i++ {
-		t, err := doc.Text(i)
-		if err != nil {
-			continue
-		}
+	for _, t := range paginas {
 		if t = strings.TrimRight(t, "\n"); t != "" {
 			texto.WriteString(t)
 			texto.WriteString("\n")
 		}
 	}
 	return texto.String(), nil
+}
+
+// TextoPorPagina devuelve el texto de cada pagina ("" si una pagina no se pudo leer).
+func TextoPorPagina(pdfBytes []byte) ([]string, error) {
+	doc, err := fitz.NewFromMemory(pdfBytes)
+	if err != nil {
+		return nil, err
+	}
+	defer doc.Close()
+	paginas := make([]string, doc.NumPage())
+	for i := range paginas {
+		if t, err := doc.Text(i); err == nil {
+			paginas[i] = t
+		}
+	}
+	return paginas, nil
 }
 
 // DescargarYLeer devuelve el texto (sin espacios a los costados), las imagenes
@@ -87,18 +98,44 @@ func RenderizarPaginas(pdfBytes []byte, n int, dpi float64) [][]byte {
 	defer doc.Close()
 	var imagenes [][]byte
 	for i := 0; i < doc.NumPage() && i < n; i++ {
-		img, err := doc.ImageDPI(i, dpi)
+		img, err := jpegDePagina(doc, i, dpi)
 		if err != nil {
 			fmt.Printf("  WARN: no se pudieron renderizar paginas para vision: %v\n", err)
 			break
 		}
-		var buf bytes.Buffer
-		if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: 95}); err != nil {
-			break
-		}
-		imagenes = append(imagenes, buf.Bytes())
+		imagenes = append(imagenes, img)
 	}
 	return imagenes
+}
+
+// RenderizarSeleccion convierte en JPEG las paginas indicadas (desde 0), en ese orden.
+func RenderizarSeleccion(pdfBytes []byte, paginas []int, dpi float64) ([][]byte, error) {
+	doc, err := fitz.NewFromMemory(pdfBytes)
+	if err != nil {
+		return nil, err
+	}
+	defer doc.Close()
+	imagenes := make([][]byte, 0, len(paginas))
+	for _, i := range paginas {
+		img, err := jpegDePagina(doc, i, dpi)
+		if err != nil {
+			return nil, fmt.Errorf("pagina %d: %w", i+1, err)
+		}
+		imagenes = append(imagenes, img)
+	}
+	return imagenes, nil
+}
+
+func jpegDePagina(doc *fitz.Document, pagina int, dpi float64) ([]byte, error) {
+	img, err := doc.ImageDPI(pagina, dpi)
+	if err != nil {
+		return nil, err
+	}
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: 95}); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 // errorHTTP replica el mensaje de requests.raise_for_status() de Python, que
