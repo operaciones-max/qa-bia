@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/operaciones-max/qa-bia/backend/catalogo"
+	"github.com/operaciones-max/qa-bia/backend/cierre"
 	"github.com/operaciones-max/qa-bia/backend/config"
 	"github.com/operaciones-max/qa-bia/backend/dato"
 	"github.com/operaciones-max/qa-bia/backend/estado"
@@ -248,6 +249,9 @@ func (p *Pipeline) ProcesarActa(ctx context.Context, acta metabase.Fila, f fuent
 	validaciones.LimpiarErroresFantasma(qa, tipo)
 	// No se fuerza FALLIDA por datos incompletos: se respeta el estado del tecnico.
 	// El revisor puede marcar FALLIDA desde el dashboard (frontend/).
+	// Lo que el subagente de cierre ve del acta: antes de simplificar las
+	// fallidas, que borran sus errores.
+	actaExtraida := copiar(qa)
 	validaciones.SimplificarFallida(qa)
 	catalogo.ValidarTipificacion(qa)
 
@@ -294,6 +298,19 @@ func (p *Pipeline) ProcesarActa(ctx context.Context, acta metabase.Fila, f fuent
 	// VIPE e INST: cruce de los equipos entre acta, fotos y sistema.
 	if tipoOT, ok := catalogo.TipoOTDe(otNombre, tipo); ok && usaFull && (tipoOT.Codigo == "VIPE" || tipoOT.Codigo == "INST") {
 		p.verificarEquipos(ctx, qa, tipoOT.Codigo, pdfBytes, equipos, codigo, exitosa)
+	}
+
+	// Subagente de cierre del tipo de OT: segundo veredicto, independiente del de App Ops.
+	if p.cfg.SubagentesCierre {
+		p.evaluarCierre(ctx, qa, cierre.Caso{
+			TipoServicio:    tipo,
+			EstadoReportado: estadoElectricista,
+			CodigoCO:        codigo,
+			Acta:            actaExtraida,
+			TextoActa:       textoPDF,
+			Alcance:         alcance,
+			Equipos:         equipos,
+		}, otNombre)
 	}
 
 	fmt.Printf("     Resultado: %s | Medida: %s\n", pyRepr(qa["estado_ot"]), pyRepr(qa["tipo_medida"]))
@@ -416,6 +433,46 @@ func (p *Pipeline) verificarEquipos(ctx context.Context, qa dato.Objeto, codigoO
 		errores = append(errores, h)
 	}
 	val["errores_encontrados"] = errores
+}
+
+// evaluarCierre manda el caso al subagente de su tipo de OT y deja el
+// resultado en qa["cierre_ia"]. No toca estado_ot: el revisor compara los dos.
+func (p *Pipeline) evaluarCierre(ctx context.Context, qa dato.Objeto, caso cierre.Caso, otNombre string) {
+	tipoOT, ok := catalogo.TipoOTDe(otNombre, caso.TipoServicio)
+	if !ok {
+		fmt.Printf("     Sin subagente de cierre para %q (%s)\n", otNombre, caso.TipoServicio)
+		return
+	}
+	caso.Tipo = tipoOT
+	caso.Validaciones = dato.Objeto{}
+	for _, k := range []string{"medidor_coincide_wms", "tcs_coinciden_wms", "tps_coinciden_wms",
+		"serial_medidor_factura_anterior", "factura_anterior_estado", "medidor_coincide_factura_anterior",
+		"verificacion_equipos"} {
+		if v, hay := qa[k]; hay {
+			caso.Validaciones[k] = v
+		}
+	}
+	resultado, err := cierre.Evaluar(ctx, p.claude, caso)
+	if err != nil {
+		fmt.Printf("     Subagente %s: ERROR %v\n", tipoOT.Codigo, err)
+		qa["cierre_ia"] = dato.Objeto{"subagente": tipoOT.Codigo, "error": err.Error()}
+		return
+	}
+	qa["cierre_ia"] = resultado
+	fmt.Printf("     Subagente %s: %s | acta completa: %v\n", tipoOT.Codigo, resultado["veredicto"], resultado["acta_completa"])
+}
+
+// copiar hace una copia profunda de un objeto JSON.
+func copiar(o dato.Objeto) dato.Objeto {
+	data, err := dato.Codificar(o, false)
+	if err != nil {
+		return dato.Objeto{}
+	}
+	var copia dato.Objeto
+	if err := dato.Decodificar(data, &copia); err != nil {
+		return dato.Objeto{}
+	}
+	return copia
 }
 
 // compararFacturaAnterior extrae (o toma del cache) el serial del medidor de la

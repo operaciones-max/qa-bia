@@ -89,6 +89,13 @@ func nuevoEntorno(t *testing.T) (*supabaseFalso, *httptest.Server, *http.Client)
 		"resultado_qa_completo": map[string]any{
 			"observacion_tecnico_verbatim": "El cliente no permitio el acceso",
 			"tipificacion_falla":           map[string]any{"causa_raiz": "Agendamiento cliente", "detalle": "d", "mejora": "m"},
+			"cierre_ia": map[string]any{
+				"subagente": "VIPE", "subagente_nombre": "Visita previa", "familia": "previa", "borrador": false,
+				"veredicto": "FALLIDA", "acta_completa": true, "alcance_cumplido": false,
+				"hallazgos":          []any{"El medidor encontrado no es el de la factura"},
+				"comentario_cierre":  "Se levantó la información de otro medidor.",
+				"tipificacion_falla": map[string]any{"causa_raiz": "Fallas en el Alistamiento Operativo", "responsable": "Contratista", "cinco_por_que": []any{"1. ¿Por qué? Porque…"}},
+			},
 			"verificacion_equipos": map[string]any{
 				"tipo_medida": "SEMIDIRECTA", "fotos_leidas": true,
 				"cruces": []any{map[string]any{
@@ -154,7 +161,8 @@ func TestRecorridoCompleto(t *testing.T) {
 	resp, _ = cli.Get(srv.URL + "/actas/ot-1?estadoOt=FALLIDA")
 	detalle := leer(t, resp)
 	for _, esperado := range []string{"El cliente no permitio el acceso", "Agendamiento cliente", `href="/?estadoOt=FALLIDA"`, "Error &lt;b&gt;real&lt;/b&gt;",
-		"Verificación de equipos", `<span class="insignia rojo">No coincide</span>`, "(factura anterior)", "TCs encontrados: relación"} {
+		"Verificación de equipos", `<span class="insignia rojo">No coincide</span>`, "(factura anterior)", "TCs encontrados: relación",
+		"Cierre según el subagente VIPE", "Se levantó la información de otro medidor.", "Fallas en el Alistamiento Operativo · Contratista", "5 porqués"} {
 		if !strings.Contains(detalle, esperado) {
 			t.Errorf("el detalle no contiene %q", esperado)
 		}

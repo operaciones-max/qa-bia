@@ -21,6 +21,8 @@ Programa Go que se ejecuta desde la raíz del repo con `go run ./backend/cmd/qa`
      lo manda Metabase, no la IA;
    - en VIPE e INST cruza los equipos entre acta, fotos (OCR) y sistema
      (`verificacion`): factura anterior, visita previa y WMS;
+   - el subagente de cierre de su tipo de OT (`cierre`) da un segundo veredicto
+     (EXITOSA / FALLIDA / PENDIENTE), independiente del de App Ops;
    - cruza seriales con WMS y con la factura anterior (`facturas`);
    - guarda en Supabase (`supabase`) y, solo si se guardó, marca el acta como
      procesada (`estado`). Si falla, se reintenta en la próxima corrida.
@@ -43,6 +45,7 @@ Programa Go que se ejecuta desde la raíz del repo con `go run ./backend/cmd/qa`
 | Salida | `supabase` | Escritura en `actas_qa` (contrato con el frontend) |
 | Salida | `reportes` | JSON local por acta en `backend/reportes_qa/` (no se versiona) |
 | Estado | `estado` | Archivos JSON de `state/` y cooldown del LLM |
+| Análisis | `cierre` | Subagentes de cierre: arma el caso, llama al subagente del tipo de OT y valida su veredicto |
 | Orquestación | `pipeline` | `ProcesarActa()` y `Main()` |
 | Servicio | `extraccion` | Servicio HTTP de extracción de documentos (OCR con Claude) |
 | Utilidades | `dato`, `util` | JSON libre de la IA, fechas, normalización de seriales |
@@ -56,9 +59,8 @@ La respuesta de Claude es un JSON libre que se maneja como `map[string]any`
   `2023-06-01`), modelo `claude-haiku-4-5-20251001` (configurable con `CLAUDE_MODEL`).
 - System prompt cacheado 1 hora y `temperature` 0.1.
 - Los prompts están en [`ia/prompts/`](ia/prompts/README.md), incluidos los
-  subagentes de cierre por tipo de OT (veredicto EXITOSA / FALLIDA / PENDIENTE),
-  que todavía no están conectados al pipeline. Ver
-  [docs/agentes-ot.md](../docs/agentes-ot.md).
+  subagentes de cierre por tipo de OT (veredicto EXITOSA / FALLIDA / PENDIENTE).
+  Ver [docs/agentes-ot.md](../docs/agentes-ot.md).
 - Ante un 429 o 529 se activa un cooldown (`state/llm_cooldown.json`) y no se
   vuelve a llamar hasta que vence.
 - La API `2026-10-21` (SDK v2) ya no acepta `temperature`: ver
@@ -81,6 +83,7 @@ Copiar `backend/.env.example` a `backend/.env` (no se versiona). Variables:
 | `QA_FECHA_INICIO_ALCANCES` | `2026-04-30` | Ignora alcances anteriores |
 | `QA_MAX_ACTAS_POR_RUN` | `30` | Tope por corrida |
 | `QA_OCR_FOTOS` | `true` | En VIPE e INST, leer con OCR las fotos de los equipos (una llamada más a Claude por acta) |
+| `QA_SUBAGENTES` | `true` | Veredicto del subagente de cierre de cada tipo de OT (una llamada más a Claude por acta) |
 | `QA_PAUSA_ENTRE_ACTAS_SEGUNDOS` | `20` | Pausa entre llamadas a Claude |
 | `QA_STATE_DIR` | `backend/state` | Carpeta de estado. En local usar `backend/state-local` para no tocar la de producción |
 | `QA_CARPETA_REPORTES` | `backend/reportes_qa` | Reportes locales |

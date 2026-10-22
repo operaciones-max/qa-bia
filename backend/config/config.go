@@ -49,6 +49,9 @@ type Config struct {
 	// OCRFotos: en VIPE e INST se leen con OCR las fotos de los equipos para
 	// cruzarlas con el acta y el sistema (una llamada mas a Claude por acta).
 	OCRFotos bool
+	// SubagentesCierre: el subagente del tipo de OT da un veredicto de cierre
+	// independiente (una llamada mas a Claude por acta).
+	SubagentesCierre bool
 
 	// Estado persistente y reportes
 	StateDir                  string
@@ -104,6 +107,7 @@ func Cargar(archivoEnv string) Config {
 		IntervaloSegundos:     300,
 		MaxActasPorRun:        envInt("QA_MAX_ACTAS_POR_RUN", 30),
 		OCRFotos:              envBool("QA_OCR_FOTOS", true),
+		SubagentesCierre:      envBool("QA_SUBAGENTES", true),
 
 		StateDir:                  stateDir,
 		ArchivoProcesados:         filepath.Join(stateDir, "actas_procesadas.json"),

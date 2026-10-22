@@ -81,6 +81,7 @@ func TestTipoOTDeTitulo(t *testing.T) {
 		"VIPE_44339_3986E7":              "VIPE",
 		"PREB_CO0100003376_1350990039_1": "PREB",
 		"gvico_123":                      "GVICO",
+		"MANT/1":                         "MANT",
 		"XXXX_1":                         "",
 		"":                               "",
 	}
@@ -99,5 +100,21 @@ func TestTipoOTDeTitulo(t *testing.T) {
 	}
 	if len(TiposOT) != 45 {
 		t.Errorf("hay %d tipos de OT, esperados 45", len(TiposOT))
+	}
+}
+
+func TestTipoOTDeUsaElTipoDeServicioSiElTituloNoTraeCodigo(t *testing.T) {
+	casos := map[[2]string]string{
+		{"VIPE_1", "Instalación"}:              "VIPE", // manda el titulo
+		{"DONE_1", "Instalacion"}:              "INST",
+		{"RET_1", "Normalizacion Telemedidas"}: "NOTE",
+		{"OT 55", "Normalización Telemedidas"}: "NOTE",
+		{"OT 56", "Algo que no existe"}:        "",
+	}
+	for c, esperado := range casos {
+		tipo, ok := TipoOTDe(c[0], c[1])
+		if tipo.Codigo != esperado || ok != (esperado != "") {
+			t.Errorf("%v: %q %v, esperado %q", c, tipo.Codigo, ok, esperado)
+		}
 	}
 }

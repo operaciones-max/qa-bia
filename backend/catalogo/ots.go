@@ -1,6 +1,9 @@
 package catalogo
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 // Familia agrupa los tipos de OT que se evaluan con las mismas reglas generales.
 // Cada familia tiene su archivo en backend/ia/prompts/agentes/familias/.
@@ -103,12 +106,16 @@ func TipoOTPorCodigo(codigo string) (TipoOT, bool) {
 	return TipoOT{}, false
 }
 
+var reCodigoOT = regexp.MustCompile(`^[A-Za-z]+`)
+
 // TipoOTDeTitulo saca el tipo de OT del titulo, que empieza con el codigo
-// (ej. "VIPE_44339_3986E7" o "PREB_CO0100003376_1350990039_1").
+// (ej. "VIPE_44339_3986E7", "PREB_CO0100003376_1350990039_1" o "MANT/1").
 func TipoOTDeTitulo(titulo string) (TipoOT, bool) {
-	codigo, _, _ := strings.Cut(strings.TrimSpace(titulo), "_")
-	return TipoOTPorCodigo(codigo)
+	return TipoOTPorCodigo(reCodigoOT.FindString(strings.TrimSpace(titulo)))
 }
+
+var sinTildes = strings.NewReplacer("á", "a", "é", "e", "í", "i", "ó", "o", "ú", "u", "ü", "u",
+	"Á", "A", "É", "E", "Í", "I", "Ó", "O", "Ú", "U", "Ü", "U")
 
 // TipoOTDe saca el tipo de OT del titulo y, si el titulo no trae un codigo
 // conocido, del texto del tipo de servicio (ej. "Visita previa", "Instalación").
@@ -116,8 +123,9 @@ func TipoOTDe(titulo, tipoServicio string) (TipoOT, bool) {
 	if t, ok := TipoOTDeTitulo(titulo); ok {
 		return t, true
 	}
+	servicio := sinTildes.Replace(strings.TrimSpace(tipoServicio))
 	for _, t := range TiposOT {
-		if strings.EqualFold(t.Nombre, strings.TrimSpace(tipoServicio)) {
+		if strings.EqualFold(sinTildes.Replace(t.Nombre), servicio) {
 			return t, true
 		}
 	}

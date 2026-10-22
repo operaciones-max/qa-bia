@@ -8,8 +8,9 @@ no hay que tocar Go.
 |---|---|---|
 | `qa_full.md` | `ia.SystemPromptFull()` | Extracción del acta: Activación y normalizaciones con WMS |
 | `qa_lite.md` | `ia.SystemPromptLite()` | Extracción del acta: Retención y Energy Solutions |
-| `agentes/` | `ia.SystemPromptAgente(codigo)` | Subagentes de cierre, uno por tipo de OT: veredicto independiente. **Todavía no los usa el pipeline** |
-| `extraccion.md` | `ia.SystemPromptExtraccion()` | Servicio de extracción de documentos (`backend/extraccion`) |
+| `agentes/` | `ia.SystemPromptAgente(codigo)` | Subagentes de cierre, uno por tipo de OT: veredicto independiente (`backend/cierre`) |
+| `extraccion.md` | `ia.SystemPromptExtraccion()` | Servicio de extracción de documentos (`backend/extraccion`) y OCR de la factura anterior |
+| `fotos_equipos.md` | `ia.SystemPromptFotosEquipos()` | OCR de las fotos de medidores, TCs y TPs (`backend/verificacion`) |
 
 Marcadores que se reemplazan al cargar el prompt:
 
@@ -101,24 +102,26 @@ este repo.
 - **QA lite:** el JSON no trae bloques de equipos. Su ausencia no cuenta contra el
   técnico.
 
-### Qué falta para conectarlo al pipeline
+### Cómo está conectado
 
-1. **Una segunda llamada a Claude** en `pipeline.ProcesarActa`, después de la
-   extracción. Hay que armar el mensaje con los bloques que define el prompt
-   (`TIPO DE OT`, `ESTADO REPORTADO`, `CODIGO INTERNO BIA`, `ACTA EXTRAIDA`,
-   `TEXTO DEL ACTA`, `ALCANCE`, `EQUIPOS ASIGNADOS`, `NOTAS`,
-   `VALIDACIONES DEL BACKEND`), con el subagente del tipo de OT. Sube el costo:
-   una llamada más por acta.
-2. **Mandarle el JSON antes de `validaciones.SimplificarFallida`**, que en las
-   fallidas borra `errores_encontrados` y las alertas. Sin `estado_ot` ni
-   `tipificacion_falla`, para que no los copie.
-3. **Comparar con WMS también cuando el técnico reportó fallo:** hoy
-   `ValidarCoincidenciaWMS` solo compara si reportó éxito.
-4. **Guardar el veredicto aparte de `estado_ot`:** `estado_ot` sigue siendo el
-   estado de App Ops. Por ejemplo, columnas nuevas `veredicto_ia`,
-   `acta_completa`, `pendientes`, `comentario_cierre` (migración + contrato en
-   `docs/contrato-supabase.md`), o dentro de `resultado_qa_completo`.
-5. **Validar la tipificación:** `catalogo.ValidarTipificacion` hoy mira
-   `estado_ot`. Hay que hacerlo mirar `veredicto` para corregir causas fuera del
-   catálogo.
-6. **Mostrarlo en el dashboard** junto al estado de App Ops y la revisión humana.
+`backend/cierre` arma el caso con los bloques que define `agentes/comun.md`:
+
+- `TIPO DE OT`, `ESTADO REPORTADO` y `CODIGO INTERNO BIA`;
+- `ACTA EXTRAIDA`: antes de `SimplificarFallida` y sin `estado_ot` ni la
+  tipificación de la extracción;
+- `TEXTO DEL ACTA`, `ALCANCE`, `EQUIPOS ASIGNADOS` y `NOTAS`;
+- `VALIDACIONES DEL BACKEND`: WMS, factura anterior y `verificacion_equipos`.
+
+Con eso llama a `ia.EvaluarCierre` y valida la respuesta:
+
+- PENDIENTE solo si la OT lo admite;
+- la tipificación se ajusta con `catalogo.ValidarTipificacion`.
+
+El resultado queda en `resultado_qa_completo.cierre_ia` y el dashboard lo
+muestra en el detalle. `estado_ot` sigue siendo el estado de App Ops.
+
+Pendiente:
+
+- **Comparar con WMS también cuando el técnico reportó fallo**, fuera de VIPE e
+  INST: hoy `ValidarCoincidenciaWMS` solo compara si reportó éxito.
+- **Columnas propias** si se quiere filtrar por el veredicto del subagente.

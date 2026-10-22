@@ -27,12 +27,45 @@ llamada a Claude con sus propias instrucciones. Es más barato y predecible, y
 alcanza porque la evaluación de un acta no necesita herramientas ni varios
 pasos.
 
-**Estado:** creados, probados y sin conectar al pipeline. Las reglas de VIPE,
-INST y DESX vienen del prompt `v1_closure_evaluator`. VIPE e INST suman además
-la verificación de equipos acta · foto · sistema
-([flujo-vipe-inst.md](flujo-vipe-inst.md)), que sí corre en el pipeline. Las de las otras 42 OTs
-son un **borrador escrito a partir del nombre de cada OT**: hay que validarlas
-con operaciones antes de usarlas.
+**Estado:** conectados al QA. Las reglas de VIPE, INST y DESX vienen del
+prompt `v1_closure_evaluator`; VIPE e INST suman además la verificación de
+equipos acta · foto · sistema ([flujo-vipe-inst.md](flujo-vipe-inst.md)). Las
+de las otras 42 OTs son un **borrador escrito a partir del nombre de cada OT**:
+el dashboard las marca "reglas en borrador" hasta validarlas con operaciones.
+
+## Qué hacen en el flujo
+
+Después de que el QA extrae el acta y corre sus validaciones, cada acta pasa
+por el subagente de su tipo de OT (`backend/cierre`, en `pipeline.ProcesarActa`):
+
+1. **Elige el subagente** por el código con que empieza el título de la OT
+   (`INST_…` → INST). Si el título no trae código, lo busca por el tipo de
+   servicio.
+2. **Le arma el caso** con todas las fuentes:
+   - el acta extraída, antes de simplificar las fallidas;
+   - el texto completo del PDF;
+   - el alcance;
+   - los equipos de WMS;
+   - las notas (hoy no disponibles);
+   - las validaciones del backend, incluida la verificación de equipos en VIPE
+     e INST.
+3. **El subagente responde:**
+   - su veredicto (EXITOSA, FALLIDA o PENDIENTE);
+   - si el acta está completa y qué falta;
+   - los pendientes;
+   - los hallazgos;
+   - si falló, los 5 porqués con la causa del catálogo;
+   - un comentario de cierre.
+4. **El backend lo valida:**
+   - PENDIENTE solo donde la OT lo admite;
+   - la causa se ajusta al catálogo.
+
+   Lo guarda en `resultado_qa_completo.cierre_ia`.
+5. **El revisor lo ve en el detalle del acta**, junto al estado de App Ops, y
+   decide. El subagente no cambia `estado_ot`: es un segundo veredicto,
+   independiente.
+
+Cuesta una llamada más a Claude por acta. Se apaga con `QA_SUBAGENTES=false`.
 
 ## Tipos de OT
 
@@ -141,7 +174,7 @@ con operaciones antes de usarlas.
     porque su nombre dice "previa".
 
   Con el código se puede clasificar exacto. ¿Lo cambiamos?
-- **Conectarlos al pipeline:** las mismas decisiones del evaluador de cierre:
-  - una llamada más a Claude por acta;
-  - columnas nuevas en Supabase para el veredicto;
-  - mostrarlo en el dashboard.
+- **Columnas propias para el veredicto:** hoy queda dentro de
+  `resultado_qa_completo` para no depender de una migración. Si se quiere
+  filtrar el listado por el veredicto del subagente, hay que pasarlo a
+  columnas.

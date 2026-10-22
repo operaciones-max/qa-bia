@@ -106,3 +106,18 @@ func TestExtraerInformacionErrores(t *testing.T) {
 		}
 	}
 }
+
+func TestEvaluarCierreUsaElPromptDelSubagente(t *testing.T) {
+	srv, cuerpo, _ := claudeFalso(t, "end_turn", `{"veredicto": "PENDIENTE", "pendientes": ["Legalización"]}`)
+	r, err := clienteDePrueba(srv.URL, "claude-haiku-4-5-20251001").EvaluarCierre(context.Background(), "INST", "TIPO DE OT: INST")
+	if err != nil || r["veredicto"] != "PENDIENTE" {
+		t.Fatalf("r = %v, err = %v", r, err)
+	}
+	sistema := (*cuerpo)["system"].([]any)[0].(map[string]any)["text"].(string)
+	if !strings.Contains(sistema, "subagente de cierre de las OTs INST (Instalación") || !strings.Contains(sistema, "Esta OT admite PENDIENTE") {
+		t.Error("el system prompt no es el del subagente INST")
+	}
+	if _, err := clienteDePrueba(srv.URL, "x").EvaluarCierre(context.Background(), "NOEXISTE", "x"); err == nil {
+		t.Error("un tipo de OT desconocido deberia dar error")
+	}
+}

@@ -121,6 +121,27 @@
     </div>
 
     <div class="pila">
+      {{with campo $qa "cierre_ia"}}
+      <section class="tarjeta"><h2>Cierre según el subagente {{.subagente}}</h2>
+        {{if .error}}<p class="tenue">El subagente no pudo evaluar el acta: {{.error}}</p>{{else}}
+        <dl class="campos">
+          <div><dt>Subagente</dt><dd>{{.subagente}} · {{.subagente_nombre}} ({{.familia}}){{if .borrador}} <span class="insignia ambar">reglas en borrador</span>{{end}}</dd></div>
+          <div><dt>Veredicto del subagente</dt><dd><span class="insignia {{tonoEstado (printf "%v" .veredicto)}}">{{.veredicto}}</span></dd></div>
+          <div><dt>Estado en App Ops</dt><dd>{{texto $a.EstadoOT}}</dd></div>
+          <div><dt>Acta completa</dt><dd>{{if .acta_completa}}Sí{{else}}No{{end}}</dd></div>
+          <div><dt>Alcance cumplido</dt><dd>{{if .alcance_cumplido}}Sí{{else}}No{{end}}</dd></div>
+          {{with .pendientes}}<div><dt>Pendientes</dt><dd>{{lista .}}</dd></div>{{end}}
+        </dl>
+        {{with .comentario_cierre}}<p class="etiqueta">Comentario de cierre</p><p>{{.}}</p>{{end}}
+        {{with .hallazgos}}<p class="etiqueta">Hallazgos</p><ul>{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+        {{with .campos_faltantes}}<p class="etiqueta">Campos faltantes</p><ul>{{range .}}<li>{{.}}</li>{{end}}</ul>{{end}}
+        {{with .tipificacion_falla}}
+          <p class="etiqueta">Causa raíz</p><p>{{.causa_raiz}} · {{.responsable}}</p>
+          {{with .cinco_por_que}}<p class="etiqueta">5 porqués</p><ol>{{range .}}<li>{{.}}</li>{{end}}</ol>{{end}}
+        {{end}}
+        {{end}}
+      </section>
+      {{end}}
       <section class="tarjeta"><h2>Revisión</h2>
         {{if .Guardado}}<div class="aviso" role="status">Revisión guardada.</div>{{end}}
         {{if $a.RevisionResultado}}

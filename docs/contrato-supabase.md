@@ -66,7 +66,7 @@ Fuente: `backend/supabase/supabase.go` → `Registro()`.
 | `estado_app_ops` | `Exitosa` \| `Fallida` \| null | Cierre formal en App Ops |
 | `estado_revision` | `pendiente` \| `cerrada` | Ver abajo |
 | `tiene_alcance`, `alcance_viable`, `alcance_medida_instalar`, `alcance_completo` | bool / text / text / jsonb | Alcance de ingeniería |
-| `resultado_qa_completo` | jsonb | Respuesta completa de la IA tras las validaciones. En VIPE e INST incluye `verificacion_equipos` (cruce acta · foto · sistema, ver [flujo-vipe-inst.md](flujo-vipe-inst.md)) |
+| `resultado_qa_completo` | jsonb | Respuesta completa de la IA tras las validaciones. En VIPE e INST incluye `verificacion_equipos` (cruce acta · foto · sistema, ver [flujo-vipe-inst.md](flujo-vipe-inst.md)). En todas, `cierre_ia`: el veredicto del subagente de cierre (ver [agentes-ot.md](agentes-ot.md)) |
 
 ## Columnas que el backend actualiza después
 

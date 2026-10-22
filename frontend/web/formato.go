@@ -94,13 +94,15 @@ func TextoCoincidencia(v *bool) string {
 	}
 }
 
-// TonoEstado colorea EXITOSA en verde y FALLIDA en rojo.
+// TonoEstado colorea EXITOSA en verde, FALLIDA en rojo y PENDIENTE en ambar.
 func TonoEstado(estado string) string {
 	switch estado {
 	case "EXITOSA":
 		return "verde"
 	case "FALLIDA":
 		return "rojo"
+	case "PENDIENTE":
+		return "ambar"
 	}
 	return "gris"
 }
