@@ -20,3 +20,6 @@ run_qa.bat
 .vscode/
 .idea/
 *.swp
+
+# Python (por si se corre algun script suelto)
+__pycache__/
