@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/anthropics/anthropic-sdk-go"
+
+	"github.com/operaciones-max/qa-bia/backend/catalogo"
 )
 
 func TestEtiquetaTipoNoConvierteTodoEnVisitaPrevia(t *testing.T) {
@@ -54,5 +56,21 @@ func TestPromptsIncluyenElCatalogo(t *testing.T) {
 		if strings.Contains(p, "{{CATALOGO}}") || !strings.Contains(p, "  - Error en alcance\n") {
 			t.Errorf("prompt %s sin catalogo", nombre)
 		}
+	}
+}
+
+func TestEvaluadorCierreIncluyeElCatalogoPorResponsable(t *testing.T) {
+	p := SystemPromptEvaluadorCierre()
+	if strings.Contains(p, "{{") {
+		t.Fatal("quedo un placeholder sin reemplazar")
+	}
+	for _, tip := range catalogo.Tipificaciones {
+		if !strings.Contains(p, "\n  - "+tip.Causa+"\n") {
+			t.Errorf("falta la causa %q", tip.Causa)
+		}
+	}
+	// Cada causa queda bajo el titulo de su responsable.
+	if !strings.Contains(p, "\nContratista:\n  - Fallas en el Alistamiento Operativo\n") {
+		t.Error("las causas no quedaron agrupadas por responsable")
 	}
 }
