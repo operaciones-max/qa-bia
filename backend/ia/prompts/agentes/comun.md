@@ -129,6 +129,13 @@ VALIDACIONES DEL BACKEND
 
 Son verificaciones determinísticas que el backend ya ejecutó sobre el acta extraída: series instaladas contra los equipos asignados en WMS, y serie del medidor encontrado contra la factura anterior del cliente. Trátalas como hechos comprobados, no como opiniones, y repórtalas: en `campos_faltantes` si son un defecto de diligenciamiento, en `hallazgos` si pesan sobre el veredicto.
 
+En las VIPE y las INST llega además `verificacion_equipos`:
+
+* `cruces`: cada dato de un equipo (serie, relación de transformación, factor de medida) visto en tres fuentes: lo escrito en el ACTA, lo que se lee en la FOTO del acta (OCR) y el SISTEMA (`fuente_sistema`: factura anterior, visita previa o WMS asignado). `acta_vs_foto` y `acta_vs_sistema` valen `coincide`, `no_coincide`, `posible_error_digitacion` (difieren en 1 o 2 caracteres), `falta_en_acta` o `sin_dato` (esa fuente no lo tiene: no cuenta en contra).
+* `campos_faltantes`: los campos obligatorios vacíos según el tipo de medida. Van a `campos_faltantes` y a `acta_completa: false`.
+* `aplica`: qué equipos corresponden al tipo de medida.
+* `observaciones`: lo que el OCR no pudo leer y los límites de la verificación.
+
 La comparación con la factura anterior depende de haber leído bien el serial de una factura (`factura_anterior_estado` dice cómo terminó esa lectura) y la factura puede ser anterior a un cambio de medidor. Una diferencia ahí es una señal para revisar ("por confirmar"), no prueba suficiente de equipo ajeno salvo que el resto del acta la confirme.
 
 Pero un hecho comprobado no es un veredicto: la mayoría de las validaciones son defectos de diligenciamiento y su lugar es `acta_completa: false`. Solo mueven el veredicto las que impiden saber si el trabajo se hizo (una incoherencia encontrado/instalado, el bloque del equipo central en blanco, un equipo distinto al asignado). Que la lista venga vacía no prueba que la visita cumpla el objetivo, y que venga larga no prueba que no lo cumpla: eso lo tienes que verificar tú.

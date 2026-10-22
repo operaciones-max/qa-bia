@@ -89,6 +89,15 @@ func nuevoEntorno(t *testing.T) (*supabaseFalso, *httptest.Server, *http.Client)
 		"resultado_qa_completo": map[string]any{
 			"observacion_tecnico_verbatim": "El cliente no permitio el acceso",
 			"tipificacion_falla":           map[string]any{"causa_raiz": "Agendamiento cliente", "detalle": "d", "mejora": "m"},
+			"verificacion_equipos": map[string]any{
+				"tipo_medida": "SEMIDIRECTA", "fotos_leidas": true,
+				"cruces": []any{map[string]any{
+					"equipo": "Medidor encontrado", "dato": "serie", "acta": "60714646", "foto": "60714646",
+					"sistema": "82084260", "fuente_sistema": "factura anterior",
+					"acta_vs_foto": "coincide", "acta_vs_sistema": "no_coincide",
+				}},
+				"campos_faltantes": []any{"TCs encontrados: relación"},
+			},
 		},
 	}}}
 	srvSB := httptest.NewServer(sb)
@@ -144,7 +153,8 @@ func TestRecorridoCompleto(t *testing.T) {
 	// Detalle conservando filtros; el HTML de la IA se escapa
 	resp, _ = cli.Get(srv.URL + "/actas/ot-1?estadoOt=FALLIDA")
 	detalle := leer(t, resp)
-	for _, esperado := range []string{"El cliente no permitio el acceso", "Agendamiento cliente", `href="/?estadoOt=FALLIDA"`, "Error &lt;b&gt;real&lt;/b&gt;"} {
+	for _, esperado := range []string{"El cliente no permitio el acceso", "Agendamiento cliente", `href="/?estadoOt=FALLIDA"`, "Error &lt;b&gt;real&lt;/b&gt;",
+		"Verificación de equipos", `<span class="insignia rojo">No coincide</span>`, "(factura anterior)", "TCs encontrados: relación"} {
 		if !strings.Contains(detalle, esperado) {
 			t.Errorf("el detalle no contiene %q", esperado)
 		}

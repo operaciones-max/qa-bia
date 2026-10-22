@@ -142,37 +142,42 @@ func (c *Cliente) AnalizarActa(ctx context.Context, textoPDF, tipoServicio strin
 	return resultado
 }
 
-// ExtraerSerialDeFactura le pide a Claude el serial del medidor de una factura
-// (cuando las expresiones regulares no lo encontraron). Devuelve el serial ("" si
-// no hay) y el estado de la extraccion: "ok", "cooldown", "rate_limit" o "error_claude: ...".
-func (c *Cliente) ExtraerSerialDeFactura(ctx context.Context, textoFactura string) (string, string) {
-	if c.estado.CooldownActivo() != nil {
-		return "", "cooldown"
-	}
-	prompt := "Factura electrica colombiana. Extrae el serial del medidor.\n\n" +
-		"Patrones conocidos por comercializador:\n" +
-		"- Enel: 'No. Medidor: XXXX'\n" +
-		"- Air-e/Aire: 'Número de Medidor: XXXX'\n" +
-		"- Enel X: 'Medidor No: XXXX'\n" +
-		"- ERCO: 'Código medidor: XXXX'\n" +
-		"- Celsia: cuadro 'Medidor' con numero abajo\n" +
-		"- EPM: 'medidor' junto al cuadro de consumos\n" +
-		"- CENS: 'Medidor Activa: XXXX'\n\n" +
-		"Si no aparece serial reconocible, devuelve null.\n" +
-		"JSON estricto: {\"serial\": \"<num>\" o null}\n\n" +
-		recortar(textoFactura, 3500)
+// instruccionFactura es lo que se le pide al OCR sobre la factura anterior.
+const instruccionFactura = `Factura de energía eléctrica colombiana. Extrae el número (serial) del medidor del cliente.
+Dónde suele estar, por comercializador:
+- Enel: "No. Medidor"
+- Air-e / Aire: "Número de Medidor"
+- Enel X: "Medidor No"
+- ERCO: "Código medidor"
+- Celsia: cuadro "Medidor" con el número abajo
+- EPM: "medidor" junto al cuadro de consumos
+- CENS: "Medidor Activa"
+No lo confundas con el NIU, NIC, número de cuenta, de contrato o de factura.
+"menciona_express" es true si la palabra "express" aparece en la factura.
+Estructura: {"serial_medidor": "", "menciona_express": false}`
 
-	texto, err := c.llamar(ctx, "", "", []anthropic.ContentBlockParamUnion{anthropic.NewTextBlock(prompt)}, 80)
+// LeerSerialDeFactura lee con el OCR (texto de las paginas y, las escaneadas,
+// como imagen) el serial del medidor de la factura anterior. Devuelve el
+// serial ("" si no aparece), si menciona "express" (nil si no se pudo leer) y
+// el estado: "ok", "cooldown", "rate_limit" o "error_claude: ...".
+func (c *Cliente) LeerSerialDeFactura(ctx context.Context, doc Documento) (string, *bool, string) {
+	if c.estado != nil && c.estado.CooldownActivo() != nil {
+		return "", nil, "cooldown"
+	}
+	r, err := c.ExtraerInformacion(ctx, instruccionFactura, doc, "")
 	if err != nil {
 		if EsLimiteDeUso(err) {
-			c.estado.ActivarCooldown(err.Error())
-			return "", "rate_limit"
+			if c.estado != nil {
+				c.estado.ActivarCooldown(err.Error())
+			}
+			return "", nil, "rate_limit"
 		}
-		return "", "error_claude: " + recortar(err.Error(), 120)
+		return "", nil, "error_claude: " + recortar(err.Error(), 120)
 	}
-	data, err := ExtraerJSON(texto)
+	data, err := ExtraerJSON(string(r.JSON))
 	if err != nil {
-		return "", "error_claude: " + err.Error()
+		return "", nil, "error_claude: " + err.Error()
 	}
-	return dato.TextoLimpio(data["serial"]), "ok"
+	express := dato.EsTrue(data["menciona_express"])
+	return dato.TextoLimpio(data["serial_medidor"]), &express, "ok"
 }

@@ -59,6 +59,7 @@ qa-bia/
 │   ├── contrato-supabase.md  Columnas de actas_qa: quién escribe qué
 │   ├── servicio-extraccion.md  Servicio de extracción: API, configuración y origen
 │   ├── agentes-ot.md         Subagentes de cierre por tipo de OT: estado y qué falta
+│   ├── flujo-vipe-inst.md    VIPE e INST: cruce de equipos acta · foto · sistema
 │   └── hallazgos.md          Revisión del código: bugs, riesgos y su estado
 └── .github/workflows/        CI, QA automático y 2 workflows de limpieza manual
 ```

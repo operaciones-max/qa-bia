@@ -21,6 +21,7 @@ import (
 	"github.com/operaciones-max/qa-bia/backend/supabase"
 	"github.com/operaciones-max/qa-bia/backend/util"
 	"github.com/operaciones-max/qa-bia/backend/validaciones"
+	"github.com/operaciones-max/qa-bia/backend/verificacion"
 )
 
 // Pipeline tiene las dependencias de una corrida.
@@ -290,6 +291,11 @@ func (p *Pipeline) ProcesarActa(ctx context.Context, acta metabase.Fila, f fuent
 
 	p.compararFacturaAnterior(ctx, qa, codigo, f.facturas)
 
+	// VIPE e INST: cruce de los equipos entre acta, fotos y sistema.
+	if tipoOT, ok := catalogo.TipoOTDe(otNombre, tipo); ok && usaFull && (tipoOT.Codigo == "VIPE" || tipoOT.Codigo == "INST") {
+		p.verificarEquipos(ctx, qa, tipoOT.Codigo, pdfBytes, equipos, codigo, exitosa)
+	}
+
 	fmt.Printf("     Resultado: %s | Medida: %s\n", pyRepr(qa["estado_ot"]), pyRepr(qa["tipo_medida"]))
 	if dato.EsFalse(qa["medidor_coincide_wms"]) {
 		fmt.Printf("     ALERTA: Medidor instalado != WMS asignado %s\n", serialAsignado)
@@ -342,6 +348,74 @@ func (p *Pipeline) ProcesarActa(ctx context.Context, acta metabase.Fila, f fuent
 	}
 	fmt.Printf("     OK: %s auditada.\n", otNombre)
 	return true
+}
+
+// verificarEquipos cruza los equipos de una VIPE o INST entre lo escrito en el
+// acta, lo que se ve en sus fotos (OCR) y el sistema: la factura anterior y la
+// visita previa para lo encontrado, lo asignado en WMS para lo instalado.
+// Deja el resultado en qa["verificacion_equipos"] y, si el tecnico reporto la
+// OT exitosa, suma lo que no cuadra a los errores del QA.
+func (p *Pipeline) verificarEquipos(ctx context.Context, qa dato.Objeto, codigoOT string, pdfBytes []byte,
+	equipos *metabase.EquiposWMS, codigoCO string, exitosa bool) {
+
+	entrada := verificacion.Entrada{
+		TipoOT: codigoOT,
+		Acta:   qa,
+		Factura: verificacion.Factura{
+			Serial: dato.TextoLimpio(qa["serial_medidor_factura_anterior"]),
+			Estado: dato.TextoLimpio(qa["factura_anterior_estado"]),
+		},
+	}
+	if codigoOT == "INST" {
+		if equipos != nil {
+			asignados := &verificacion.Asignados{}
+			if equipos.Medidor != nil {
+				asignados.Medidor = equipos.Medidor.Serial
+			}
+			for _, t := range equipos.TCs {
+				asignados.TCs = append(asignados.TCs, t.Serial)
+			}
+			for _, t := range equipos.TPs {
+				asignados.TPs = append(asignados.TPs, t.Serial)
+			}
+			entrada.Asignados = asignados
+		}
+		if vp, ok := p.estado.VisitaPreviaDe(codigoCO); ok {
+			tcs := dato.Mapa(vp.TCsEncontrados)
+			entrada.VisitaPrevia = &verificacion.VisitaPrevia{
+				OT:           vp.OTNombre,
+				MedidorSerie: dato.TextoLimpio(vp.MedidorEncSerie),
+				TCsSeriales:  dato.Textos(tcs["seriales"]),
+				RelacionTCs:  dato.TextoLimpio(tcs["relacion"]),
+			}
+		}
+	}
+	if p.cfg.OCRFotos {
+		fotos, err := verificacion.LeerFotos(ctx, p.claude, pdfBytes, codigoOT, dato.Texto(qa["tipo_medida"]))
+		if err != nil {
+			fmt.Printf("     OCR de fotos: %v\n", err)
+		}
+		entrada.Fotos = fotos
+	}
+
+	resultado := verificacion.Verificar(entrada)
+	qa["verificacion_equipos"] = resultado
+	hallazgos := resultado.Hallazgos()
+	fmt.Printf("     Verificacion de equipos (%s, %s): %d cruces, %d hallazgos, fotos leidas: %v\n",
+		codigoOT, resultado.TipoMedida, len(resultado.Cruces), len(hallazgos), resultado.FotosLeidas)
+	if !exitosa || len(hallazgos) == 0 {
+		return
+	}
+	val := dato.Hijo(qa, "validaciones")
+	if val == nil {
+		val = dato.Objeto{}
+		qa["validaciones"] = val
+	}
+	errores := dato.Lista(val["errores_encontrados"])
+	for _, h := range hallazgos {
+		errores = append(errores, h)
+	}
+	val["errores_encontrados"] = errores
 }
 
 // compararFacturaAnterior extrae (o toma del cache) el serial del medidor de la

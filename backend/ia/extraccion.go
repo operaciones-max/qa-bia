@@ -63,11 +63,16 @@ var (
 // ExtraerInformacion le pide a Claude el JSON que describe la instruccion con
 // los datos del documento. esfuerzo vacio = el del modelo.
 func (c *Cliente) ExtraerInformacion(ctx context.Context, instruccion string, doc Documento, esfuerzo string) (RespuestaExtraccion, error) {
+	return c.pedirJSON(ctx, SystemPromptExtraccion(), contenidoExtraccion(instruccion, doc), esfuerzo)
+}
+
+// pedirJSON hace una llamada sin temperature y devuelve el objeto JSON de la respuesta.
+func (c *Cliente) pedirJSON(ctx context.Context, sistema string, contenido []anthropic.BetaContentBlockParamUnion, esfuerzo string) (RespuestaExtraccion, error) {
 	params := anthropic.BetaMessageNewParams{
 		Model:     anthropic.Model(c.modelo),
 		MaxTokens: maxTokensExtraccion,
-		System:    []anthropic.BetaTextBlockParam{{Text: SystemPromptExtraccion()}},
-		Messages:  []anthropic.BetaMessageParam{anthropic.NewBetaUserMessage(contenidoExtraccion(instruccion, doc)...)},
+		System:    []anthropic.BetaTextBlockParam{{Text: sistema}},
+		Messages:  []anthropic.BetaMessageParam{anthropic.NewBetaUserMessage(contenido...)},
 	}
 	if esfuerzo != "" {
 		params.OutputConfig = anthropic.BetaOutputConfigParam{Effort: anthropic.BetaOutputConfigEffort(esfuerzo)}
@@ -118,10 +123,16 @@ func AdmiteRespaldo(modelo string) bool {
 // contenidoExtraccion arma el mensaje: cada imagen con su etiqueta y al final
 // la instruccion con el texto de las paginas.
 func contenidoExtraccion(instruccion string, doc Documento) []anthropic.BetaContentBlockParamUnion {
+	bloques := bloquesPaginas(doc.Imagenes, doc.Tipo == "imagen")
+	return append(bloques, anthropic.NewBetaTextBlock(MensajeExtraccion(instruccion, doc)))
+}
+
+// bloquesPaginas pone cada imagen precedida de "Página N:".
+func bloquesPaginas(paginas []PaginaImagen, imagenSuelta bool) []anthropic.BetaContentBlockParamUnion {
 	var bloques []anthropic.BetaContentBlockParamUnion
-	for _, p := range doc.Imagenes {
+	for _, p := range paginas {
 		etiqueta := fmt.Sprintf("Página %d:", p.Numero)
-		if doc.Tipo == "imagen" {
+		if imagenSuelta {
 			etiqueta = "Imagen del documento:"
 		}
 		bloques = append(bloques,
@@ -131,7 +142,36 @@ func contenidoExtraccion(instruccion string, doc Documento) []anthropic.BetaCont
 				MediaType: anthropic.BetaBase64ImageSourceMediaType(p.Imagen.Tipo),
 			}))
 	}
-	return append(bloques, anthropic.NewBetaTextBlock(MensajeExtraccion(instruccion, doc)))
+	return bloques
+}
+
+// LeerFotosEquipos lee con OCR las fotos de los medidores, TCs y TPs de las
+// paginas dadas del acta. Devuelve el JSON que define prompts/fotos_equipos.md.
+func (c *Cliente) LeerFotosEquipos(ctx context.Context, paginas []PaginaImagen, tipoOT, tipoMedida string) (json.RawMessage, error) {
+	if c.estado != nil {
+		if cd := c.estado.CooldownActivo(); cd != nil {
+			return nil, fmt.Errorf("Claude en cooldown: %s", cd.Razon)
+		}
+	}
+	numeros := make([]string, len(paginas))
+	for i, p := range paginas {
+		numeros[i] = fmt.Sprint(p.Numero)
+	}
+	if tipoMedida == "" {
+		tipoMedida = "sin diligenciar"
+	}
+	mensaje := fmt.Sprintf("TIPO DE OT: %s\nTIPO DE MEDIDA (según el acta): %s\nPÁGINAS ADJUNTAS: %s",
+		tipoOT, tipoMedida, strings.Join(numeros, ", "))
+	contenido := append(bloquesPaginas(paginas, false), anthropic.NewBetaTextBlock(mensaje))
+	r, err := c.pedirJSON(ctx, SystemPromptFotosEquipos(), contenido, "")
+	if err != nil {
+		if EsLimiteDeUso(err) && c.estado != nil {
+			c.estado.ActivarCooldown(err.Error())
+		}
+		return nil, err
+	}
+	fmt.Printf("  Claude fotos tokens: in=%d out=%d\n", r.TokensEntrada, r.TokensSalida)
+	return r.JSON, nil
 }
 
 // MensajeExtraccion es el texto del mensaje: instruccion, descripcion del

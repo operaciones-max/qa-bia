@@ -18,6 +18,7 @@ INSTRUCCIONES CRITICAS:
   * "fotos_medidor": cuenta los timestamps en los bloques "Registro fotografico medidor, sellos y celdas" (encontrado E instalado combinados). Aplica para DIRECTA/SEMIDIRECTA/INDIRECTA.
   * "fotos_tcs": cuenta los timestamps en los bloques "Registro fotografico de TCs..." (encontrados E instalados). null si DIRECTA.
   * "fotos_tps": cuenta los timestamps en los bloques "Registro fotografico de TPs..." (encontrados E instalados). null si DIRECTA o SEMIDIRECTA.
+- RELACION DE TCs y TPs: "relacion" es la relacion de transformacion TAL COMO ESTA ESCRITA en el acta para ese grupo de equipos (ej. "200/5", "13200/120"). Si no esta escrita usa null; no la calcules desde el factor.
 - WMS comparacion (ignorando ceros a la izquierda y espacios):
   * "medidor_coincide_wms": Si MEDIDOR ASIGNADO arriba dice "No aplica" -> null. Si no, true/false comparando serie_instalada vs WMS.
   * "tcs_coinciden_wms": null si DIRECTA o si TCs ASIGNADOS dice "No aplica". Si no, true solo si CADA serial asignado en WMS aparece tambien en tcs_instalados.seriales (orden libre, comparacion por conjunto).
@@ -149,10 +150,10 @@ JSON ESPERADO:
     "calibre_acometida": "<o null>", "cables_por_fase_acometida": "<o null>"
   },
 
-  "tcs_encontrados":      { "aplica": <bool>, "tiene": <bool>, "seriales": ["<serial>"], "detalles": "<o null>" },
-  "tcs_instalados":       { "aplica": <bool>, "se_instalo": <bool>, "seriales": ["<serial de cada TC instalado>"], "marca": "<o null>", "detalles": "<o null>" },
-  "tps_encontrados":      { "aplica": <bool>, "tiene": <bool>, "seriales": ["<serial>"], "detalles": "<o null>" },
-  "tps_instalados":       { "aplica": <bool>, "se_instalo": <bool>, "seriales": ["<serial de cada TP instalado>"], "marca": "<o null>", "detalles": "<o null>" },
+  "tcs_encontrados":      { "aplica": <bool>, "tiene": <bool>, "seriales": ["<serial>"], "relacion": "<o null>", "detalles": "<o null>" },
+  "tcs_instalados":       { "aplica": <bool>, "se_instalo": <bool>, "seriales": ["<serial de cada TC instalado>"], "marca": "<o null>", "relacion": "<o null>", "detalles": "<o null>" },
+  "tps_encontrados":      { "aplica": <bool>, "tiene": <bool>, "seriales": ["<serial>"], "relacion": "<o null>", "detalles": "<o null>" },
+  "tps_instalados":       { "aplica": <bool>, "se_instalo": <bool>, "seriales": ["<serial de cada TP instalado>"], "marca": "<o null>", "relacion": "<o null>", "detalles": "<o null>" },
 
   "tcs_coinciden_wms": <true | false | null>,
   "tps_coinciden_wms": <true | false | null>,

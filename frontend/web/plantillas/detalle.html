@@ -67,6 +67,28 @@
         {{else}}<p class="tenue">Este código no tiene equipos asignados en WMS.</p>{{end}}
       </section>
 
+      {{with campo $qa "verificacion_equipos"}}
+      <section class="tarjeta"><h2>Verificación de equipos: acta · foto · sistema</h2>
+        <p class="tenue">Medida {{or .tipo_medida "sin diligenciar"}}.{{if not .fotos_leidas}} No se leyeron fotos de equipos.{{end}}</p>
+        <div class="tabla-contenedor"><table>
+          <thead><tr><th>Equipo</th><th>Dato</th><th>Acta</th><th>Foto</th><th>Sistema</th><th>Acta vs foto</th><th>Acta vs sistema</th></tr></thead>
+          <tbody>
+          {{range .cruces}}
+            <tr>
+              <td>{{.equipo}}</td><td>{{.dato}}</td>
+              <td>{{or .acta "—"}}</td><td>{{or .foto "—"}}</td>
+              <td>{{or .sistema "—"}}{{with .fuente_sistema}} <span class="tenue">({{.}})</span>{{end}}</td>
+              <td><span class="insignia {{tonoCruce .acta_vs_foto}}">{{textoCruce .acta_vs_foto}}</span></td>
+              <td><span class="insignia {{tonoCruce .acta_vs_sistema}}">{{textoCruce .acta_vs_sistema}}</span></td>
+            </tr>
+          {{end}}
+          </tbody>
+        </table></div>
+        {{with .campos_faltantes}}<p class="etiqueta">Campos sin diligenciar</p><p>{{lista .}}</p>{{end}}
+        {{with .observaciones}}<p class="etiqueta">Observaciones</p><p>{{lista .}}</p>{{end}}
+      </section>
+      {{end}}
+
       <div class="dos-columnas">
         <section class="tarjeta"><h2>Factura anterior</h2>
           <dl class="campos">

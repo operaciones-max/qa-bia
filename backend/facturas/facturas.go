@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/operaciones-max/qa-bia/backend/extraccion"
 	"github.com/operaciones-max/qa-bia/backend/ia"
 	"github.com/operaciones-max/qa-bia/backend/pdf"
 )
@@ -101,19 +102,22 @@ func ExtraerSerial(ctx context.Context, claude *ia.Cliente, url string) Resultad
 	if err != nil {
 		return Resultado{Estado: fmt.Sprintf("error_pdf: %v", err)}
 	}
-	if strings.TrimSpace(texto) == "" {
-		return Resultado{Estado: "pdf_vacio"}
+
+	// 1er intento: regex por comercializador sobre el texto (gratis, sin tokens)
+	if strings.TrimSpace(texto) != "" {
+		express := strings.Contains(strings.ToLower(texto), "express")
+		if serial, patron := SerialPorPatron(texto); serial != "" {
+			fmt.Printf("     Serial extraido por regex (%s): %s\n", patron, serial)
+			return Resultado{Serial: serial, Express: &express, Estado: "regex_" + patron}
+		}
 	}
 
-	express := strings.Contains(strings.ToLower(texto), "express")
-
-	// 1er intento: regex por comercializador (gratis, sin tokens)
-	if serial, patron := SerialPorPatron(texto); serial != "" {
-		fmt.Printf("     Serial extraido por regex (%s): %s\n", patron, serial)
-		return Resultado{Serial: serial, Express: &express, Estado: "regex_" + patron}
+	// 2do intento: el OCR del servicio de extraccion. Lee el texto y, si la
+	// factura esta escaneada, sus paginas como imagen.
+	doc, err := extraccion.PrepararDocumento(pdfBytes)
+	if err != nil {
+		return Resultado{Estado: fmt.Sprintf("error_pdf: %v", err)}
 	}
-
-	// 2do intento: Claude
-	serial, estado := claude.ExtraerSerialDeFactura(ctx, texto)
-	return Resultado{Serial: serial, Express: &express, Estado: estado}
+	serial, express, estado := claude.LeerSerialDeFactura(ctx, doc)
+	return Resultado{Serial: serial, Express: express, Estado: estado}
 }

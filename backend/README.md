@@ -19,6 +19,8 @@ Programa Go que se ejecuta desde la raíz del repo con `go run ./backend/cmd/qa`
      emergencia);
    - aplica reglas defensivas (`validaciones`, `catalogo`): el estado de la OT
      lo manda Metabase, no la IA;
+   - en VIPE e INST cruza los equipos entre acta, fotos (OCR) y sistema
+     (`verificacion`): factura anterior, visita previa y WMS;
    - cruza seriales con WMS y con la factura anterior (`facturas`);
    - guarda en Supabase (`supabase`) y, solo si se guardó, marca el acta como
      procesada (`estado`). Si falla, se reintenta en la próxima corrida.
@@ -37,6 +39,7 @@ Programa Go que se ejecuta desde la raíz del repo con `go run ./backend/cmd/qa`
 | Análisis | `facturas` | Serial del medidor en la factura anterior (regex, y Claude si falla) |
 | Reglas | `catalogo` | Catálogo de tipificaciones, tracks de QA, planner por OR |
 | Reglas | `validaciones` | Post-validaciones sobre la respuesta de la IA |
+| Reglas | `verificacion` | VIPE e INST: cruce acta · foto · sistema, campos obligatorios y factor (ver [docs/flujo-vipe-inst.md](../docs/flujo-vipe-inst.md)) |
 | Salida | `supabase` | Escritura en `actas_qa` (contrato con el frontend) |
 | Salida | `reportes` | JSON local por acta en `backend/reportes_qa/` (no se versiona) |
 | Estado | `estado` | Archivos JSON de `state/` y cooldown del LLM |
@@ -77,6 +80,7 @@ Copiar `backend/.env.example` a `backend/.env` (no se versiona). Variables:
 | `QA_FECHA_INICIO` | `2026-05-10` | Ignora actas anteriores |
 | `QA_FECHA_INICIO_ALCANCES` | `2026-04-30` | Ignora alcances anteriores |
 | `QA_MAX_ACTAS_POR_RUN` | `30` | Tope por corrida |
+| `QA_OCR_FOTOS` | `true` | En VIPE e INST, leer con OCR las fotos de los equipos (una llamada más a Claude por acta) |
 | `QA_PAUSA_ENTRE_ACTAS_SEGUNDOS` | `20` | Pausa entre llamadas a Claude |
 | `QA_STATE_DIR` | `backend/state` | Carpeta de estado. En local usar `backend/state-local` para no tocar la de producción |
 | `QA_CARPETA_REPORTES` | `backend/reportes_qa` | Reportes locales |

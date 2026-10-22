@@ -46,6 +46,9 @@ type Config struct {
 	PausaEntreAlcancesSeg int
 	IntervaloSegundos     int
 	MaxActasPorRun        int
+	// OCRFotos: en VIPE e INST se leen con OCR las fotos de los equipos para
+	// cruzarlas con el acta y el sistema (una llamada mas a Claude por acta).
+	OCRFotos bool
 
 	// Estado persistente y reportes
 	StateDir                  string
@@ -100,6 +103,7 @@ func Cargar(archivoEnv string) Config {
 		PausaEntreAlcancesSeg: envInt("QA_PAUSA_ENTRE_ALCANCES_SEGUNDOS", 2),
 		IntervaloSegundos:     300,
 		MaxActasPorRun:        envInt("QA_MAX_ACTAS_POR_RUN", 30),
+		OCRFotos:              envBool("QA_OCR_FOTOS", true),
 
 		StateDir:                  stateDir,
 		ArchivoProcesados:         filepath.Join(stateDir, "actas_procesadas.json"),

@@ -109,3 +109,17 @@ func TipoOTDeTitulo(titulo string) (TipoOT, bool) {
 	codigo, _, _ := strings.Cut(strings.TrimSpace(titulo), "_")
 	return TipoOTPorCodigo(codigo)
 }
+
+// TipoOTDe saca el tipo de OT del titulo y, si el titulo no trae un codigo
+// conocido, del texto del tipo de servicio (ej. "Visita previa", "Instalación").
+func TipoOTDe(titulo, tipoServicio string) (TipoOT, bool) {
+	if t, ok := TipoOTDeTitulo(titulo); ok {
+		return t, true
+	}
+	for _, t := range TiposOT {
+		if strings.EqualFold(t.Nombre, strings.TrimSpace(tipoServicio)) {
+			return t, true
+		}
+	}
+	return TipoOT{}, false
+}

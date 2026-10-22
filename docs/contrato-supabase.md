@@ -53,7 +53,7 @@ Fuente: `backend/supabase/supabase.go` → `Registro()`.
 | `tiene_tcs`, `tiene_tps`, `tiene_telemedida`, `tiene_diagrama_unifilar` | bool | IA |
 | `or_firma` | `SI` \| `NO` | IA |
 | `validacion_coherente` | `COHERENTE` \| `INCOHERENTE` \| `INCOMPLETO` | IA |
-| `errores_qa`, `alertas_qa` | jsonb (lista de textos) | IA, filtrado por `backend/validaciones` |
+| `errores_qa`, `alertas_qa` | jsonb (lista de textos) | IA, filtrado por `backend/validaciones`. En VIPE e INST reportadas exitosas, `errores_qa` suma lo que no cuadra en la verificación de equipos |
 | `tipificacion_causa_raiz`, `tipificacion_responsable` | text | IA, ajustado al catálogo (`backend/catalogo`) |
 | `wms_asignado` | bool | ¿Hay medidor asignado en WMS? |
 | `wms_medidor_serial`, `wms_medidor_marca` | text | WMS |
@@ -66,7 +66,7 @@ Fuente: `backend/supabase/supabase.go` → `Registro()`.
 | `estado_app_ops` | `Exitosa` \| `Fallida` \| null | Cierre formal en App Ops |
 | `estado_revision` | `pendiente` \| `cerrada` | Ver abajo |
 | `tiene_alcance`, `alcance_viable`, `alcance_medida_instalar`, `alcance_completo` | bool / text / text / jsonb | Alcance de ingeniería |
-| `resultado_qa_completo` | jsonb | Respuesta completa de la IA tras las validaciones |
+| `resultado_qa_completo` | jsonb | Respuesta completa de la IA tras las validaciones. En VIPE e INST incluye `verificacion_equipos` (cruce acta · foto · sistema, ver [flujo-vipe-inst.md](flujo-vipe-inst.md)) |
 
 ## Columnas que el backend actualiza después
 

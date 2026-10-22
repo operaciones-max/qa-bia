@@ -113,6 +113,19 @@ func (e *Estado) VisitasPrevias() map[string]bool {
 	return out
 }
 
+// VisitaPreviaDe devuelve la visita previa guardada de un codigo CO, si hay.
+func (e *Estado) VisitaPreviaDe(codigoCO string) (VisitaPrevia, bool) {
+	raw, ok := leerObjeto(e.cfg.ArchivoVisitasPrevias).Get(codigoCO)
+	if !ok {
+		return VisitaPrevia{}, false
+	}
+	var vp VisitaPrevia
+	if err := dato.Decodificar(raw, &vp); err != nil {
+		return VisitaPrevia{}, false
+	}
+	return vp, true
+}
+
 // GuardarVisitaPrevia guarda (o reemplaza) la visita previa de un codigo CO.
 func (e *Estado) GuardarVisitaPrevia(codigoCO string, vp VisitaPrevia) error {
 	return guardarEnObjeto(e.cfg.ArchivoVisitasPrevias, codigoCO, vp)

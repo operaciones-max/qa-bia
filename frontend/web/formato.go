@@ -144,6 +144,30 @@ func TextoFactura(estado *string) string {
 	return *estado
 }
 
+// estadosCruce traduce los estados de verificacion_equipos.cruces (backend/verificacion).
+var estadosCruce = map[string][2]string{
+	"coincide":                 {"verde", "Coincide"},
+	"no_coincide":              {"rojo", "No coincide"},
+	"posible_error_digitacion": {"ambar", "¿Error de digitación?"},
+	"falta_en_acta":            {"ambar", "Falta en el acta"},
+	"sin_dato":                 {"gris", "Sin dato"},
+}
+
+// TonoCruce y TextoCruce dan el color y el texto de un estado de cruce.
+func TonoCruce(v any) string {
+	if e, ok := estadosCruce[fmt.Sprint(v)]; ok {
+		return e[0]
+	}
+	return "gris"
+}
+
+func TextoCruce(v any) string {
+	if e, ok := estadosCruce[fmt.Sprint(v)]; ok {
+		return e[1]
+	}
+	return "—"
+}
+
 // Numero formatea un entero con separador de miles ("1.234").
 func Numero(n int) string {
 	s := strconv.Itoa(n)
@@ -162,6 +186,8 @@ var funciones = template.FuncMap{
 	"fecha":             func(v *string) string { return FormatearFecha(v, false) },
 	"fechaHora":         func(v *string) string { return FormatearFecha(v, true) },
 	"texto":             Texto,
+	"tonoCruce":         TonoCruce,
+	"textoCruce":        TextoCruce,
 	"siNo":              SiNo,
 	"tonoCoincidencia":  TonoCoincidencia,
 	"textoCoincidencia": TextoCoincidencia,

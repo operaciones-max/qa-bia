@@ -18,6 +18,8 @@ var (
 	promptFull string
 	//go:embed prompts/extraccion.md
 	promptExtraccion string
+	//go:embed prompts/fotos_equipos.md
+	promptFotosEquipos string
 	//go:embed prompts/agentes
 	promptsAgentes embed.FS
 )
@@ -99,3 +101,7 @@ func SystemPromptAgente(codigo string) (string, error) {
 // SystemPromptExtraccion es el system prompt del servicio de extraccion de
 // documentos (backend/extraccion).
 func SystemPromptExtraccion() string { return promptExtraccion }
+
+// SystemPromptFotosEquipos es el system prompt del OCR de las fotos de los
+// equipos de medida (backend/verificacion).
+func SystemPromptFotosEquipos() string { return promptFotosEquipos }

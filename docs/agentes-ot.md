@@ -28,7 +28,9 @@ alcanza porque la evaluación de un acta no necesita herramientas ni varios
 pasos.
 
 **Estado:** creados, probados y sin conectar al pipeline. Las reglas de VIPE,
-INST y DESX vienen del prompt `v1_closure_evaluator`. Las de las otras 42 OTs
+INST y DESX vienen del prompt `v1_closure_evaluator`. VIPE e INST suman además
+la verificación de equipos acta · foto · sistema
+([flujo-vipe-inst.md](flujo-vipe-inst.md)), que sí corre en el pipeline. Las de las otras 42 OTs
 son un **borrador escrito a partir del nombre de cada OT**: hay que validarlas
 con operaciones antes de usarlas.
 
