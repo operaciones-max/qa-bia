@@ -52,9 +52,10 @@ La respuesta de Claude es un JSON libre que se maneja como `map[string]any`
 - SDK `github.com/anthropics/anthropic-sdk-go` **v1.78.0** (versión de API
   `2023-06-01`), modelo `claude-haiku-4-5-20251001` (configurable con `CLAUDE_MODEL`).
 - System prompt cacheado 1 hora y `temperature` 0.1.
-- Los prompts están en [`ia/prompts/`](ia/prompts/README.md), incluido el
-  evaluador de cierre v1 (veredicto EXITOSA / FALLIDA / PENDIENTE), que todavía
-  no está conectado al pipeline.
+- Los prompts están en [`ia/prompts/`](ia/prompts/README.md), incluidos los
+  subagentes de cierre por tipo de OT (veredicto EXITOSA / FALLIDA / PENDIENTE),
+  que todavía no están conectados al pipeline. Ver
+  [docs/agentes-ot.md](../docs/agentes-ot.md).
 - Ante un 429 o 529 se activa un cooldown (`state/llm_cooldown.json`) y no se
   vuelve a llamar hasta que vence.
 - La API `2026-10-21` (SDK v2) ya no acepta `temperature`: ver

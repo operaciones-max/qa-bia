@@ -75,3 +75,29 @@ func TestCatalogoCompleto(t *testing.T) {
 		t.Fatalf("el catalogo tiene %d causas, esperadas 62", len(Tipificaciones))
 	}
 }
+
+func TestTipoOTDeTitulo(t *testing.T) {
+	casos := map[string]string{
+		"VIPE_44339_3986E7":              "VIPE",
+		"PREB_CO0100003376_1350990039_1": "PREB",
+		"gvico_123":                      "GVICO",
+		"XXXX_1":                         "",
+		"":                               "",
+	}
+	for titulo, esperado := range casos {
+		tipo, ok := TipoOTDeTitulo(titulo)
+		if tipo.Codigo != esperado || ok != (esperado != "") {
+			t.Errorf("%q: %q %v, esperado %q", titulo, tipo.Codigo, ok, esperado)
+		}
+	}
+	vistos := map[string]bool{}
+	for _, tipo := range TiposOT {
+		if vistos[tipo.Codigo] {
+			t.Errorf("codigo repetido %s", tipo.Codigo)
+		}
+		vistos[tipo.Codigo] = true
+	}
+	if len(TiposOT) != 45 {
+		t.Errorf("hay %d tipos de OT, esperados 45", len(TiposOT))
+	}
+}

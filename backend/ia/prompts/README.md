@@ -8,15 +8,43 @@ no hay que tocar Go.
 |---|---|---|
 | `qa_full.md` | `ia.SystemPromptFull()` | Extracción del acta: Activación y normalizaciones con WMS |
 | `qa_lite.md` | `ia.SystemPromptLite()` | Extracción del acta: Retención y Energy Solutions |
-| `evaluador_cierre_v1.md` | `ia.SystemPromptEvaluadorCierre()` | Veredicto independiente de cierre. **Todavía no lo usa el pipeline** |
+| `agentes/` | `ia.SystemPromptAgente(codigo)` | Subagentes de cierre, uno por tipo de OT: veredicto independiente. **Todavía no los usa el pipeline** |
 | `extraccion.md` | `ia.SystemPromptExtraccion()` | Servicio de extracción de documentos (`backend/extraccion`) |
 
 Marcadores que se reemplazan al cargar el prompt:
 
 - `{{CATALOGO}}`: la lista del catálogo de `backend/catalogo`;
-- `{{CATALOGO_POR_RESPONSABLE}}`: las mismas causas, agrupadas por responsable.
+- `{{CATALOGO_POR_RESPONSABLE}}`: las mismas causas, agrupadas por responsable;
+- `{{OT_CODIGO}}`, `{{OT_NOMBRE}}`, `{{OT_LINEA}}`, `{{FAMILIA}}`, `{{OT}}`: los
+  datos y las reglas del tipo de OT (subagentes).
 
-## Evaluador de cierre v1
+## Subagentes de cierre por tipo de OT
+
+Cada tipo de OT (45, en `backend/catalogo/ots.go`) tiene su subagente. Su
+prompt se arma con tres capas:
+
+```
+agentes/comun.md                  reglas de todos: dos juicios, fuentes, lectura del acta,
+                                  5 porqués, catálogo, formato de salida
+agentes/familias/<familia>.md     reglas de su familia: previa, ejecucion, normalizacion,
+                                  emergencia, retiro, verificacion, cartera, gestion
+agentes/ots/<CODIGO>.md           objetivo de la OT, qué debe traer el acta y sus reglas propias
+```
+
+Si una regla de la OT choca con la general, manda la de la OT. El backend
+sabe qué subagente usar por el código al inicio del título de la OT
+(`VIPE_44339_3986E7` → VIPE), con `catalogo.TipoOTDeTitulo`.
+
+Para ajustar un subagente se edita su archivo en `agentes/ots/`. Qué está en
+borrador y qué falta validar con operaciones está en
+[docs/agentes-ot.md](../../../docs/agentes-ot.md).
+
+`agentes/comun.md` es el evaluador de cierre v1 (abajo) sin sus reglas
+propias de VIPE, INST y DESX, que pasaron a `agentes/ots/`. Además, ahora
+recibe el TEXTO DEL ACTA completo, para las OTs cuyo formulario no extrae el
+QA (condensadores, BIA Monitor, termografía…).
+
+## Origen: evaluador de cierre v1
 
 Viene del prompt `v1_closure_evaluator`, que fue escrito para otro backend.
 Se conservaron todas sus reglas de negocio:
@@ -43,7 +71,7 @@ este repo.
 | `system_conditions` | `tipo_medida`, `factor_medida` (un solo valor, sin par encontrado/instalado) |
 | `missing_form_fields` | No existe: el evaluador toma como faltantes los null de los bloques declarados ejecutados |
 | `status_flags` | `ESTADO REPORTADO` = `electrician_status_id` de App Ops |
-| `service_type` INST / VIPE / DESX | Texto del tipo de servicio de Metabase (`Instalación`, `Visita previa`, `Desconexión`) |
+| `service_type` INST / VIPE / DESX | Código al inicio del título de la OT; un subagente por código |
 | Alcance (texto libre) | Fila del alcance de ingeniería de Metabase (`metabase.Alcances`), como pares `campo: valor` |
 | Equipos (SKU asignados) | `metabase.EquiposWMS` (medidor, TCs, TPs) |
 | Notas | Sin fuente: hoy siempre `(NO DISPONIBLE: …)` |
@@ -77,9 +105,10 @@ este repo.
 
 1. **Una segunda llamada a Claude** en `pipeline.ProcesarActa`, después de la
    extracción. Hay que armar el mensaje con los bloques que define el prompt
-   (`TIPO DE SERVICIO`, `ESTADO REPORTADO`, `CODIGO INTERNO BIA`, `ACTA EXTRAIDA`,
-   `ALCANCE`, `EQUIPOS ASIGNADOS`, `NOTAS`, `VALIDACIONES DEL BACKEND`). Sube el
-   costo: una llamada más por acta.
+   (`TIPO DE OT`, `ESTADO REPORTADO`, `CODIGO INTERNO BIA`, `ACTA EXTRAIDA`,
+   `TEXTO DEL ACTA`, `ALCANCE`, `EQUIPOS ASIGNADOS`, `NOTAS`,
+   `VALIDACIONES DEL BACKEND`), con el subagente del tipo de OT. Sube el costo:
+   una llamada más por acta.
 2. **Mandarle el JSON antes de `validaciones.SimplificarFallida`**, que en las
    fallidas borra `errores_encontrados` y las alertas. Sin `estado_ot` ni
    `tipificacion_falla`, para que no los copie.

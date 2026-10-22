@@ -59,18 +59,61 @@ func TestPromptsIncluyenElCatalogo(t *testing.T) {
 	}
 }
 
-func TestEvaluadorCierreIncluyeElCatalogoPorResponsable(t *testing.T) {
-	p := SystemPromptEvaluadorCierre()
-	if strings.Contains(p, "{{") {
-		t.Fatal("quedo un placeholder sin reemplazar")
-	}
-	for _, tip := range catalogo.Tipificaciones {
-		if !strings.Contains(p, "\n  - "+tip.Causa+"\n") {
-			t.Errorf("falta la causa %q", tip.Causa)
+func TestCadaTipoDeOTTieneSuSubagente(t *testing.T) {
+	for _, tipo := range catalogo.TiposOT {
+		p, err := SystemPromptAgente(tipo.Codigo)
+		if err != nil {
+			t.Fatalf("%s: %v", tipo.Codigo, err)
+		}
+		if strings.Contains(p, "{{") {
+			t.Errorf("%s: quedo un marcador sin reemplazar", tipo.Codigo)
+		}
+		if !strings.Contains(p, "subagente de cierre de las OTs "+tipo.Codigo+" ("+tipo.Nombre) {
+			t.Errorf("%s: el prompt no dice de que OT es", tipo.Codigo)
+		}
+		// PENDIENTE solo donde el tipo lo admite.
+		if admite := strings.Contains(p, "Esta OT admite PENDIENTE"); admite != tipo.PermitePendiente {
+			t.Errorf("%s: admite PENDIENTE = %v, esperado %v", tipo.Codigo, admite, tipo.PermitePendiente)
 		}
 	}
-	// Cada causa queda bajo el titulo de su responsable.
-	if !strings.Contains(p, "\nContratista:\n  - Fallas en el Alistamiento Operativo\n") {
-		t.Error("las causas no quedaron agrupadas por responsable")
+	if _, err := SystemPromptAgente("XXXX"); err == nil {
+		t.Error("un codigo desconocido deberia dar error")
+	}
+}
+
+func TestNoHayReglasDeOTsSinTipo(t *testing.T) {
+	for _, dir := range []string{"ots", "familias"} {
+		archivos, err := promptsAgentes.ReadDir("prompts/agentes/" + dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, a := range archivos {
+			nombre := strings.TrimSuffix(a.Name(), ".md")
+			usado := false
+			for _, tipo := range catalogo.TiposOT {
+				usado = usado || nombre == tipo.Codigo || nombre == string(tipo.Familia)
+			}
+			if !usado {
+				t.Errorf("%s/%s no corresponde a ningun tipo de OT", dir, a.Name())
+			}
+		}
+	}
+}
+
+func TestSubagenteIncluyeReglasYCatalogo(t *testing.T) {
+	vipe, _ := SystemPromptAgente("VIPE")
+	desx, _ := SystemPromptAgente("desx")
+	for _, parte := range []string{"Tu OT es una VISITA PREVIA", "Transformadores encontrados (`transformador`)", "\nContratista:\n  - Fallas en el Alistamiento Operativo\n"} {
+		if !strings.Contains(vipe, parte) {
+			t.Errorf("VIPE sin %q", parte)
+		}
+	}
+	if !strings.Contains(desx, "El pago en sitio es éxito") || strings.Contains(desx, "Transformadores encontrados") {
+		t.Error("DESX debe traer sus reglas y no las de VIPE")
+	}
+	for _, tip := range catalogo.Tipificaciones {
+		if !strings.Contains(vipe, "\n  - "+tip.Causa+"\n") {
+			t.Errorf("falta la causa %q", tip.Causa)
+		}
 	}
 }
